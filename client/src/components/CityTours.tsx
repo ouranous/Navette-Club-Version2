@@ -3,6 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Star, Clock, Users, MapPin, Camera, Globe } from "lucide-react";
 import { useState } from "react";
+import GoogleMap from "./GoogleMap";
 
 interface Tour {
   id: string;
@@ -109,6 +110,64 @@ export default function CityTours() {
     // todo: remove mock functionality
   };
 
+  // Emplacements des tours pour la carte // todo: remove mock functionality
+  const tourLocations = [
+    {
+      id: "paris-classic",
+      position: { lat: 48.8584, lng: 2.2945 },
+      title: "Paris Classique",
+      description: "Monuments emblématiques de Paris",
+      type: "tour" as const,
+      rating: 4.9,
+      price: 89
+    },
+    {
+      id: "paris-gourmet",
+      position: { lat: 48.8566, lng: 2.3522 },
+      title: "Paris Gourmand",
+      description: "Gastronomie parisienne",
+      type: "tour" as const,
+      rating: 4.8,
+      price: 149
+    },
+    {
+      id: "paris-secret",
+      position: { lat: 48.8534, lng: 2.3488 },
+      title: "Paris Insolite",
+      description: "Quartiers cachés et secrets",
+      type: "tour" as const,
+      rating: 4.7,
+      price: 119
+    },
+    {
+      id: "versailles-day",
+      position: { lat: 48.8049, lng: 2.1204 },
+      title: "Château de Versailles",
+      description: "Visite complète du château",
+      type: "tour" as const,
+      rating: 4.9,
+      price: 179
+    },
+    {
+      id: "montmartre-night",
+      position: { lat: 48.8867, lng: 2.3431 },
+      title: "Montmartre by Night",
+      description: "Bohème parisienne nocturne",
+      type: "tour" as const,
+      rating: 4.6,
+      price: 69
+    },
+    {
+      id: "loire-castles",
+      position: { lat: 47.4034, lng: 1.0727 },
+      title: "Châteaux de la Loire",
+      description: "Excursion châteaux",
+      type: "tour" as const,
+      rating: 4.8,
+      price: 249
+    }
+  ];
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Facile": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
@@ -131,6 +190,30 @@ export default function CityTours() {
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Découvrez la France autrement avec nos guides experts. Expériences authentiques et inoubliables garanties.
           </p>
+        </div>
+
+        {/* Carte interactive des tours */}
+        <div className="mb-12">
+          <Card className="overflow-hidden" data-testid="card-tours-map">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                Localisation de nos Tours
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Cliquez sur un marqueur pour voir les détails du tour
+              </p>
+            </CardHeader>
+            <CardContent className="p-0">
+              <GoogleMap 
+                center={{ lat: 48.8566, lng: 2.3522 }}
+                zoom={10}
+                locations={tourLocations}
+                height="400px"
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
