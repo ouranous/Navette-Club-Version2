@@ -41,7 +41,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Car, Users, Briefcase, Upload, Image as ImageIcon, Calendar, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { insertVehicleSchema, type Vehicle, type Provider, type VehicleSeasonalPrice } from "@shared/schema";
+import { insertVehicleSchema, type Vehicle, type Provider, type VehicleSeasonalPrice, type VehicleHourlyPrice } from "@shared/schema";
 import type { z } from "zod";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from "@uppy/core";
@@ -55,6 +55,15 @@ type SeasonalPriceForm = {
   endDate: string;
   basePrice: string;
   pricePerKm: string;
+};
+
+type HourlyPriceForm = {
+  id?: string;
+  seasonName: string;
+  startDate: string;
+  endDate: string;
+  pricePerHour: string;
+  minimumHours: string;
 };
 
 // Helper function to display vehicle type names
@@ -88,6 +97,17 @@ export default function VehiclesManagement() {
     endDate: "",
     basePrice: "0",
     pricePerKm: "0",
+  });
+
+  const [hourlyPrices, setHourlyPrices] = useState<HourlyPriceForm[]>([]);
+  const [originalHourlyPriceIds, setOriginalHourlyPriceIds] = useState<string[]>([]);
+  const [isAddingHourlyPrice, setIsAddingHourlyPrice] = useState(false);
+  const [newHourlyPrice, setNewHourlyPrice] = useState<HourlyPriceForm>({
+    seasonName: "",
+    startDate: "",
+    endDate: "",
+    pricePerHour: "0",
+    minimumHours: "4",
   });
 
   const { data: vehicles = [], isLoading } = useQuery<Vehicle[]>({
@@ -200,6 +220,26 @@ export default function VehiclesManagement() {
     } catch (error) {
       console.error("Failed to load seasonal prices", error);
     }
+
+    // Charger les prix horaires
+    try {
+      const res = await fetch(`/api/vehicles/${vehicle.id}/hourly-prices`);
+      if (res.ok) {
+        const prices: VehicleHourlyPrice[] = await res.json();
+        const priceIds = prices.map(p => p.id);
+        setOriginalHourlyPriceIds(priceIds);
+        setHourlyPrices(prices.map(p => ({
+          id: p.id,
+          seasonName: p.seasonName,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          pricePerHour: p.pricePerHour || "0",
+          minimumHours: p.minimumHours?.toString() || "4",
+        })));
+      }
+    } catch (error) {
+      console.error("Failed to load hourly prices", error);
+    }
     
     setIsDialogOpen(true);
   };
@@ -222,12 +262,33 @@ export default function VehiclesManagement() {
     setSeasonalPrices(seasonalPrices.filter((_, i) => i !== index));
   };
 
+  const handleAddHourlyPrice = () => {
+    if (newHourlyPrice.seasonName && newHourlyPrice.startDate && newHourlyPrice.endDate && newHourlyPrice.pricePerHour) {
+      setHourlyPrices([...hourlyPrices, { ...newHourlyPrice }]);
+      setNewHourlyPrice({
+        seasonName: "",
+        startDate: "",
+        endDate: "",
+        pricePerHour: "0",
+        minimumHours: "4",
+      });
+      setIsAddingHourlyPrice(false);
+    }
+  };
+
+  const handleRemoveHourlyPrice = (index: number) => {
+    setHourlyPrices(hourlyPrices.filter((_, i) => i !== index));
+  };
+
   const handleDialogClose = (open: boolean) => {
     if (!open) {
       setEditingVehicle(null);
       setSeasonalPrices([]);
       setOriginalSeasonalPriceIds([]);
       setIsAddingPrice(false);
+      setHourlyPrices([]);
+      setOriginalHourlyPriceIds([]);
+      setIsAddingHourlyPrice(false);
       form.reset();
     }
     setIsDialogOpen(open);
@@ -276,6 +337,38 @@ export default function VehiclesManagement() {
             endDate: price.endDate,
             basePrice: price.basePrice,
             pricePerKm: price.pricePerKm,
+          });
+        }
+      }
+
+      // Détecter les prix horaires supprimés
+      const currentHourlyPriceIds = hourlyPrices.map(p => p.id).filter(Boolean) as string[];
+      const deletedHourlyPriceIds = originalHourlyPriceIds.filter(id => !currentHourlyPriceIds.includes(id));
+      
+      // Supprimer les prix horaires qui ont été retirés
+      for (const priceId of deletedHourlyPriceIds) {
+        await apiRequest("DELETE", `/api/vehicles/hourly-prices/${priceId}`);
+      }
+      
+      // Sauvegarder les prix horaires
+      for (const price of hourlyPrices) {
+        if (price.id) {
+          // Mettre à jour un prix existant
+          await apiRequest("PATCH", `/api/vehicles/hourly-prices/${price.id}`, {
+            seasonName: price.seasonName,
+            startDate: price.startDate,
+            endDate: price.endDate,
+            pricePerHour: parseFloat(price.pricePerHour),
+            minimumHours: parseInt(price.minimumHours),
+          });
+        } else {
+          // Créer un nouveau prix
+          await apiRequest("POST", `/api/vehicles/${vehicleId}/hourly-prices`, {
+            seasonName: price.seasonName,
+            startDate: price.startDate,
+            endDate: price.endDate,
+            pricePerHour: parseFloat(price.pricePerHour),
+            minimumHours: parseInt(price.minimumHours),
           });
         }
       }
@@ -743,6 +836,148 @@ export default function VehiclesManagement() {
                               size="sm"
                               onClick={handleAddSeasonalPrice}
                               data-testid="button-save-new-price"
+                            >
+                              Ajouter
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+
+                <Separator className="my-6" />
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold">Prix horaires (Mise à disposition)</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Tarification horaire pour les services de mise à disposition
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsAddingHourlyPrice(true)}
+                      data-testid="button-add-hourly-price"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Ajouter
+                    </Button>
+                  </div>
+
+                  {hourlyPrices.length > 0 && (
+                    <div className="space-y-2">
+                      {hourlyPrices.map((price, index) => (
+                        <Card key={index}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                  <span className="font-medium">{price.seasonName}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                  <Calendar className="w-3 h-3" />
+                                  <span>{price.startDate} → {price.endDate}</span>
+                                </div>
+                                <div className="text-muted-foreground">
+                                  Prix/heure: <span className="font-medium text-foreground">{price.pricePerHour} €</span>
+                                </div>
+                                <div className="text-muted-foreground">
+                                  Minimum: <span className="font-medium text-foreground">{price.minimumHours} heures</span>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveHourlyPrice(index)}
+                                data-testid={`button-remove-hourly-price-${index}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+
+                  {isAddingHourlyPrice && (
+                    <Card className="border-primary">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-sm font-medium">Nom de la saison*</label>
+                            <Input
+                              value={newHourlyPrice.seasonName}
+                              onChange={(e) => setNewHourlyPrice({ ...newHourlyPrice, seasonName: e.target.value })}
+                              placeholder="Basse saison, Haute saison, etc."
+                              data-testid="input-new-hourly-season-name"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-sm font-medium">Date de début* (MM-DD)</label>
+                              <Input
+                                value={newHourlyPrice.startDate}
+                                onChange={(e) => setNewHourlyPrice({ ...newHourlyPrice, startDate: e.target.value })}
+                                placeholder="01-01"
+                                data-testid="input-new-hourly-start-date"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Date de fin* (MM-DD)</label>
+                              <Input
+                                value={newHourlyPrice.endDate}
+                                onChange={(e) => setNewHourlyPrice({ ...newHourlyPrice, endDate: e.target.value })}
+                                placeholder="12-31"
+                                data-testid="input-new-hourly-end-date"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-sm font-medium">Prix par heure (€)*</label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={newHourlyPrice.pricePerHour}
+                                onChange={(e) => setNewHourlyPrice({ ...newHourlyPrice, pricePerHour: e.target.value })}
+                                placeholder="0.00"
+                                data-testid="input-new-hourly-price-per-hour"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Durée minimum (heures)*</label>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={newHourlyPrice.minimumHours}
+                                onChange={(e) => setNewHourlyPrice({ ...newHourlyPrice, minimumHours: e.target.value })}
+                                placeholder="4"
+                                data-testid="input-new-hourly-minimum-hours"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsAddingHourlyPrice(false)}
+                              data-testid="button-cancel-new-hourly-price"
+                            >
+                              Annuler
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleAddHourlyPrice}
+                              data-testid="button-save-new-hourly-price"
                             >
                               Ajouter
                             </Button>
