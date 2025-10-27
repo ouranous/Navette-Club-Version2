@@ -1,38 +1,354 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+// Reference: blueprint:javascript_database
+import { 
+  users, 
+  providers,
+  vehicles, 
+  cityTours, 
+  tourStops,
+  customers,
+  transferBookings,
+  tourBookings,
+  type User,
+  type InsertUser,
+  type Provider,
+  type InsertProvider,
+  type Vehicle,
+  type InsertVehicle,
+  type CityTour,
+  type InsertCityTour,
+  type TourStop,
+  type InsertTourStop,
+  type Customer,
+  type InsertCustomer,
+  type TransferBooking,
+  type InsertTransferBooking,
+  type TourBooking,
+  type InsertTourBooking,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
+  // Users
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Providers
+  getAllProviders(): Promise<Provider[]>;
+  getProvider(id: string): Promise<Provider | undefined>;
+  createProvider(provider: InsertProvider): Promise<Provider>;
+  updateProvider(id: string, provider: Partial<InsertProvider>): Promise<Provider | undefined>;
+  deleteProvider(id: string): Promise<boolean>;
+  
+  // Vehicles
+  getAllVehicles(): Promise<Vehicle[]>;
+  getAvailableVehicles(): Promise<Vehicle[]>;
+  getVehicle(id: string): Promise<Vehicle | undefined>;
+  getVehiclesByProvider(providerId: string): Promise<Vehicle[]>;
+  createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
+  updateVehicle(id: string, vehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined>;
+  deleteVehicle(id: string): Promise<boolean>;
+  
+  // City Tours
+  getAllTours(): Promise<CityTour[]>;
+  getActiveTours(): Promise<CityTour[]>;
+  getTour(id: string): Promise<CityTour | undefined>;
+  getTourBySlug(slug: string): Promise<CityTour | undefined>;
+  getToursByProvider(providerId: string): Promise<CityTour[]>;
+  createTour(tour: InsertCityTour): Promise<CityTour>;
+  updateTour(id: string, tour: Partial<InsertCityTour>): Promise<CityTour | undefined>;
+  deleteTour(id: string): Promise<boolean>;
+  
+  // Tour Stops
+  getTourStops(tourId: string): Promise<TourStop[]>;
+  createTourStop(stop: InsertTourStop): Promise<TourStop>;
+  updateTourStop(id: string, stop: Partial<InsertTourStop>): Promise<TourStop | undefined>;
+  deleteTourStop(id: string): Promise<boolean>;
+  
+  // Customers
+  getAllCustomers(): Promise<Customer[]>;
+  getCustomer(id: string): Promise<Customer | undefined>;
+  getCustomerByEmail(email: string): Promise<Customer | undefined>;
+  createCustomer(customer: InsertCustomer): Promise<Customer>;
+  
+  // Transfer Bookings
+  getAllTransferBookings(): Promise<TransferBooking[]>;
+  getTransferBooking(id: string): Promise<TransferBooking | undefined>;
+  getTransferBookingsByCustomer(customerId: string): Promise<TransferBooking[]>;
+  createTransferBooking(booking: InsertTransferBooking): Promise<TransferBooking>;
+  updateTransferBooking(id: string, booking: Partial<InsertTransferBooking>): Promise<TransferBooking | undefined>;
+  
+  // Tour Bookings
+  getAllTourBookings(): Promise<TourBooking[]>;
+  getTourBooking(id: string): Promise<TourBooking | undefined>;
+  getTourBookingsByCustomer(customerId: string): Promise<TourBooking[]>;
+  getTourBookingsByTour(tourId: string): Promise<TourBooking[]>;
+  createTourBooking(booking: InsertTourBooking): Promise<TourBooking>;
+  updateTourBooking(id: string, booking: Partial<InsertTourBooking>): Promise<TourBooking | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
+  // Users
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values({ ...insertUser, role: "admin" })
+      .returning();
     return user;
+  }
+
+  // Providers
+  async getAllProviders(): Promise<Provider[]> {
+    return await db.select().from(providers).orderBy(desc(providers.createdAt));
+  }
+
+  async getProvider(id: string): Promise<Provider | undefined> {
+    const [provider] = await db.select().from(providers).where(eq(providers.id, id));
+    return provider || undefined;
+  }
+
+  async createProvider(provider: InsertProvider): Promise<Provider> {
+    const [created] = await db.insert(providers).values(provider).returning();
+    return created;
+  }
+
+  async updateProvider(id: string, provider: Partial<InsertProvider>): Promise<Provider | undefined> {
+    const [updated] = await db
+      .update(providers)
+      .set({ ...provider, updatedAt: new Date() })
+      .where(eq(providers.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteProvider(id: string): Promise<boolean> {
+    const result = await db.delete(providers).where(eq(providers.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Vehicles
+  async getAllVehicles(): Promise<Vehicle[]> {
+    return await db.select().from(vehicles).orderBy(desc(vehicles.createdAt));
+  }
+
+  async getAvailableVehicles(): Promise<Vehicle[]> {
+    return await db
+      .select()
+      .from(vehicles)
+      .where(eq(vehicles.isAvailable, true))
+      .orderBy(vehicles.basePrice);
+  }
+
+  async getVehicle(id: string): Promise<Vehicle | undefined> {
+    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+    return vehicle || undefined;
+  }
+
+  async getVehiclesByProvider(providerId: string): Promise<Vehicle[]> {
+    return await db
+      .select()
+      .from(vehicles)
+      .where(eq(vehicles.providerId, providerId));
+  }
+
+  async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
+    const [created] = await db.insert(vehicles).values(vehicle).returning();
+    return created;
+  }
+
+  async updateVehicle(id: string, vehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined> {
+    const [updated] = await db
+      .update(vehicles)
+      .set({ ...vehicle, updatedAt: new Date() })
+      .where(eq(vehicles.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteVehicle(id: string): Promise<boolean> {
+    const result = await db.delete(vehicles).where(eq(vehicles.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // City Tours
+  async getAllTours(): Promise<CityTour[]> {
+    return await db.select().from(cityTours).orderBy(desc(cityTours.createdAt));
+  }
+
+  async getActiveTours(): Promise<CityTour[]> {
+    return await db
+      .select()
+      .from(cityTours)
+      .where(eq(cityTours.isActive, true))
+      .orderBy(cityTours.featured, cityTours.name);
+  }
+
+  async getTour(id: string): Promise<CityTour | undefined> {
+    const [tour] = await db.select().from(cityTours).where(eq(cityTours.id, id));
+    return tour || undefined;
+  }
+
+  async getTourBySlug(slug: string): Promise<CityTour | undefined> {
+    const [tour] = await db.select().from(cityTours).where(eq(cityTours.slug, slug));
+    return tour || undefined;
+  }
+
+  async getToursByProvider(providerId: string): Promise<CityTour[]> {
+    return await db
+      .select()
+      .from(cityTours)
+      .where(eq(cityTours.providerId, providerId));
+  }
+
+  async createTour(tour: InsertCityTour): Promise<CityTour> {
+    const [created] = await db.insert(cityTours).values(tour).returning();
+    return created;
+  }
+
+  async updateTour(id: string, tour: Partial<InsertCityTour>): Promise<CityTour | undefined> {
+    const [updated] = await db
+      .update(cityTours)
+      .set({ ...tour, updatedAt: new Date() })
+      .where(eq(cityTours.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteTour(id: string): Promise<boolean> {
+    const result = await db.delete(cityTours).where(eq(cityTours.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Tour Stops
+  async getTourStops(tourId: string): Promise<TourStop[]> {
+    return await db
+      .select()
+      .from(tourStops)
+      .where(eq(tourStops.tourId, tourId))
+      .orderBy(tourStops.order);
+  }
+
+  async createTourStop(stop: InsertTourStop): Promise<TourStop> {
+    const [created] = await db.insert(tourStops).values(stop).returning();
+    return created;
+  }
+
+  async updateTourStop(id: string, stop: Partial<InsertTourStop>): Promise<TourStop | undefined> {
+    const [updated] = await db
+      .update(tourStops)
+      .set(stop)
+      .where(eq(tourStops.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteTourStop(id: string): Promise<boolean> {
+    const result = await db.delete(tourStops).where(eq(tourStops.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Customers
+  async getAllCustomers(): Promise<Customer[]> {
+    return await db.select().from(customers).orderBy(desc(customers.createdAt));
+  }
+
+  async getCustomer(id: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer || undefined;
+  }
+
+  async getCustomerByEmail(email: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.email, email));
+    return customer || undefined;
+  }
+
+  async createCustomer(customer: InsertCustomer): Promise<Customer> {
+    const [created] = await db.insert(customers).values(customer).returning();
+    return created;
+  }
+
+  // Transfer Bookings
+  async getAllTransferBookings(): Promise<TransferBooking[]> {
+    return await db.select().from(transferBookings).orderBy(desc(transferBookings.createdAt));
+  }
+
+  async getTransferBooking(id: string): Promise<TransferBooking | undefined> {
+    const [booking] = await db.select().from(transferBookings).where(eq(transferBookings.id, id));
+    return booking || undefined;
+  }
+
+  async getTransferBookingsByCustomer(customerId: string): Promise<TransferBooking[]> {
+    return await db
+      .select()
+      .from(transferBookings)
+      .where(eq(transferBookings.customerId, customerId))
+      .orderBy(desc(transferBookings.createdAt));
+  }
+
+  async createTransferBooking(booking: InsertTransferBooking): Promise<TransferBooking> {
+    const [created] = await db.insert(transferBookings).values(booking).returning();
+    return created;
+  }
+
+  async updateTransferBooking(id: string, booking: Partial<InsertTransferBooking>): Promise<TransferBooking | undefined> {
+    const [updated] = await db
+      .update(transferBookings)
+      .set({ ...booking, updatedAt: new Date() })
+      .where(eq(transferBookings.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Tour Bookings
+  async getAllTourBookings(): Promise<TourBooking[]> {
+    return await db.select().from(tourBookings).orderBy(desc(tourBookings.createdAt));
+  }
+
+  async getTourBooking(id: string): Promise<TourBooking | undefined> {
+    const [booking] = await db.select().from(tourBookings).where(eq(tourBookings.id, id));
+    return booking || undefined;
+  }
+
+  async getTourBookingsByCustomer(customerId: string): Promise<TourBooking[]> {
+    return await db
+      .select()
+      .from(tourBookings)
+      .where(eq(tourBookings.customerId, customerId))
+      .orderBy(desc(tourBookings.createdAt));
+  }
+
+  async getTourBookingsByTour(tourId: string): Promise<TourBooking[]> {
+    return await db
+      .select()
+      .from(tourBookings)
+      .where(eq(tourBookings.tourId, tourId))
+      .orderBy(desc(tourBookings.createdAt));
+  }
+
+  async createTourBooking(booking: InsertTourBooking): Promise<TourBooking> {
+    const [created] = await db.insert(tourBookings).values(booking).returning();
+    return created;
+  }
+
+  async updateTourBooking(id: string, booking: Partial<InsertTourBooking>): Promise<TourBooking | undefined> {
+    const [updated] = await db
+      .update(tourBookings)
+      .set({ ...booking, updatedAt: new Date() })
+      .where(eq(tourBookings.id, id))
+      .returning();
+    return updated || undefined;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
