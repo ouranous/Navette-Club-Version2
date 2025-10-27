@@ -163,6 +163,7 @@ export const transferBookings = pgTable("transfer_bookings", {
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"), // "pending", "confirmed", "completed", "cancelled"
   paymentStatus: text("payment_status").notNull().default("pending"), // "pending", "paid", "refunded"
+  paymentIntentId: varchar("payment_intent_id").references(() => paymentIntents.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -179,6 +180,41 @@ export const tourBookings = pgTable("tour_bookings", {
   specialRequests: text("special_requests"),
   status: text("status").notNull().default("pending"), // "pending", "confirmed", "completed", "cancelled"
   paymentStatus: text("payment_status").notNull().default("pending"),
+  paymentIntentId: varchar("payment_intent_id").references(() => paymentIntents.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Disposal Bookings - Réservations de mise à disposition (location horaire)
+export const disposalBookings = pgTable("disposal_bookings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull().references(() => customers.id),
+  vehicleId: varchar("vehicle_id").notNull().references(() => vehicles.id),
+  pickupLocation: text("pickup_location").notNull(),
+  pickupDate: timestamp("pickup_date").notNull(),
+  pickupTime: text("pickup_time").notNull(),
+  duration: integer("duration").notNull(), // durée en heures
+  passengers: integer("passengers").notNull(),
+  specialRequests: text("special_requests"),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending"), // "pending", "confirmed", "completed", "cancelled"
+  paymentStatus: text("payment_status").notNull().default("pending"), // "pending", "paid", "refunded"
+  paymentIntentId: varchar("payment_intent_id").references(() => paymentIntents.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Payment Intents - Suivi des transactions de paiement KONNECT
+export const paymentIntents = pgTable("payment_intents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingType: text("booking_type").notNull(), // "transfer", "disposal", "tour"
+  bookingId: varchar("booking_id").notNull(), // ID de la réservation associée
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").notNull().default("TND"),
+  status: text("status").notNull().default("pending"), // "pending", "completed", "failed", "expired"
+  konnectPaymentRef: text("konnect_payment_ref"), // référence KONNECT
+  konnectPayUrl: text("konnect_pay_url"), // URL de paiement KONNECT
+  metadata: jsonb("metadata"), // données supplémentaires
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -194,7 +230,8 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
     fields: [vehicles.providerId],
     references: [providers.id],
   }),
-  bookings: many(transferBookings),
+  transferBookings: many(transferBookings),
+  disposalBookings: many(disposalBookings),
   seasonalPrices: many(vehicleSeasonalPrices),
   hourlyPrices: many(vehicleHourlyPrices),
 }));
@@ -232,6 +269,7 @@ export const tourStopsRelations = relations(tourStops, ({ one }) => ({
 export const customersRelations = relations(customers, ({ many }) => ({
   transferBookings: many(transferBookings),
   tourBookings: many(tourBookings),
+  disposalBookings: many(disposalBookings),
 }));
 
 export const transferBookingsRelations = relations(transferBookings, ({ one }) => ({
@@ -243,6 +281,10 @@ export const transferBookingsRelations = relations(transferBookings, ({ one }) =
     fields: [transferBookings.vehicleId],
     references: [vehicles.id],
   }),
+  paymentIntent: one(paymentIntents, {
+    fields: [transferBookings.paymentIntentId],
+    references: [paymentIntents.id],
+  }),
 }));
 
 export const tourBookingsRelations = relations(tourBookings, ({ one }) => ({
@@ -253,6 +295,25 @@ export const tourBookingsRelations = relations(tourBookings, ({ one }) => ({
   tour: one(cityTours, {
     fields: [tourBookings.tourId],
     references: [cityTours.id],
+  }),
+  paymentIntent: one(paymentIntents, {
+    fields: [tourBookings.paymentIntentId],
+    references: [paymentIntents.id],
+  }),
+}));
+
+export const disposalBookingsRelations = relations(disposalBookings, ({ one }) => ({
+  customer: one(customers, {
+    fields: [disposalBookings.customerId],
+    references: [customers.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [disposalBookings.vehicleId],
+    references: [vehicles.id],
+  }),
+  paymentIntent: one(paymentIntents, {
+    fields: [disposalBookings.paymentIntentId],
+    references: [paymentIntents.id],
   }),
 }));
 
@@ -319,6 +380,21 @@ export const insertVehicleHourlyPriceSchema = createInsertSchema(vehicleHourlyPr
   createdAt: true,
 });
 
+export const insertDisposalBookingSchema = createInsertSchema(disposalBookings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPaymentIntentSchema = createInsertSchema(paymentIntents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  bookingType: z.enum(["transfer", "disposal", "tour"]),
+  status: z.enum(["pending", "completed", "failed", "expired"]).default("pending"),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -352,3 +428,9 @@ export type InsertVehicleSeasonalPrice = z.infer<typeof insertVehicleSeasonalPri
 
 export type VehicleHourlyPrice = typeof vehicleHourlyPrices.$inferSelect;
 export type InsertVehicleHourlyPrice = z.infer<typeof insertVehicleHourlyPriceSchema>;
+
+export type DisposalBooking = typeof disposalBookings.$inferSelect;
+export type InsertDisposalBooking = z.infer<typeof insertDisposalBookingSchema>;
+
+export type PaymentIntent = typeof paymentIntents.$inferSelect;
+export type InsertPaymentIntent = z.infer<typeof insertPaymentIntentSchema>;
