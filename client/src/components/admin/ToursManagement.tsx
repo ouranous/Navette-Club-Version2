@@ -337,6 +337,7 @@ export default function ToursManagement() {
                             type="number"
                             min="1"
                             {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             data-testid="input-duration"
                           />
                         </FormControl>
@@ -358,6 +359,7 @@ export default function ToursManagement() {
                             type="number"
                             min="1"
                             {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             data-testid="input-max-capacity"
                           />
                         </FormControl>
@@ -377,6 +379,7 @@ export default function ToursManagement() {
                             type="number"
                             min="1"
                             {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             data-testid="input-min-participants"
                           />
                         </FormControl>

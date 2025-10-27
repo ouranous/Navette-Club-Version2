@@ -259,6 +259,7 @@ export default function VehiclesManagement() {
                             type="number"
                             min="1"
                             {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             data-testid="input-capacity"
                           />
                         </FormControl>
@@ -278,6 +279,7 @@ export default function VehiclesManagement() {
                             type="number"
                             min="0"
                             {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             data-testid="input-luggage"
                           />
                         </FormControl>
