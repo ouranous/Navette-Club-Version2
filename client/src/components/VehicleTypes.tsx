@@ -1,23 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Luggage, Wifi, Coffee, Star } from "lucide-react";
-
-interface Vehicle {
-  id: string;
-  name: string;
-  description: string;
-  passengers: number;
-  luggage: number;
-  features: string[];
-  image: string;
-  priceFrom: number;
-  popular?: boolean;
-}
+import { Users, Luggage, Star, Coffee } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { Vehicle } from "@shared/schema";
 
 export default function VehicleTypes() {
-  // todo: remove mock functionality
-  const vehicles: Vehicle[] = [
+  const { data: vehicles = [], isLoading } = useQuery<Vehicle[]>({
+    queryKey: ["/api/vehicles", { available: true }],
+    queryFn: async () => {
+      const res = await fetch("/api/vehicles?available=true");
+      if (!res.ok) throw new Error("Failed to fetch vehicles");
+      return res.json();
+    },
+  });
+
+  // Fallback mock data if database is empty
+  const mockVehicles: Vehicle[] = isLoading || vehicles.length > 0 ? [] : [
     {
       id: "economy",
       name: "Économie",
@@ -103,8 +102,20 @@ export default function VehicleTypes() {
 
   const handleSelectVehicle = (vehicleId: string) => {
     console.log('Selected vehicle:', vehicleId);
-    // todo: remove mock functionality
   };
+
+  // Use real data or fallback to mock
+  const displayVehicles = vehicles.length > 0 ? vehicles : mockVehicles;
+
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-muted-foreground">Chargement des véhicules...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-muted/30">
@@ -120,29 +131,24 @@ export default function VehicleTypes() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {vehicles.map((vehicle) => (
+          {displayVehicles.map((vehicle) => (
             <Card 
               key={vehicle.id}
               className="overflow-hidden hover-elevate transition-all duration-300 relative"
               data-testid={`card-vehicle-${vehicle.id}`}
             >
-              {vehicle.popular && (
-                <Badge className="absolute top-4 left-4 z-10 bg-primary" data-testid={`badge-popular-${vehicle.id}`}>
-                  <Star className="h-3 w-3 mr-1" />
-                  Populaire
-                </Badge>
-              )}
-              
               <div className="relative">
                 <img 
-                  src={vehicle.image} 
+                  src={vehicle.imageUrl || vehicle.image || "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80"} 
                   alt={vehicle.name}
                   className="w-full h-48 object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 <div className="absolute bottom-4 left-4 text-white">
                   <h3 className="text-xl font-bold">{vehicle.name}</h3>
-                  <p className="text-sm opacity-90">À partir de {vehicle.priceFrom}€</p>
+                  <p className="text-sm opacity-90">
+                    À partir de {vehicle.basePrice || vehicle.priceFrom || "0"}€
+                  </p>
                 </div>
               </div>
 
@@ -152,11 +158,10 @@ export default function VehicleTypes() {
               </CardHeader>
 
               <CardContent className="space-y-4">
-                {/* Capacity */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{vehicle.passengers} passagers</span>
+                    <span className="text-sm">{vehicle.capacity || vehicle.passengers} passagers</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Luggage className="h-4 w-4 text-muted-foreground" />
@@ -164,22 +169,23 @@ export default function VehicleTypes() {
                   </div>
                 </div>
 
-                {/* Features */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Équipements inclus</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {vehicle.features.map((feature, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
-                        className="text-xs"
-                        data-testid={`badge-feature-${vehicle.id}-${index}`}
-                      >
-                        {feature}
-                      </Badge>
-                    ))}
+                {vehicle.features && vehicle.features.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Équipements inclus</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {vehicle.features.map((feature, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="text-xs"
+                          data-testid={`badge-feature-${vehicle.id}-${index}`}
+                        >
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <Button 
                   className="w-full"
