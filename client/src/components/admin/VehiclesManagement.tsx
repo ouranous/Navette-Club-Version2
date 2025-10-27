@@ -209,10 +209,14 @@ export default function VehiclesManagement() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="sedan">Berline</SelectItem>
+                            <SelectItem value="economy">Économie</SelectItem>
+                            <SelectItem value="comfort">Confort</SelectItem>
+                            <SelectItem value="business">Business</SelectItem>
+                            <SelectItem value="premium">Premium</SelectItem>
+                            <SelectItem value="vip">VIP</SelectItem>
+                            <SelectItem value="suv">SUV</SelectItem>
                             <SelectItem value="van">Van</SelectItem>
                             <SelectItem value="minibus">Minibus</SelectItem>
-                            <SelectItem value="bus">Autocar</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

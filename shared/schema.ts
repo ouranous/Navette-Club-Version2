@@ -34,7 +34,7 @@ export const vehicles = pgTable("vehicles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   providerId: varchar("provider_id").references(() => providers.id),
   name: text("name").notNull(), // "Berline Premium", "Van 8 Places"
-  type: text("type").notNull(), // "sedan", "van", "minibus", "bus"
+  type: text("type").notNull(), // "economy", "comfort", "business", "premium", "vip", "suv", "van", "minibus"
   capacity: integer("capacity").notNull(), // nombre de passagers
   luggage: integer("luggage").notNull(), // nombre de bagages
   description: text("description"),
