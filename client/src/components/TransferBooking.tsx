@@ -6,9 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Users, Luggage } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Vehicle } from "@shared/schema";
+
+// Import des photos par défaut pour chaque type
+import economyImg from "@assets/stock_images/modern_black_economy_2715528e.jpg";
+import comfortImg from "@assets/stock_images/luxury_comfortable_s_e3010d3e.jpg";
+import businessImg from "@assets/stock_images/business_executive_s_04315f4d.jpg";
+import premiumImg from "@assets/stock_images/premium_luxury_sedan_12f88229.jpg";
+import vipImg from "@assets/stock_images/vip_luxury_limousine_ce32b295.jpg";
+import suvImg from "@assets/stock_images/modern_suv_car_luxur_f01cfdb1.jpg";
+import vanImg from "@assets/stock_images/passenger_van_miniva_5a4872e1.jpg";
+import minibusImg from "@assets/stock_images/minibus_passenger_tr_a9f4517e.jpg";
 
 const getVehicleTypeName = (type: string): string => {
   const typeNames: Record<string, string> = {
@@ -24,6 +34,20 @@ const getVehicleTypeName = (type: string): string => {
   return typeNames[type] || type;
 };
 
+const getDefaultVehicleImage = (type: string): string => {
+  const defaultImages: Record<string, string> = {
+    economy: economyImg,
+    comfort: comfortImg,
+    business: businessImg,
+    premium: premiumImg,
+    vip: vipImg,
+    suv: suvImg,
+    van: vanImg,
+    minibus: minibusImg,
+  };
+  return defaultImages[type] || economyImg;
+};
+
 export default function TransferBooking() {
   const [tripType, setTripType] = useState("one-way");
   const [selectedVehicle, setSelectedVehicle] = useState("");
@@ -37,6 +61,17 @@ export default function TransferBooking() {
       return res.json();
     },
   });
+
+  // Grouper par type et prendre le premier véhicule de chaque type
+  const vehiclesByType = useMemo(() => {
+    const grouped = new Map<string, Vehicle>();
+    vehicles.forEach(vehicle => {
+      if (!grouped.has(vehicle.type)) {
+        grouped.set(vehicle.type, vehicle);
+      }
+    });
+    return Array.from(grouped.values());
+  }, [vehicles]);
 
   const handleSearch = () => {
     console.log('Search transfers clicked', { tripType, selectedVehicle, passengers });
@@ -172,31 +207,25 @@ export default function TransferBooking() {
             <div className="space-y-4">
               <Label className="text-sm font-medium">Type de véhicule</Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {vehicles.map((vehicle) => (
+                {vehiclesByType.map((vehicle) => (
                   <Card 
-                    key={vehicle.id}
+                    key={vehicle.type}
                     className={`cursor-pointer transition-all hover-elevate ${
-                      selectedVehicle === vehicle.id 
+                      selectedVehicle === vehicle.type 
                         ? 'ring-2 ring-primary bg-primary/5' 
                         : 'hover:shadow-md'
                     }`}
-                    onClick={() => setSelectedVehicle(vehicle.id)}
-                    data-testid={`card-vehicle-${vehicle.id}`}
+                    onClick={() => setSelectedVehicle(vehicle.type)}
+                    data-testid={`card-vehicle-${vehicle.type}`}
                   >
                     <CardContent className="p-3 text-center space-y-2">
-                      {vehicle.imageUrl ? (
-                        <div className="aspect-video bg-muted rounded-md overflow-hidden">
-                          <img 
-                            src={vehicle.imageUrl} 
-                            alt={getVehicleTypeName(vehicle.type)} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                          <span className="text-xs text-muted-foreground">{getVehicleTypeName(vehicle.type)}</span>
-                        </div>
-                      )}
+                      <div className="aspect-video bg-muted rounded-md overflow-hidden">
+                        <img 
+                          src={vehicle.imageUrl || getDefaultVehicleImage(vehicle.type)} 
+                          alt={getVehicleTypeName(vehicle.type)} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                       <h4 className="font-medium text-sm">{getVehicleTypeName(vehicle.type)}</h4>
                       <div className="flex justify-center gap-2">
                         <Badge variant="secondary" className="text-xs">
