@@ -27,11 +27,12 @@ The backend is built with Express.js following a minimalist API-first approach:
   - ObjectStorageService for managing file uploads and downloads
   - ObjectAcl for access control policies (public/private visibility)
   - Direct-to-storage uploads using presigned URLs
-- **API Routes**: Complete RESTful API endpoints for providers, vehicles, city tours, bookings, and file uploads
+- **API Routes**: Complete RESTful API endpoints for providers, vehicles, city tours, bookings, homepage content, and file uploads
   - GET /api/providers, POST /api/providers, PATCH /api/providers/:id, DELETE /api/providers/:id
   - GET /api/vehicles, POST /api/vehicles, PATCH /api/vehicles/:id, DELETE /api/vehicles/:id
   - GET /api/tours, GET /api/tours/:id, POST /api/tours, PATCH /api/tours/:id, DELETE /api/tours/:id
   - GET /api/bookings, POST /api/bookings
+  - GET /api/homepage-content, GET /api/homepage-content/:id, POST /api/homepage-content, PATCH /api/homepage-content/:id, DELETE /api/homepage-content/:id
   - POST /api/objects/upload (get presigned URL for file upload)
   - GET /objects/:objectPath (serve uploaded files)
   - GET /public-objects/:filePath (serve public assets)
@@ -43,18 +44,18 @@ All API routes include proper error handling with try/catch blocks and return ap
 ## Component Structure
 The application is organized into well-defined functional components:
 
-- **Layout Components**: Header with navigation, Hero section, Footer with company information
+- **Layout Components**: Header with navigation, Hero section with dynamic banner from database, Footer with company information
 - **Feature Components**: Transfer booking form, City tours showcase, Vehicle types display
 - **Admin Components**: Complete admin interface with tabs for managing providers, vehicles, city tours, and homepage content
   - ProvidersManagement: Manage transport providers
-  - VehiclesManagement: Manage vehicle fleet (supports 8 vehicle types: economy, comfort, business, premium, vip, suv, van, minibus)
-  - ToursManagement: Manage city tours with full itinerary support
-  - HomePageManagement: Manage homepage service badges (currently local state only, not persisted to database)
+  - VehiclesManagement: Manage vehicle fleet with photo upload (supports 8 vehicle types: economy, comfort, business, premium, vip, suv, van, minibus)
+  - ToursManagement: Manage city tours with full itinerary support and photo upload
+  - HomePageManagement: Manage homepage hero banner image and service badges (fully persisted to database)
 - **Page Components**: Home page, Admin page, Tour detail page with booking forms
 - **UI Components**: Comprehensive shadcn/ui component library with custom theming
 - **Utility Components**: Theme toggle, notification center, mobile responsiveness hooks, ObjectUploader for file uploads
 
-All public-facing components (VehicleTypes, CityTours) are connected to real backend APIs via React Query, with proper loading states and empty state handling. Mock data is used only as fallback when the database is empty.
+All public-facing components (VehicleTypes, CityTours, Hero) are connected to real backend APIs via React Query, with proper loading states and empty state handling. Mock data is used only as fallback when the database is empty.
 
 ## Design System
 The application implements a sophisticated design system with:
@@ -76,8 +77,10 @@ The application implements a comprehensive PostgreSQL schema with the following 
   - **Category Labels**: French labels for tour categories (Culturel, Gastronomique, Aventure, Historique, Nature)
   - **Difficulty Badges**: Color-coded difficulty levels (Facile/green, Modéré/yellow, Difficile/red)
 - **Tour Stops Table**: Individual stops for each tour with order, description, and duration
-- **Home Page Content Table**: Homepage content management (type, title, description, icon, order, isActive)
-  - Currently used in schema but HomePageManagement component uses local state only
+- **Home Page Content Table**: Homepage content management (type, title, description, icon, imageUrl, order, isActive)
+  - Supports two content types: hero_image (for hero banner) and service_badge (for homepage service badges)
+  - Hero banner image is dynamically loaded from database in Hero component
+  - Service badges can be managed through admin interface with full CRUD operations
 - **Bookings Table**: Customer bookings with contact details, service type (transfer/tour), pricing, and status tracking
 - **Schema Generation**: Drizzle-zod integration for type-safe schema definitions with automatic insert/select type generation
 - **Migration System**: Drizzle Kit for database schema migrations and management
