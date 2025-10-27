@@ -7,35 +7,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Users, Luggage } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { Vehicle } from "@shared/schema";
 
-interface VehicleType {
-  id: string;
-  name: string;
-  passengers: number;
-  luggage: number;
-  image: string;
-}
+const getVehicleTypeName = (type: string): string => {
+  const typeNames: Record<string, string> = {
+    economy: "Économie",
+    comfort: "Confort",
+    business: "Business",
+    premium: "Premium",
+    vip: "VIP",
+    suv: "SUV",
+    van: "Van",
+    minibus: "Minibus",
+  };
+  return typeNames[type] || type;
+};
 
 export default function TransferBooking() {
   const [tripType, setTripType] = useState("one-way");
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [passengers, setPassengers] = useState("1");
 
-  // todo: remove mock functionality
-  const vehicleTypes: VehicleType[] = [
-    { id: "economy", name: "Économie", passengers: 4, luggage: 2, image: "/api/placeholder/80/60" },
-    { id: "comfort", name: "Confort", passengers: 4, luggage: 2, image: "/api/placeholder/80/60" },
-    { id: "business", name: "Business", passengers: 4, luggage: 2, image: "/api/placeholder/80/60" },
-    { id: "premium", name: "Premium", passengers: 4, luggage: 2, image: "/api/placeholder/80/60" },
-    { id: "vip", name: "VIP", passengers: 4, luggage: 2, image: "/api/placeholder/80/60" },
-    { id: "suv", name: "SUV", passengers: 4, luggage: 2, image: "/api/placeholder/80/60" },
-    { id: "van", name: "Van", passengers: 8, luggage: 4, image: "/api/placeholder/80/60" },
-    { id: "minibus", name: "Minibus", passengers: 16, luggage: 20, image: "/api/placeholder/80/60" },
-  ];
+  const { data: vehicles = [] } = useQuery<Vehicle[]>({
+    queryKey: ["/api/vehicles", { available: true }],
+    queryFn: async () => {
+      const res = await fetch("/api/vehicles?available=true");
+      if (!res.ok) throw new Error("Failed to fetch vehicles");
+      return res.json();
+    },
+  });
 
   const handleSearch = () => {
     console.log('Search transfers clicked', { tripType, selectedVehicle, passengers });
-    // todo: remove mock functionality
   };
 
   return (
@@ -168,7 +172,7 @@ export default function TransferBooking() {
             <div className="space-y-4">
               <Label className="text-sm font-medium">Type de véhicule</Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {vehicleTypes.map((vehicle) => (
+                {vehicles.map((vehicle) => (
                   <Card 
                     key={vehicle.id}
                     className={`cursor-pointer transition-all hover-elevate ${
@@ -180,14 +184,24 @@ export default function TransferBooking() {
                     data-testid={`card-vehicle-${vehicle.id}`}
                   >
                     <CardContent className="p-3 text-center space-y-2">
-                      <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                        <span className="text-xs text-muted-foreground">{vehicle.name}</span>
-                      </div>
-                      <h4 className="font-medium text-sm">{vehicle.name}</h4>
+                      {vehicle.imageUrl ? (
+                        <div className="aspect-video bg-muted rounded-md overflow-hidden">
+                          <img 
+                            src={vehicle.imageUrl} 
+                            alt={getVehicleTypeName(vehicle.type)} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">{getVehicleTypeName(vehicle.type)}</span>
+                        </div>
+                      )}
+                      <h4 className="font-medium text-sm">{getVehicleTypeName(vehicle.type)}</h4>
                       <div className="flex justify-center gap-2">
                         <Badge variant="secondary" className="text-xs">
                           <Users className="h-3 w-3 mr-1" />
-                          {vehicle.passengers}
+                          {vehicle.capacity}
                         </Badge>
                         <Badge variant="secondary" className="text-xs">
                           <Luggage className="h-3 w-3 mr-1" />
