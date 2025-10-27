@@ -47,6 +47,24 @@ import type { UploadResult } from "@uppy/core";
 
 type VehicleFormData = z.infer<typeof insertVehicleSchema>;
 
+// Helper function to display vehicle type names
+const getVehicleTypeName = (type: string): string => {
+  const typeNames: Record<string, string> = {
+    economy: "Économie",
+    comfort: "Confort",
+    business: "Business",
+    premium: "Premium",
+    vip: "VIP",
+    suv: "SUV",
+    van: "Van",
+    minibus: "Minibus",
+    // Legacy types for backward compatibility
+    sedan: "Berline",
+    bus: "Autocar",
+  };
+  return typeNames[type] || type;
+};
+
 export default function VehiclesManagement() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -445,8 +463,8 @@ export default function VehiclesManagement() {
                       <Car className="w-5 h-5" />
                       {vehicle.name}
                     </CardTitle>
-                    <CardDescription className="capitalize">
-                      {vehicle.type}
+                    <CardDescription>
+                      {getVehicleTypeName(vehicle.type)}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-1">
