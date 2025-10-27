@@ -352,24 +352,23 @@ export default function VehiclesManagement() {
       
       // Sauvegarder les prix horaires
       for (const price of hourlyPrices) {
+        const pricePerHour = parseFloat(price.pricePerHour) || 0;
+        const minimumHours = parseInt(price.minimumHours, 10) || 4;
+        
+        const payload = {
+          seasonName: price.seasonName,
+          startDate: price.startDate,
+          endDate: price.endDate,
+          pricePerHour,
+          minimumHours,
+        };
+        
         if (price.id) {
           // Mettre à jour un prix existant
-          await apiRequest("PATCH", `/api/vehicles/hourly-prices/${price.id}`, {
-            seasonName: price.seasonName,
-            startDate: price.startDate,
-            endDate: price.endDate,
-            pricePerHour: parseFloat(price.pricePerHour),
-            minimumHours: parseInt(price.minimumHours),
-          });
+          await apiRequest("PATCH", `/api/vehicles/hourly-prices/${price.id}`, payload);
         } else {
           // Créer un nouveau prix
-          await apiRequest("POST", `/api/vehicles/${vehicleId}/hourly-prices`, {
-            seasonName: price.seasonName,
-            startDate: price.startDate,
-            endDate: price.endDate,
-            pricePerHour: parseFloat(price.pricePerHour),
-            minimumHours: parseInt(price.minimumHours),
-          });
+          await apiRequest("POST", `/api/vehicles/${vehicleId}/hourly-prices`, payload);
         }
       }
       
