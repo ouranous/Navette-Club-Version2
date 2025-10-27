@@ -17,6 +17,7 @@ import {
 } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { calculateTransferCost, calculateDisposalCost } from "./pricing";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
@@ -882,6 +883,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete content" });
+    }
+  });
+
+  // ========== PRICING CALCULATOR ==========
+  app.get("/api/pricing/transfer", async (req, res) => {
+    try {
+      const { vehicleId, distance, date } = req.query;
+      
+      if (!vehicleId || !distance || !date) {
+        return res.status(400).json({ 
+          error: "Missing required parameters: vehicleId, distance, and date are required" 
+        });
+      }
+
+      const distanceNum = parseFloat(distance as string);
+      if (isNaN(distanceNum) || distanceNum <= 0) {
+        return res.status(400).json({ error: "Invalid distance value" });
+      }
+
+      const result = await calculateTransferCost(
+        vehicleId as string,
+        distanceNum,
+        new Date(date as string)
+      );
+
+      if (!result) {
+        return res.status(404).json({ 
+          error: "No pricing information found for this vehicle and date" 
+        });
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error calculating transfer price:", error);
+      res.status(500).json({ error: "Failed to calculate price" });
+    }
+  });
+
+  app.get("/api/pricing/disposal", async (req, res) => {
+    try {
+      const { vehicleId, hours, date } = req.query;
+      
+      if (!vehicleId || !hours || !date) {
+        return res.status(400).json({ 
+          error: "Missing required parameters: vehicleId, hours, and date are required" 
+        });
+      }
+
+      const hoursNum = parseInt(hours as string, 10);
+      if (isNaN(hoursNum) || hoursNum <= 0) {
+        return res.status(400).json({ error: "Invalid hours value" });
+      }
+
+      const result = await calculateDisposalCost(
+        vehicleId as string,
+        hoursNum,
+        new Date(date as string)
+      );
+
+      if (!result) {
+        return res.status(404).json({ 
+          error: "No pricing information found for this vehicle and date" 
+        });
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error calculating disposal price:", error);
+      res.status(500).json({ error: "Failed to calculate price" });
     }
   });
 
