@@ -9,6 +9,7 @@ import {
   insertCustomerSchema,
   insertTransferBookingSchema,
   insertTourBookingSchema,
+  insertHomePageContentSchema,
 } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
@@ -456,6 +457,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error searching for public object:", error);
       return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // ========== HOMEPAGE CONTENT ==========
+  app.get("/api/homepage-content", async (req, res) => {
+    try {
+      const content = await storage.getAllHomePageContent();
+      res.json(content);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch homepage content" });
+    }
+  });
+
+  app.get("/api/homepage-content/:id", async (req, res) => {
+    try {
+      const content = await storage.getHomePageContent(req.params.id);
+      if (!content) {
+        return res.status(404).json({ error: "Content not found" });
+      }
+      res.json(content);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch content" });
+    }
+  });
+
+  app.post("/api/homepage-content", async (req, res) => {
+    try {
+      const validatedData = insertHomePageContentSchema.parse(req.body);
+      const content = await storage.createHomePageContent(validatedData);
+      res.status(201).json(content);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid content data", details: error });
+    }
+  });
+
+  app.patch("/api/homepage-content/:id", async (req, res) => {
+    try {
+      const validatedData = insertHomePageContentSchema.partial().parse(req.body);
+      const content = await storage.updateHomePageContent(req.params.id, validatedData);
+      if (!content) {
+        return res.status(404).json({ error: "Content not found" });
+      }
+      res.json(content);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid content data", details: error });
+    }
+  });
+
+  app.delete("/api/homepage-content/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteHomePageContent(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Content not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete content" });
     }
   });
 

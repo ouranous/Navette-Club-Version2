@@ -1,23 +1,44 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Star, Shield, Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { HomePageContent } from "@shared/schema";
 
 export default function Hero() {
+  // Fetch hero image from database
+  const { data: allContent = [] } = useQuery<HomePageContent[]>({
+    queryKey: ["/api/homepage-content"],
+  });
+
+  const heroImage = allContent.find((item) => item.type === "hero_image" && item.isActive);
+  const defaultHeroImage = "https://images.unsplash.com/photo-1601116933440-a35bc48e6f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80";
+
   const handleBookTransfer = () => {
-    console.log('Book transfer clicked');
-    // todo: remove mock functionality
+    // Scroll to transfer booking section
+    const transferSection = document.getElementById("transfer-booking");
+    if (transferSection) {
+      transferSection.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const handleExploreTours = () => {
-    console.log('Explore tours clicked');
-    // todo: remove mock functionality
+    // Scroll to city tours section
+    const toursSection = document.getElementById("city-tours");
+    if (toursSection) {
+      toursSection.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
     <section className="relative min-h-screen flex items-center">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-background/50">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1601116933440-a35bc48e6f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2069&q=80')] bg-cover bg-center opacity-30"></div>
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-30"
+          style={{
+            backgroundImage: `url(${heroImage?.imageUrl || defaultHeroImage})`
+          }}
+        ></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">

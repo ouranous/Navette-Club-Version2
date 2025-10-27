@@ -8,6 +8,7 @@ import {
   customers,
   transferBookings,
   tourBookings,
+  homePageContent,
   type User,
   type InsertUser,
   type Provider,
@@ -24,6 +25,8 @@ import {
   type InsertTransferBooking,
   type TourBooking,
   type InsertTourBooking,
+  type HomePageContent,
+  type InsertHomePageContent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -86,6 +89,13 @@ export interface IStorage {
   getTourBookingsByTour(tourId: string): Promise<TourBooking[]>;
   createTourBooking(booking: InsertTourBooking): Promise<TourBooking>;
   updateTourBooking(id: string, booking: Partial<InsertTourBooking>): Promise<TourBooking | undefined>;
+
+  // Home Page Content
+  getAllHomePageContent(): Promise<HomePageContent[]>;
+  getHomePageContent(id: string): Promise<HomePageContent | undefined>;
+  createHomePageContent(content: InsertHomePageContent): Promise<HomePageContent>;
+  updateHomePageContent(id: string, content: Partial<InsertHomePageContent>): Promise<HomePageContent | undefined>;
+  deleteHomePageContent(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -348,6 +358,35 @@ export class DatabaseStorage implements IStorage {
       .where(eq(tourBookings.id, id))
       .returning();
     return updated || undefined;
+  }
+
+  // Home Page Content
+  async getAllHomePageContent(): Promise<HomePageContent[]> {
+    return await db.select().from(homePageContent).orderBy(homePageContent.order, homePageContent.createdAt);
+  }
+
+  async getHomePageContent(id: string): Promise<HomePageContent | undefined> {
+    const [content] = await db.select().from(homePageContent).where(eq(homePageContent.id, id));
+    return content || undefined;
+  }
+
+  async createHomePageContent(content: InsertHomePageContent): Promise<HomePageContent> {
+    const [created] = await db.insert(homePageContent).values(content).returning();
+    return created;
+  }
+
+  async updateHomePageContent(id: string, content: Partial<InsertHomePageContent>): Promise<HomePageContent | undefined> {
+    const [updated] = await db
+      .update(homePageContent)
+      .set({ ...content, updatedAt: new Date() })
+      .where(eq(homePageContent.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteHomePageContent(id: string): Promise<boolean> {
+    const result = await db.delete(homePageContent).where(eq(homePageContent.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
   }
 }
 
