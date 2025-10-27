@@ -12,14 +12,15 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Car, MapIcon, Route, List } from "lucide-react";
+import { Building2, Car, MapIcon, Route, List, Home } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import ProvidersManagement from "@/components/admin/ProvidersManagement";
 import VehiclesManagement from "@/components/admin/VehiclesManagement";
 import ToursManagement from "@/components/admin/ToursManagement";
+import HomePageManagement from "@/components/admin/HomePageManagement";
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState("providers");
+  const [activeTab, setActiveTab] = useState("homepage");
 
   const sidebarStyle = {
     "--sidebar-width": "16rem",
@@ -35,6 +36,17 @@ export default function AdminPage() {
               <SidebarGroupLabel>NavetteClub Admin</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => setActiveTab("homepage")}
+                      isActive={activeTab === "homepage"}
+                      data-testid="button-nav-homepage"
+                    >
+                      <Home className="w-4 h-4" />
+                      <span>Page d'Accueil</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       onClick={() => setActiveTab("providers")}
@@ -86,6 +98,10 @@ export default function AdminPage() {
 
           <main className="flex-1 overflow-auto p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsContent value="homepage" className="mt-0">
+                <HomePageManagement />
+              </TabsContent>
+
               <TabsContent value="providers" className="mt-0">
                 <ProvidersManagement />
               </TabsContent>

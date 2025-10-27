@@ -90,6 +90,20 @@ export const tourStops = pgTable("tour_stops", {
   imageUrl: text("image_url"),
 });
 
+// Home Page Content - Gestion du contenu de la page d'accueil
+export const homePageContent = pgTable("home_page_content", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(), // "hero_image", "service_badge", "feature"
+  title: text("title"),
+  description: text("description"),
+  icon: text("icon"), // nom de l'icône lucide-react
+  imageUrl: text("image_url"),
+  order: integer("order").notNull().default(0), // ordre d'affichage
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Customers - Informations clients
 export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -242,6 +256,12 @@ export const insertTourBookingSchema = createInsertSchema(tourBookings).omit({
   updatedAt: true,
 });
 
+export const insertHomePageContentSchema = createInsertSchema(homePageContent).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -266,3 +286,6 @@ export type InsertTransferBooking = z.infer<typeof insertTransferBookingSchema>;
 
 export type TourBooking = typeof tourBookings.$inferSelect;
 export type InsertTourBooking = z.infer<typeof insertTourBookingSchema>;
+
+export type HomePageContent = typeof homePageContent.$inferSelect;
+export type InsertHomePageContent = z.infer<typeof insertHomePageContentSchema>;
