@@ -62,6 +62,7 @@ export const cityTours = pgTable("city_tours", {
   minParticipants: integer("min_participants").default(2),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   priceChild: decimal("price_child", { precision: 10, scale: 2 }),
+  highlights: text("highlights").array(), // Points forts du tour
   included: text("included").array(), // ["Guide francophone", "Entrées monuments"]
   excluded: text("excluded").array(), // ["Repas", "Pourboires"]
   meetingPoint: text("meeting_point").notNull(),

@@ -76,6 +76,7 @@ export default function ToursManagement() {
       minParticipants: 2,
       price: "50",
       priceChild: "25",
+      highlights: [],
       included: [],
       excluded: [],
       meetingPoint: "",
@@ -148,6 +149,7 @@ export default function ToursManagement() {
       minParticipants: tour.minParticipants || 2,
       price: tour.price || "0",
       priceChild: tour.priceChild || undefined,
+      highlights: tour.highlights || [],
       included: tour.included || [],
       excluded: tour.excluded || [],
       meetingPoint: tour.meetingPoint,
@@ -446,6 +448,33 @@ export default function ToursManagement() {
                           data-testid="input-meeting-point"
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="highlights"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Points forts</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          value={field.value?.join('\n') || ''}
+                          onChange={(e) => {
+                            const lines = e.target.value.split('\n').filter(line => line.trim());
+                            field.onChange(lines);
+                          }}
+                          placeholder="Entrez un point fort par ligne&#10;Ex: Nuit dans le désert&#10;Villages troglodytes&#10;Ksour traditionnels"
+                          rows={4}
+                          data-testid="textarea-highlights"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Entrez un point fort par ligne
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
