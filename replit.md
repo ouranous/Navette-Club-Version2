@@ -54,7 +54,12 @@ The application is organized into well-defined functional components:
 - **Admin Components**: Complete admin interface with tabs for managing providers, vehicles, city tours, and homepage content
   - ProvidersManagement: Manage transport providers
   - VehiclesManagement: Manage vehicle fleet with photo upload (supports 8 vehicle types: economy, comfort, business, premium, vip, suv, van, minibus)
-  - ToursManagement: Manage city tours with full itinerary support and photo upload
+  - ToursManagement: Modern 3-step tour creation interface with live preview panel
+    - **Visual Selectors** (TourVisualSelectors.tsx): Icon-based category/difficulty chips with colors
+    - **Highlight Composer** (HighlightComposer.tsx): Drag & drop highlight management with 6 pre-defined templates and 7 icon options
+    - **Layout**: 2-column design with real-time preview (40%) and stepper form (60%)
+    - **Steps**: Concept (identity & image) → Détails (description & highlights) → Logistique (pricing & settings)
+    - **Preview**: Live TourPreviewCard with hero image, gradient overlay, badges, and metadata
   - HomePageManagement: Manage homepage hero banner image and service badges (fully persisted to database)
 - **Page Components**: Home page, Admin page, Tour detail page with booking forms
 - **UI Components**: Comprehensive shadcn/ui component library with custom theming
@@ -104,7 +109,10 @@ The application implements a comprehensive PostgreSQL schema with the following 
 - **City Tours Table**: City tour programs with detailed descriptions, itineraries, pricing, duration, capacity, and booking constraints
   - **Category Labels**: French labels for tour categories (Culturel, Gastronomique, Aventure, Historique, Nature)
   - **Difficulty Badges**: Color-coded difficulty levels (Facile/green, Modéré/yellow, Difficile/red)
-  - **Highlights Field**: Text array (`text[]`) storing key selling points of each tour, managed via textarea in admin interface (one per line)
+  - **Highlights Field**: Text array (`text[]`) storing key selling points with optional icons in format "icon::text" (e.g., "sparkles::Expérience unique")
+    - Managed via HighlightComposer with drag & drop reordering
+    - 6 pre-defined templates for quick start (cultural, photo stops, coffee breaks, artisan meetings, VIP experiences, secret districts)
+    - 7 icon options available (sparkles, camera, coffee, landmark, users, map, award)
   - **Featured Field**: Boolean flag to distinguish between "City Tours Exclusifs" (`featured=false`) and "Circuits Incontournables de Tunisie" (`featured=true`)
 - **Tour Stops Table**: Individual stops for each tour with order, description, and duration
 - **Home Page Content Table**: Homepage content management (type, title, description, icon, imageUrl, order, isActive)
