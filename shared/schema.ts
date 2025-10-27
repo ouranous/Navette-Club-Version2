@@ -51,7 +51,7 @@ export const vehicles = pgTable("vehicles", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Vehicle Seasonal Prices - Prix saisonniers des véhicules
+// Vehicle Seasonal Prices - Prix saisonniers des véhicules (tarification au kilomètre)
 export const vehicleSeasonalPrices = pgTable("vehicle_seasonal_prices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   vehicleId: varchar("vehicle_id").notNull().references(() => vehicles.id, { onDelete: "cascade" }),
@@ -60,6 +60,18 @@ export const vehicleSeasonalPrices = pgTable("vehicle_seasonal_prices", {
   endDate: text("end_date").notNull(), // Format: "MM-DD" (ex: "08-31" pour 31 août)
   basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
   pricePerKm: decimal("price_per_km", { precision: 10, scale: 2 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Vehicle Hourly Prices - Prix saisonniers des véhicules (tarification horaire pour mise à disposition)
+export const vehicleHourlyPrices = pgTable("vehicle_hourly_prices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vehicleId: varchar("vehicle_id").notNull().references(() => vehicles.id, { onDelete: "cascade" }),
+  seasonName: text("season_name").notNull(), // "Basse saison", "Haute saison", "Période de fête"
+  startDate: text("start_date").notNull(), // Format: "MM-DD" (ex: "06-01" pour 1er juin)
+  endDate: text("end_date").notNull(), // Format: "MM-DD" (ex: "08-31" pour 31 août)
+  pricePerHour: decimal("price_per_hour", { precision: 10, scale: 2 }).notNull(), // Prix horaire
+  minimumHours: integer("minimum_hours").default(4), // Durée minimale de location (4h par défaut)
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -184,11 +196,19 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   }),
   bookings: many(transferBookings),
   seasonalPrices: many(vehicleSeasonalPrices),
+  hourlyPrices: many(vehicleHourlyPrices),
 }));
 
 export const vehicleSeasonalPricesRelations = relations(vehicleSeasonalPrices, ({ one }) => ({
   vehicle: one(vehicles, {
     fields: [vehicleSeasonalPrices.vehicleId],
+    references: [vehicles.id],
+  }),
+}));
+
+export const vehicleHourlyPricesRelations = relations(vehicleHourlyPrices, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [vehicleHourlyPrices.vehicleId],
     references: [vehicles.id],
   }),
 }));
@@ -294,6 +314,11 @@ export const insertVehicleSeasonalPriceSchema = createInsertSchema(vehicleSeason
   createdAt: true,
 });
 
+export const insertVehicleHourlyPriceSchema = createInsertSchema(vehicleHourlyPrices).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -324,3 +349,6 @@ export type InsertHomePageContent = z.infer<typeof insertHomePageContentSchema>;
 
 export type VehicleSeasonalPrice = typeof vehicleSeasonalPrices.$inferSelect;
 export type InsertVehicleSeasonalPrice = z.infer<typeof insertVehicleSeasonalPriceSchema>;
+
+export type VehicleHourlyPrice = typeof vehicleHourlyPrices.$inferSelect;
+export type InsertVehicleHourlyPrice = z.infer<typeof insertVehicleHourlyPriceSchema>;
