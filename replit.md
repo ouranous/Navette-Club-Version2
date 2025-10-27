@@ -15,11 +15,13 @@ The frontend is a React 18 single-page application built with TypeScript and Vit
 - **React Query**: For server state management.
 - **Tailwind CSS**: For styling with a comprehensive design system supporting light/dark themes.
 - **React Hook Form with Zod**: For type-safe form handling and validation.
+- **Replit Auth**: User authentication with Google, GitHub, X, Apple, and email/password via `useAuth` hook.
 
 ## Backend
 The backend is an Express.js application with TypeScript, designed with an API-first approach. It features:
 - **Express.js**: As the server framework.
 - **Drizzle ORM**: For PostgreSQL database integration.
+- **Replit Auth**: OpenID Connect authentication with session management, user upsert, and protected routes via `isAuthenticated` middleware.
 - **Replit Object Storage (via Google Cloud Storage)**: For photo uploads, including presigned URLs and path normalization.
 - **RESTful API**: Endpoints for managing providers, vehicles, city tours, bookings, and homepage content.
 - **Zod**: For request body validation.
@@ -38,11 +40,17 @@ A professional design system is implemented with:
 
 ## Database Schema
 A PostgreSQL schema includes tables for:
+- **Users**: Replit Auth integration with id, email, firstName, lastName, profileImageUrl, role (user/admin). OAuth login via OpenID Connect.
+- **Sessions**: Passport session storage for authenticated users.
 - **Providers**: Transport providers.
 - **Vehicles**: Fleet management with capacity, features, and availability, supporting 8 types. Includes `Vehicle Seasonal Prices` and `Vehicle Hourly Prices` tables for flexible pricing.
 - **City Tours**: Detailed tour programs with descriptions, itineraries, pricing, categories, difficulty levels, and a `Highlights` field for key selling points.
 - **Home Page Content**: Manages hero banner images and service badges.
-- **Bookings**: Customer booking details.
+- **Transfer Bookings**: Point-to-point transfers with customer, vehicle, locations, pricing, and payment intent linkage.
+- **Disposal Bookings**: Hourly vehicle rentals (mise à disposition) with duration-based pricing.
+- **Tour Bookings**: City tour reservations with participants and payment tracking.
+- **Payment Intents**: KONNECT payment tracking with booking linkage, status, and metadata.
+- **Customers**: Customer information for bookings.
 - **Drizzle-zod**: For type-safe schema definitions and migrations via Drizzle Kit.
 
 # External Dependencies

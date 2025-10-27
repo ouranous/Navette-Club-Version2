@@ -9,10 +9,13 @@ import {
   tourStops,
   customers,
   transferBookings,
+  disposalBookings,
   tourBookings,
+  paymentIntents,
   homePageContent,
   type User,
   type InsertUser,
+  type UpsertUser,
   type Provider,
   type InsertProvider,
   type Vehicle,
@@ -29,8 +32,12 @@ import {
   type InsertCustomer,
   type TransferBooking,
   type InsertTransferBooking,
+  type DisposalBooking,
+  type InsertDisposalBooking,
   type TourBooking,
   type InsertTourBooking,
+  type PaymentIntent,
+  type InsertPaymentIntent,
   type HomePageContent,
   type InsertHomePageContent,
 } from "@shared/schema";
@@ -38,10 +45,9 @@ import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
-  // Users
+  // Users (Replit Auth integration)
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Providers
   getAllProviders(): Promise<Provider[]>;
@@ -104,6 +110,13 @@ export interface IStorage {
   createTransferBooking(booking: InsertTransferBooking): Promise<TransferBooking>;
   updateTransferBooking(id: string, booking: Partial<InsertTransferBooking>): Promise<TransferBooking | undefined>;
   
+  // Disposal Bookings (Mise à disposition)
+  getAllDisposalBookings(): Promise<DisposalBooking[]>;
+  getDisposalBooking(id: string): Promise<DisposalBooking | undefined>;
+  getDisposalBookingsByCustomer(customerId: string): Promise<DisposalBooking[]>;
+  createDisposalBooking(booking: InsertDisposalBooking): Promise<DisposalBooking>;
+  updateDisposalBooking(id: string, booking: Partial<InsertDisposalBooking>): Promise<DisposalBooking | undefined>;
+  
   // Tour Bookings
   getAllTourBookings(): Promise<TourBooking[]>;
   getTourBooking(id: string): Promise<TourBooking | undefined>;
@@ -111,6 +124,13 @@ export interface IStorage {
   getTourBookingsByTour(tourId: string): Promise<TourBooking[]>;
   createTourBooking(booking: InsertTourBooking): Promise<TourBooking>;
   updateTourBooking(id: string, booking: Partial<InsertTourBooking>): Promise<TourBooking | undefined>;
+
+  // Payment Intents (KONNECT)
+  getAllPaymentIntents(): Promise<PaymentIntent[]>;
+  getPaymentIntent(id: string): Promise<PaymentIntent | undefined>;
+  getPaymentIntentByReference(paymentRef: string): Promise<PaymentIntent | undefined>;
+  createPaymentIntent(intent: InsertPaymentIntent): Promise<PaymentIntent>;
+  updatePaymentIntent(id: string, intent: Partial<InsertPaymentIntent>): Promise<PaymentIntent | undefined>;
 
   // Home Page Content
   getAllHomePageContent(): Promise<HomePageContent[]>;
@@ -121,21 +141,23 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // Users
+  // Users (Replit Auth integration)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values({ ...insertUser, role: "admin" })
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
       .returning();
     return user;
   }
@@ -466,6 +488,67 @@ export class DatabaseStorage implements IStorage {
       .update(tourBookings)
       .set({ ...booking, updatedAt: new Date() })
       .where(eq(tourBookings.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Disposal Bookings (Mise à disposition)
+  async getAllDisposalBookings(): Promise<DisposalBooking[]> {
+    return await db.select().from(disposalBookings).orderBy(desc(disposalBookings.createdAt));
+  }
+
+  async getDisposalBooking(id: string): Promise<DisposalBooking | undefined> {
+    const [booking] = await db.select().from(disposalBookings).where(eq(disposalBookings.id, id));
+    return booking || undefined;
+  }
+
+  async getDisposalBookingsByCustomer(customerId: string): Promise<DisposalBooking[]> {
+    return await db
+      .select()
+      .from(disposalBookings)
+      .where(eq(disposalBookings.customerId, customerId))
+      .orderBy(desc(disposalBookings.createdAt));
+  }
+
+  async createDisposalBooking(booking: InsertDisposalBooking): Promise<DisposalBooking> {
+    const [created] = await db.insert(disposalBookings).values(booking).returning();
+    return created;
+  }
+
+  async updateDisposalBooking(id: string, booking: Partial<InsertDisposalBooking>): Promise<DisposalBooking | undefined> {
+    const [updated] = await db
+      .update(disposalBookings)
+      .set({ ...booking, updatedAt: new Date() })
+      .where(eq(disposalBookings.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Payment Intents (KONNECT)
+  async getAllPaymentIntents(): Promise<PaymentIntent[]> {
+    return await db.select().from(paymentIntents).orderBy(desc(paymentIntents.createdAt));
+  }
+
+  async getPaymentIntent(id: string): Promise<PaymentIntent | undefined> {
+    const [intent] = await db.select().from(paymentIntents).where(eq(paymentIntents.id, id));
+    return intent || undefined;
+  }
+
+  async getPaymentIntentByReference(paymentRef: string): Promise<PaymentIntent | undefined> {
+    const [intent] = await db.select().from(paymentIntents).where(eq(paymentIntents.paymentRef, paymentRef));
+    return intent || undefined;
+  }
+
+  async createPaymentIntent(intent: InsertPaymentIntent): Promise<PaymentIntent> {
+    const [created] = await db.insert(paymentIntents).values(intent).returning();
+    return created;
+  }
+
+  async updatePaymentIntent(id: string, intent: Partial<InsertPaymentIntent>): Promise<PaymentIntent | undefined> {
+    const [updated] = await db
+      .update(paymentIntents)
+      .set({ ...intent, updatedAt: new Date() })
+      .where(eq(paymentIntents.id, id))
       .returning();
     return updated || undefined;
   }

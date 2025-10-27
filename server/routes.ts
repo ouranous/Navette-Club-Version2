@@ -10,12 +10,31 @@ import {
   insertTourStopSchema,
   insertCustomerSchema,
   insertTransferBookingSchema,
+  insertDisposalBookingSchema,
   insertTourBookingSchema,
+  insertPaymentIntentSchema,
   insertHomePageContentSchema,
 } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit Auth
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+
   // ========== PROVIDERS ==========
   app.get("/api/providers", async (req, res) => {
     try {
@@ -594,6 +613,218 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error searching for public object:", error);
       return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // ========== CUSTOMERS ==========
+  app.get("/api/customers", async (req, res) => {
+    try {
+      const customers = await storage.getAllCustomers();
+      res.json(customers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch customers" });
+    }
+  });
+
+  app.get("/api/customers/:id", async (req, res) => {
+    try {
+      const customer = await storage.getCustomer(req.params.id);
+      if (!customer) {
+        return res.status(404).json({ error: "Customer not found" });
+      }
+      res.json(customer);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch customer" });
+    }
+  });
+
+  app.post("/api/customers", async (req, res) => {
+    try {
+      const validatedData = insertCustomerSchema.parse(req.body);
+      const customer = await storage.createCustomer(validatedData);
+      res.status(201).json(customer);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid customer data", details: error });
+    }
+  });
+
+  // ========== TRANSFER BOOKINGS ==========
+  app.get("/api/transfer-bookings", isAuthenticated, async (req, res) => {
+    try {
+      const bookings = await storage.getAllTransferBookings();
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transfer bookings" });
+    }
+  });
+
+  app.get("/api/transfer-bookings/:id", isAuthenticated, async (req, res) => {
+    try {
+      const booking = await storage.getTransferBooking(req.params.id);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch booking" });
+    }
+  });
+
+  app.post("/api/transfer-bookings", async (req, res) => {
+    try {
+      const validatedData = insertTransferBookingSchema.parse(req.body);
+      const booking = await storage.createTransferBooking(validatedData);
+      res.status(201).json(booking);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid booking data", details: error });
+    }
+  });
+
+  app.patch("/api/transfer-bookings/:id", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertTransferBookingSchema.partial().parse(req.body);
+      const booking = await storage.updateTransferBooking(req.params.id, validatedData);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid booking data", details: error });
+    }
+  });
+
+  // ========== DISPOSAL BOOKINGS ==========
+  app.get("/api/disposal-bookings", isAuthenticated, async (req, res) => {
+    try {
+      const bookings = await storage.getAllDisposalBookings();
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch disposal bookings" });
+    }
+  });
+
+  app.get("/api/disposal-bookings/:id", isAuthenticated, async (req, res) => {
+    try {
+      const booking = await storage.getDisposalBooking(req.params.id);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch booking" });
+    }
+  });
+
+  app.post("/api/disposal-bookings", async (req, res) => {
+    try {
+      const validatedData = insertDisposalBookingSchema.parse(req.body);
+      const booking = await storage.createDisposalBooking(validatedData);
+      res.status(201).json(booking);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid booking data", details: error });
+    }
+  });
+
+  app.patch("/api/disposal-bookings/:id", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertDisposalBookingSchema.partial().parse(req.body);
+      const booking = await storage.updateDisposalBooking(req.params.id, validatedData);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid booking data", details: error });
+    }
+  });
+
+  // ========== TOUR BOOKINGS ==========
+  app.get("/api/tour-bookings", isAuthenticated, async (req, res) => {
+    try {
+      const bookings = await storage.getAllTourBookings();
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch tour bookings" });
+    }
+  });
+
+  app.get("/api/tour-bookings/:id", isAuthenticated, async (req, res) => {
+    try {
+      const booking = await storage.getTourBooking(req.params.id);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch booking" });
+    }
+  });
+
+  app.post("/api/tour-bookings", async (req, res) => {
+    try {
+      const validatedData = insertTourBookingSchema.parse(req.body);
+      const booking = await storage.createTourBooking(validatedData);
+      res.status(201).json(booking);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid booking data", details: error });
+    }
+  });
+
+  app.patch("/api/tour-bookings/:id", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertTourBookingSchema.partial().parse(req.body);
+      const booking = await storage.updateTourBooking(req.params.id, validatedData);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid booking data", details: error });
+    }
+  });
+
+  // ========== PAYMENT INTENTS ==========
+  app.get("/api/payment-intents", isAuthenticated, async (req, res) => {
+    try {
+      const intents = await storage.getAllPaymentIntents();
+      res.json(intents);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch payment intents" });
+    }
+  });
+
+  app.get("/api/payment-intents/:id", isAuthenticated, async (req, res) => {
+    try {
+      const intent = await storage.getPaymentIntent(req.params.id);
+      if (!intent) {
+        return res.status(404).json({ error: "Payment intent not found" });
+      }
+      res.json(intent);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch payment intent" });
+    }
+  });
+
+  app.post("/api/payment-intents", async (req, res) => {
+    try {
+      const validatedData = insertPaymentIntentSchema.parse(req.body);
+      const intent = await storage.createPaymentIntent(validatedData);
+      res.status(201).json(intent);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid payment intent data", details: error });
+    }
+  });
+
+  app.patch("/api/payment-intents/:id", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertPaymentIntentSchema.partial().parse(req.body);
+      const intent = await storage.updatePaymentIntent(req.params.id, validatedData);
+      if (!intent) {
+        return res.status(404).json({ error: "Payment intent not found" });
+      }
+      res.json(intent);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid payment intent data", details: error });
     }
   });
 
