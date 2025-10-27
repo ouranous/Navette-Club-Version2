@@ -31,6 +31,8 @@ The backend is built with Express.js following a minimalist API-first approach:
   - GET /api/providers, POST /api/providers, PATCH /api/providers/:id, DELETE /api/providers/:id
   - GET /api/vehicles, POST /api/vehicles, PATCH /api/vehicles/:id, DELETE /api/vehicles/:id
     - Supports `?available=true` query parameter to filter available vehicles
+  - Vehicle Seasonal Prices: GET/POST /api/vehicles/:vehicleId/seasonal-prices, PATCH/DELETE /api/vehicles/seasonal-prices/:id
+  - Vehicle Hourly Prices: GET/POST /api/vehicles/:vehicleId/hourly-prices, PATCH/DELETE /api/vehicles/hourly-prices/:id
   - GET /api/tours, GET /api/tours/:id, POST /api/tours, PATCH /api/tours/:id, DELETE /api/tours/:id
     - Supports `?active=true`, `?featured=true`, `?featured=false` query parameters
     - Can combine filters: `?active=true&featured=true` for featured active tours
@@ -85,12 +87,20 @@ The application implements a comprehensive PostgreSQL schema with the following 
   - French labels displayed in UI: Économie, Confort, Business, Premium, VIP, SUV, Van, Minibus
   - **Vehicle Fields**: Separated `brand` and `model` fields (both NOT NULL), plus `licensePlate` and `driver` fields for management
   - **Name Auto-generation**: The `name` field is auto-generated in backend as `${brand} ${model}` for backward compatibility
-- **Vehicle Seasonal Prices Table**: Seasonal pricing periods for vehicles with date ranges and adjusted rates
+- **Vehicle Seasonal Prices Table**: Seasonal pricing periods for vehicles with date ranges and adjusted rates (per-kilometer pricing for transfers)
   - **Structure**: vehicleId (foreign key with CASCADE delete), seasonName, startDate (MM-DD format), endDate (MM-DD format), basePrice, pricePerKm
   - **CRUD Operations**: Full create/read/update/delete support via API endpoints
   - **UI Integration**: Seasonal prices managed in VehiclesManagement admin interface with add/edit/delete functionality
   - **Delete Persistence**: Frontend tracks original price IDs and issues DELETE requests for removed prices to ensure database integrity
   - **API Routes**: GET/POST /api/vehicles/:vehicleId/seasonal-prices, PATCH/DELETE /api/vehicles/seasonal-prices/:id
+- **Vehicle Hourly Prices Table**: Seasonal hourly pricing for vehicle rentals (mise à disposition)
+  - **Structure**: vehicleId (foreign key with CASCADE delete), seasonName, startDate (MM-DD format), endDate (MM-DD format), pricePerHour (decimal), minimumHours (integer, default 4)
+  - **Purpose**: Dedicated pricing system for hourly vehicle rentals (mise à disposition) separate from per-kilometer transfers
+  - **CRUD Operations**: Full create/read/update/delete support via API endpoints
+  - **UI Integration**: Hourly prices managed in separate section of VehiclesManagement admin interface
+  - **Data Validation**: Robust conversion of numeric fields (parseFloat/parseInt with fallback defaults) to prevent validation errors
+  - **Delete Persistence**: Frontend tracks original price IDs and issues DELETE requests for removed prices
+  - **API Routes**: GET/POST /api/vehicles/:vehicleId/hourly-prices, PATCH/DELETE /api/vehicles/hourly-prices/:id
 - **City Tours Table**: City tour programs with detailed descriptions, itineraries, pricing, duration, capacity, and booking constraints
   - **Category Labels**: French labels for tour categories (Culturel, Gastronomique, Aventure, Historique, Nature)
   - **Difficulty Badges**: Color-coded difficulty levels (Facile/green, Modéré/yellow, Difficile/red)
