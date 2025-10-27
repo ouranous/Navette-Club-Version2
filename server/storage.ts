@@ -4,6 +4,7 @@ import {
   providers,
   vehicles,
   vehicleSeasonalPrices,
+  vehicleHourlyPrices,
   cityTours, 
   tourStops,
   customers,
@@ -18,6 +19,8 @@ import {
   type InsertVehicle,
   type VehicleSeasonalPrice,
   type InsertVehicleSeasonalPrice,
+  type VehicleHourlyPrice,
+  type InsertVehicleHourlyPrice,
   type CityTour,
   type InsertCityTour,
   type TourStop,
@@ -61,6 +64,12 @@ export interface IStorage {
   createVehicleSeasonalPrice(price: InsertVehicleSeasonalPrice): Promise<VehicleSeasonalPrice>;
   updateVehicleSeasonalPrice(id: string, price: Partial<InsertVehicleSeasonalPrice>): Promise<VehicleSeasonalPrice | undefined>;
   deleteVehicleSeasonalPrice(id: string): Promise<boolean>;
+  
+  // Vehicle Hourly Prices
+  getVehicleHourlyPrices(vehicleId: string): Promise<VehicleHourlyPrice[]>;
+  createVehicleHourlyPrice(price: InsertVehicleHourlyPrice): Promise<VehicleHourlyPrice>;
+  updateVehicleHourlyPrice(id: string, price: Partial<InsertVehicleHourlyPrice>): Promise<VehicleHourlyPrice | undefined>;
+  deleteVehicleHourlyPrice(id: string): Promise<boolean>;
   
   // City Tours
   getAllTours(): Promise<CityTour[]>;
@@ -229,6 +238,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteVehicleSeasonalPrice(id: string): Promise<boolean> {
     const result = await db.delete(vehicleSeasonalPrices).where(eq(vehicleSeasonalPrices.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Vehicle Hourly Prices
+  async getVehicleHourlyPrices(vehicleId: string): Promise<VehicleHourlyPrice[]> {
+    return await db
+      .select()
+      .from(vehicleHourlyPrices)
+      .where(eq(vehicleHourlyPrices.vehicleId, vehicleId))
+      .orderBy(vehicleHourlyPrices.startDate);
+  }
+
+  async createVehicleHourlyPrice(price: InsertVehicleHourlyPrice): Promise<VehicleHourlyPrice> {
+    const [created] = await db.insert(vehicleHourlyPrices).values(price).returning();
+    return created;
+  }
+
+  async updateVehicleHourlyPrice(id: string, price: Partial<InsertVehicleHourlyPrice>): Promise<VehicleHourlyPrice | undefined> {
+    const [updated] = await db
+      .update(vehicleHourlyPrices)
+      .set(price)
+      .where(eq(vehicleHourlyPrices.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteVehicleHourlyPrice(id: string): Promise<boolean> {
+    const result = await db.delete(vehicleHourlyPrices).where(eq(vehicleHourlyPrices.id, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
