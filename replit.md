@@ -21,17 +21,29 @@ The application uses a modern React 18 setup with TypeScript and Vite for develo
 The backend is built with Express.js following a minimalist API-first approach:
 
 - **Server Framework**: Express.js with TypeScript for type safety
-- **Database Integration**: Drizzle ORM configured for PostgreSQL with migrations support
-- **Storage Layer**: Abstracted storage interface with in-memory implementation for development
+- **Database Integration**: Drizzle ORM configured for PostgreSQL with full production database support
+- **Storage Layer**: Abstracted storage interface with PostgreSQL implementation for production use
+- **API Routes**: Complete RESTful API endpoints for providers, vehicles, city tours, and bookings
+  - GET /api/providers, POST /api/providers, PATCH /api/providers/:id, DELETE /api/providers/:id
+  - GET /api/vehicles, POST /api/vehicles, PATCH /api/vehicles/:id, DELETE /api/vehicles/:id
+  - GET /api/tours, GET /api/tours/:id, POST /api/tours, PATCH /api/tours/:id, DELETE /api/tours/:id
+  - GET /api/bookings, POST /api/bookings
+- **Validation**: All request bodies validated using Zod schemas before database operations
 - **Development Setup**: Vite middleware integration for seamless development experience
+
+All API routes include proper error handling with try/catch blocks and return appropriate HTTP status codes (200/201 for success, 500 for errors).
 
 ## Component Structure
 The application is organized into well-defined functional components:
 
 - **Layout Components**: Header with navigation, Hero section, Footer with company information
 - **Feature Components**: Transfer booking form, City tours showcase, Vehicle types display
+- **Admin Components**: Complete admin interface with tabs for managing providers, vehicles, and city tours (ProvidersManagement, VehiclesManagement, ToursManagement)
+- **Page Components**: Home page, Admin page, Tour detail page with booking forms
 - **UI Components**: Comprehensive shadcn/ui component library with custom theming
 - **Utility Components**: Theme toggle, notification center, mobile responsiveness hooks
+
+All public-facing components (VehicleTypes, CityTours) are connected to real backend APIs via React Query, with proper loading states and empty state handling. Mock data is used only as fallback when the database is empty.
 
 ## Design System
 The application implements a sophisticated design system with:
@@ -42,11 +54,17 @@ The application implements a sophisticated design system with:
 - **Responsive Design**: Mobile-first approach with Tailwind breakpoints
 
 ## Database Schema
-Currently implements a basic user management schema with:
+The application implements a comprehensive PostgreSQL schema with the following tables:
 
-- **Users Table**: Basic user authentication structure with username/password fields
-- **Schema Generation**: Drizzle-zod integration for type-safe schema definitions
+- **Providers Table**: Transport providers (rental companies, travel agencies) with contact information and location data
+- **Vehicles Table**: Vehicle fleet with capacity, luggage space, pricing (base price and per-km), features, and availability status
+- **City Tours Table**: City tour programs with detailed descriptions, itineraries, pricing, duration, capacity, and booking constraints
+- **Tour Stops Table**: Individual stops for each tour with order, description, and duration
+- **Bookings Table**: Customer bookings with contact details, service type (transfer/tour), pricing, and status tracking
+- **Schema Generation**: Drizzle-zod integration for type-safe schema definitions with automatic insert/select type generation
 - **Migration System**: Drizzle Kit for database schema migrations and management
+
+All numeric form fields in the admin interface properly convert string inputs to numbers before database insertion to ensure type safety.
 
 # External Dependencies
 
