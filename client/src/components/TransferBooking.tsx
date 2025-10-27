@@ -6,11 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Users, Luggage } from "lucide-react";
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import type { Vehicle } from "@shared/schema";
+import { useState } from "react";
 
-// Import des photos par défaut pour chaque type
+// Import des photos pour chaque type
 import economyImg from "@assets/stock_images/modern_black_economy_2715528e.jpg";
 import comfortImg from "@assets/stock_images/luxury_comfortable_s_e3010d3e.jpg";
 import businessImg from "@assets/stock_images/business_executive_s_04315f4d.jpg";
@@ -20,58 +18,22 @@ import suvImg from "@assets/stock_images/modern_suv_car_luxur_f01cfdb1.jpg";
 import vanImg from "@assets/stock_images/passenger_van_miniva_5a4872e1.jpg";
 import minibusImg from "@assets/stock_images/minibus_passenger_tr_a9f4517e.jpg";
 
-const getVehicleTypeName = (type: string): string => {
-  const typeNames: Record<string, string> = {
-    economy: "Économie",
-    comfort: "Confort",
-    business: "Business",
-    premium: "Premium",
-    vip: "VIP",
-    suv: "SUV",
-    van: "Van",
-    minibus: "Minibus",
-  };
-  return typeNames[type] || type;
-};
-
-const getDefaultVehicleImage = (type: string): string => {
-  const defaultImages: Record<string, string> = {
-    economy: economyImg,
-    comfort: comfortImg,
-    business: businessImg,
-    premium: premiumImg,
-    vip: vipImg,
-    suv: suvImg,
-    van: vanImg,
-    minibus: minibusImg,
-  };
-  return defaultImages[type] || economyImg;
-};
+// 8 types de véhicules fixes avec leurs photos
+const vehicleTypes = [
+  { type: "economy", name: "Économie", image: economyImg, capacity: 4, luggage: 2 },
+  { type: "comfort", name: "Confort", image: comfortImg, capacity: 4, luggage: 3 },
+  { type: "business", name: "Business", image: businessImg, capacity: 4, luggage: 3 },
+  { type: "premium", name: "Premium", image: premiumImg, capacity: 4, luggage: 3 },
+  { type: "vip", name: "VIP", image: vipImg, capacity: 4, luggage: 4 },
+  { type: "suv", name: "SUV", image: suvImg, capacity: 7, luggage: 5 },
+  { type: "van", name: "Van", image: vanImg, capacity: 8, luggage: 6 },
+  { type: "minibus", name: "Minibus", image: minibusImg, capacity: 16, luggage: 10 },
+];
 
 export default function TransferBooking() {
   const [tripType, setTripType] = useState("one-way");
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [passengers, setPassengers] = useState("1");
-
-  const { data: vehicles = [] } = useQuery<Vehicle[]>({
-    queryKey: ["/api/vehicles", { available: true }],
-    queryFn: async () => {
-      const res = await fetch("/api/vehicles?available=true");
-      if (!res.ok) throw new Error("Failed to fetch vehicles");
-      return res.json();
-    },
-  });
-
-  // Grouper par type et prendre le premier véhicule de chaque type
-  const vehiclesByType = useMemo(() => {
-    const grouped = new Map<string, Vehicle>();
-    vehicles.forEach(vehicle => {
-      if (!grouped.has(vehicle.type)) {
-        grouped.set(vehicle.type, vehicle);
-      }
-    });
-    return Array.from(grouped.values());
-  }, [vehicles]);
 
   const handleSearch = () => {
     console.log('Search transfers clicked', { tripType, selectedVehicle, passengers });
@@ -207,7 +169,7 @@ export default function TransferBooking() {
             <div className="space-y-4">
               <Label className="text-sm font-medium">Type de véhicule</Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {vehiclesByType.map((vehicle) => (
+                {vehicleTypes.map((vehicle) => (
                   <Card 
                     key={vehicle.type}
                     className={`cursor-pointer transition-all hover-elevate ${
@@ -221,12 +183,12 @@ export default function TransferBooking() {
                     <CardContent className="p-3 text-center space-y-2">
                       <div className="aspect-video bg-muted rounded-md overflow-hidden">
                         <img 
-                          src={vehicle.imageUrl || getDefaultVehicleImage(vehicle.type)} 
-                          alt={getVehicleTypeName(vehicle.type)} 
+                          src={vehicle.image} 
+                          alt={vehicle.name} 
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <h4 className="font-medium text-sm">{getVehicleTypeName(vehicle.type)}</h4>
+                      <h4 className="font-medium text-sm">{vehicle.name}</h4>
                       <div className="flex justify-center gap-2">
                         <Badge variant="secondary" className="text-xs">
                           <Users className="h-3 w-3 mr-1" />
