@@ -294,7 +294,7 @@ export default function HomePageManagement() {
                                     };
                                   }}
                                   onComplete={(result) => {
-                                    if (result.successful.length > 0) {
+                                    if (result.successful && result.successful.length > 0 && result.successful[0]?.uploadURL) {
                                       const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
                                       const objectPath = uploadedUrl.replace('https://storage.googleapis.com', '/objects');
                                       field.onChange(objectPath);
@@ -319,7 +319,8 @@ export default function HomePageManagement() {
                             </div>
                           </FormControl>
                           <FormDescription>
-                            Recommandé : 1920x1080px minimum, format JPG ou PNG
+                            <strong>Dimensions recommandées :</strong> 1920x1080px minimum (ratio 16:9)<br />
+                            <strong>Taille max :</strong> 10 MB • <strong>Formats :</strong> JPG, PNG, WEBP
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

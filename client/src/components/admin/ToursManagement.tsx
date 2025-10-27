@@ -479,7 +479,7 @@ export default function ToursManagement() {
                                 <FormLabel>Photo principale du circuit</FormLabel>
                                 <div className="space-y-3">
                                   {field.value && (
-                                    <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden">
+                                    <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden border">
                                       <img
                                         src={field.value}
                                         alt="Aperçu"
@@ -522,6 +522,10 @@ export default function ToursManagement() {
                                       </Button>
                                     )}
                                   </div>
+                                  <FormDescription>
+                                    <strong>Dimensions recommandées :</strong> 1200x800px minimum (ratio 3:2)<br />
+                                    <strong>Taille max :</strong> 10 MB • <strong>Formats :</strong> JPG, PNG, WEBP
+                                  </FormDescription>
                                 </div>
                                 <FormMessage />
                               </FormItem>
