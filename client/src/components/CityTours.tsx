@@ -55,6 +55,17 @@ export default function CityTours() {
     }
   };
 
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case "cultural": return "Culturel";
+      case "gastronomic": return "Gastronomique";
+      case "adventure": return "Aventure";
+      case "historical": return "Historique";
+      case "nature": return "Nature";
+      default: return category;
+    }
+  };
+
   if (isLoading) {
     return (
       <section id="city-tours" className="py-16 bg-background">
@@ -149,6 +160,11 @@ export default function CityTours() {
                 
                 <CardHeader className="pb-3">
                   <CardTitle className="text-xl mb-2">{tour.name}</CardTitle>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {getCategoryLabel(tour.category)}
+                    </Badge>
+                  </div>
                   <p className="text-muted-foreground text-sm">{tour.description}</p>
                 </CardHeader>
 
