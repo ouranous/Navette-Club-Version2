@@ -5,6 +5,7 @@ import {
   insertProviderSchema,
   insertVehicleSchema,
   insertVehicleSeasonalPriceSchema,
+  insertVehicleHourlyPriceSchema,
   insertCityTourSchema,
   insertTourStopSchema,
   insertCustomerSchema,
@@ -199,6 +200,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete seasonal price" });
+    }
+  });
+
+  // ========== VEHICLE HOURLY PRICES ==========
+  app.get("/api/vehicles/:vehicleId/hourly-prices", async (req, res) => {
+    try {
+      const prices = await storage.getVehicleHourlyPrices(req.params.vehicleId);
+      res.json(prices);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch hourly prices" });
+    }
+  });
+
+  app.post("/api/vehicles/:vehicleId/hourly-prices", async (req, res) => {
+    try {
+      const validatedData = insertVehicleHourlyPriceSchema.parse({
+        ...req.body,
+        vehicleId: req.params.vehicleId,
+      });
+      const price = await storage.createVehicleHourlyPrice(validatedData);
+      res.status(201).json(price);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid hourly price data", details: error });
+    }
+  });
+
+  app.patch("/api/vehicles/hourly-prices/:id", async (req, res) => {
+    try {
+      const validatedData = insertVehicleHourlyPriceSchema.partial().parse(req.body);
+      const price = await storage.updateVehicleHourlyPrice(req.params.id, validatedData);
+      if (!price) {
+        return res.status(404).json({ error: "Hourly price not found" });
+      }
+      res.json(price);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid hourly price data", details: error });
+    }
+  });
+
+  app.delete("/api/vehicles/hourly-prices/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteVehicleHourlyPrice(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Hourly price not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete hourly price" });
     }
   });
 
