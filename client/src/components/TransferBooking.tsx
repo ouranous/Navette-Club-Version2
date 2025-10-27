@@ -8,15 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Users, Luggage } from "lucide-react";
 import { useState } from "react";
 
-// Import des photos pour chaque type
-import economyImg from "@assets/stock_images/modern_black_economy_2715528e.jpg";
-import comfortImg from "@assets/stock_images/luxury_comfortable_s_e3010d3e.jpg";
-import businessImg from "@assets/stock_images/business_executive_s_04315f4d.jpg";
-import premiumImg from "@assets/stock_images/premium_luxury_sedan_12f88229.jpg";
-import vipImg from "@assets/stock_images/vip_luxury_limousine_ce32b295.jpg";
-import suvImg from "@assets/stock_images/modern_suv_car_luxur_f01cfdb1.jpg";
-import vanImg from "@assets/stock_images/passenger_van_miniva_5a4872e1.jpg";
-import minibusImg from "@assets/stock_images/minibus_passenger_tr_a9f4517e.jpg";
+// Import des photos pour chaque type de véhicule
+import economyImg from "@assets/generated_images/Economy_sedan_transfer_vehicle_564e6815.png";
+import comfortImg from "@assets/generated_images/Comfort_sedan_transfer_vehicle_9a876888.png";
+import businessImg from "@assets/generated_images/Business_sedan_transfer_vehicle_d44bfa46.png";
+import premiumImg from "@assets/generated_images/Premium_sedan_transfer_vehicle_5f3b93f7.png";
+import vipImg from "@assets/generated_images/VIP_luxury_sedan_vehicle_27daaf98.png";
+import suvImg from "@assets/generated_images/Luxury_SUV_transfer_vehicle_6e3cb7bd.png";
+import vanImg from "@assets/generated_images/Passenger_van_transfer_vehicle_8ef8caf6.png";
+import minibusImg from "@assets/generated_images/Minibus_transfer_vehicle_c075b9d7.png";
 
 // 8 types de véhicules fixes avec leurs photos
 const vehicleTypes = [
