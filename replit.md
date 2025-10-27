@@ -83,6 +83,14 @@ The application implements a comprehensive PostgreSQL schema with the following 
   - **Vehicle Types**: Supports 8 standardized types with Zod validation: economy, comfort, business, premium, vip, suv, van, minibus
   - Default type is "economy" for new vehicles
   - French labels displayed in UI: Économie, Confort, Business, Premium, VIP, SUV, Van, Minibus
+  - **Vehicle Fields**: Separated `brand` and `model` fields (both NOT NULL), plus `licensePlate` and `driver` fields for management
+  - **Name Auto-generation**: The `name` field is auto-generated in backend as `${brand} ${model}` for backward compatibility
+- **Vehicle Seasonal Prices Table**: Seasonal pricing periods for vehicles with date ranges and adjusted rates
+  - **Structure**: vehicleId (foreign key with CASCADE delete), seasonName, startDate (MM-DD format), endDate (MM-DD format), basePrice, pricePerKm
+  - **CRUD Operations**: Full create/read/update/delete support via API endpoints
+  - **UI Integration**: Seasonal prices managed in VehiclesManagement admin interface with add/edit/delete functionality
+  - **Delete Persistence**: Frontend tracks original price IDs and issues DELETE requests for removed prices to ensure database integrity
+  - **API Routes**: GET/POST /api/vehicles/:vehicleId/seasonal-prices, PATCH/DELETE /api/vehicles/seasonal-prices/:id
 - **City Tours Table**: City tour programs with detailed descriptions, itineraries, pricing, duration, capacity, and booking constraints
   - **Category Labels**: French labels for tour categories (Culturel, Gastronomique, Aventure, Historique, Nature)
   - **Difficulty Badges**: Color-coded difficulty levels (Facile/green, Modéré/yellow, Difficile/red)
