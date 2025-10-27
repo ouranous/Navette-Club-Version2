@@ -81,15 +81,18 @@ export default function VehiclesManagement() {
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(insertVehicleSchema),
     defaultValues: {
-      name: "",
+      brand: "",
+      model: "",
+      licensePlate: undefined,
+      driver: undefined,
       type: "economy",
       capacity: 4,
       luggage: 2,
-      description: "",
+      description: undefined,
       features: [],
       imageUrl: "",
       basePrice: "0",
-      pricePerKm: "0",
+      pricePerKm: undefined,
       isAvailable: true,
       providerId: undefined,
     },
@@ -142,17 +145,20 @@ export default function VehiclesManagement() {
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     form.reset({
-      name: vehicle.name,
-      type: vehicle.type,
+      brand: vehicle.brand || "",
+      model: vehicle.model || "",
+      licensePlate: vehicle.licensePlate ?? undefined,
+      driver: vehicle.driver ?? undefined,
+      type: vehicle.type as any,
       capacity: vehicle.capacity,
       luggage: vehicle.luggage,
-      description: vehicle.description || "",
+      description: vehicle.description ?? undefined,
       features: vehicle.features || [],
       imageUrl: vehicle.imageUrl || "",
       basePrice: vehicle.basePrice || "0",
-      pricePerKm: vehicle.pricePerKm || "0",
+      pricePerKm: vehicle.pricePerKm ?? undefined,
       isAvailable: vehicle.isAvailable,
-      providerId: vehicle.providerId || undefined,
+      providerId: vehicle.providerId ?? undefined,
     });
     setIsDialogOpen(true);
   };
@@ -192,23 +198,81 @@ export default function VehiclesManagement() {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom du véhicule*</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Berline Premium"
-                          data-testid="input-vehicle-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="brand"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Marque*</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Mercedes, BMW, Toyota..."
+                            data-testid="input-vehicle-brand"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Modèle*</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Classe E, Série 5, Camry..."
+                            data-testid="input-vehicle-model"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="licensePlate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Matricule</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="123 TU 1234"
+                            data-testid="input-vehicle-license-plate"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="driver"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Chauffeur</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Nom du chauffeur"
+                            data-testid="input-vehicle-driver"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
@@ -401,7 +465,7 @@ export default function VehiclesManagement() {
                               };
                             }}
                             onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-                              if (result.successful[0]?.uploadURL) {
+                              if (result.successful && result.successful[0]?.uploadURL) {
                                 const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
                                 const objectPath = uploadedUrl.replace('https://storage.googleapis.com', '/objects');
                                 field.onChange(objectPath);
@@ -461,10 +525,11 @@ export default function VehiclesManagement() {
                   <div className="flex-1">
                     <CardTitle className="flex items-center gap-2">
                       <Car className="w-5 h-5" />
-                      {vehicle.name}
+                      {vehicle.brand} {vehicle.model}
                     </CardTitle>
                     <CardDescription>
                       {getVehicleTypeName(vehicle.type)}
+                      {vehicle.licensePlate && ` • ${vehicle.licensePlate}`}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-1">

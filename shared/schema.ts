@@ -33,18 +33,33 @@ export const providers = pgTable("providers", {
 export const vehicles = pgTable("vehicles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   providerId: varchar("provider_id").references(() => providers.id),
-  name: text("name").notNull(), // "Berline Premium", "Van 8 Places"
+  brand: text("brand").notNull(), // "Mercedes", "BMW", "Toyota"
+  model: text("model").notNull(), // "Classe E", "Série 5", "Camry"
+  licensePlate: text("license_plate"), // Matricule du véhicule
+  driver: text("driver"), // Nom du chauffeur assigné
   type: text("type").notNull(), // "economy", "comfort", "business", "premium", "vip", "suv", "van", "minibus"
   capacity: integer("capacity").notNull(), // nombre de passagers
   luggage: integer("luggage").notNull(), // nombre de bagages
   description: text("description"),
   features: text("features").array(), // ["Wi-Fi", "Climatisation", "Sièges cuir"]
   imageUrl: text("image_url"),
-  basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
-  pricePerKm: decimal("price_per_km", { precision: 10, scale: 2 }),
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(), // Prix de base par défaut
+  pricePerKm: decimal("price_per_km", { precision: 10, scale: 2 }), // Prix par km par défaut
   isAvailable: boolean("is_available").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Vehicle Seasonal Prices - Prix saisonniers des véhicules
+export const vehicleSeasonalPrices = pgTable("vehicle_seasonal_prices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vehicleId: varchar("vehicle_id").notNull().references(() => vehicles.id, { onDelete: "cascade" }),
+  seasonName: text("season_name").notNull(), // "Basse saison", "Haute saison", "Période de fête"
+  startDate: text("start_date").notNull(), // Format: "MM-DD" (ex: "06-01" pour 1er juin)
+  endDate: text("end_date").notNull(), // Format: "MM-DD" (ex: "08-31" pour 31 août)
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
+  pricePerKm: decimal("price_per_km", { precision: 10, scale: 2 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 // City Tours - Configuration complète des tours
@@ -167,6 +182,14 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
     references: [providers.id],
   }),
   bookings: many(transferBookings),
+  seasonalPrices: many(vehicleSeasonalPrices),
+}));
+
+export const vehicleSeasonalPricesRelations = relations(vehicleSeasonalPrices, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [vehicleSeasonalPrices.vehicleId],
+    references: [vehicles.id],
+  }),
 }));
 
 export const cityToursRelations = relations(cityTours, ({ one, many }) => ({
@@ -265,6 +288,11 @@ export const insertHomePageContentSchema = createInsertSchema(homePageContent).o
   updatedAt: true,
 });
 
+export const insertVehicleSeasonalPriceSchema = createInsertSchema(vehicleSeasonalPrices).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -292,3 +320,6 @@ export type InsertTourBooking = z.infer<typeof insertTourBookingSchema>;
 
 export type HomePageContent = typeof homePageContent.$inferSelect;
 export type InsertHomePageContent = z.infer<typeof insertHomePageContentSchema>;
+
+export type VehicleSeasonalPrice = typeof vehicleSeasonalPrices.$inferSelect;
+export type InsertVehicleSeasonalPrice = z.infer<typeof insertVehicleSeasonalPriceSchema>;
