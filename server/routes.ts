@@ -141,11 +141,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========== CITY TOURS ==========
   app.get("/api/tours", async (req, res) => {
     try {
-      const { active, providerId } = req.query;
+      const { active, providerId, featured } = req.query;
       
       let tours;
-      if (active === "true") {
+      if (active === "true" && featured === "true") {
+        tours = await storage.getFeaturedActiveTours();
+      } else if (active === "true" && featured === "false") {
+        tours = await storage.getNonFeaturedActiveTours();
+      } else if (active === "true") {
         tours = await storage.getActiveTours();
+      } else if (featured === "true") {
+        tours = await storage.getFeaturedTours();
+      } else if (featured === "false") {
+        tours = await storage.getNonFeaturedTours();
       } else if (providerId) {
         tours = await storage.getToursByProvider(providerId as string);
       } else {

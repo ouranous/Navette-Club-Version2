@@ -30,7 +30,10 @@ The backend is built with Express.js following a minimalist API-first approach:
 - **API Routes**: Complete RESTful API endpoints for providers, vehicles, city tours, bookings, homepage content, and file uploads
   - GET /api/providers, POST /api/providers, PATCH /api/providers/:id, DELETE /api/providers/:id
   - GET /api/vehicles, POST /api/vehicles, PATCH /api/vehicles/:id, DELETE /api/vehicles/:id
+    - Supports `?available=true` query parameter to filter available vehicles
   - GET /api/tours, GET /api/tours/:id, POST /api/tours, PATCH /api/tours/:id, DELETE /api/tours/:id
+    - Supports `?active=true`, `?featured=true`, `?featured=false` query parameters
+    - Can combine filters: `?active=true&featured=true` for featured active tours
   - GET /api/bookings, POST /api/bookings
   - GET /api/homepage-content, GET /api/homepage-content/:id, POST /api/homepage-content, PATCH /api/homepage-content/:id, DELETE /api/homepage-content/:id
   - POST /api/objects/upload (get presigned URL for file upload)
@@ -55,7 +58,14 @@ The application is organized into well-defined functional components:
 - **UI Components**: Comprehensive shadcn/ui component library with custom theming
 - **Utility Components**: Theme toggle, notification center, mobile responsiveness hooks, ObjectUploader for file uploads
 
-All public-facing components (VehicleTypes, CityTours, Hero) are connected to real backend APIs via React Query, with proper loading states and empty state handling. Mock data is used only as fallback when the database is empty.
+All public-facing components are connected to real backend APIs via React Query, with proper loading states and empty state handling:
+- **Hero**: Loads banner image from database (`homepage_content` table with `type='hero_image'`)
+- **TransferBooking**: Loads available vehicles from `/api/vehicles?available=true` with photos and specifications
+- **VehicleTypes**: Displays all vehicle types from database with dynamic data
+- **CityTours**: Loads non-featured tours from `/api/tours?active=true&featured=false` (City Tours Exclusifs)
+- **TunisiaHighlights**: Loads featured tours from `/api/tours?featured=true&active=true` (Circuits Incontournables de Tunisie)
+
+No hardcoded data is used in public-facing components - all content is dynamically loaded from the database.
 
 ## Design System
 The application implements a sophisticated design system with:
@@ -76,6 +86,8 @@ The application implements a comprehensive PostgreSQL schema with the following 
 - **City Tours Table**: City tour programs with detailed descriptions, itineraries, pricing, duration, capacity, and booking constraints
   - **Category Labels**: French labels for tour categories (Culturel, Gastronomique, Aventure, Historique, Nature)
   - **Difficulty Badges**: Color-coded difficulty levels (Facile/green, Modéré/yellow, Difficile/red)
+  - **Highlights Field**: Text array (`text[]`) storing key selling points of each tour, managed via textarea in admin interface (one per line)
+  - **Featured Field**: Boolean flag to distinguish between "City Tours Exclusifs" (`featured=false`) and "Circuits Incontournables de Tunisie" (`featured=true`)
 - **Tour Stops Table**: Individual stops for each tour with order, description, and duration
 - **Home Page Content Table**: Homepage content management (type, title, description, icon, imageUrl, order, isActive)
   - Supports two content types: hero_image (for hero banner) and service_badge (for homepage service badges)

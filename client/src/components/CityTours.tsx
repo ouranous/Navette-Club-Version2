@@ -13,9 +13,9 @@ export default function CityTours() {
   const [, navigate] = useLocation();
 
   const { data: tours = [], isLoading } = useQuery<CityTour[]>({
-    queryKey: ["/api/tours", { active: true }],
+    queryKey: ["/api/tours", { active: true, featured: false }],
     queryFn: async () => {
-      const res = await fetch("/api/tours?active=true");
+      const res = await fetch("/api/tours?active=true&featured=false");
       if (!res.ok) throw new Error("Failed to fetch tours");
       return res.json();
     },

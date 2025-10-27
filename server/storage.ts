@@ -56,6 +56,10 @@ export interface IStorage {
   // City Tours
   getAllTours(): Promise<CityTour[]>;
   getActiveTours(): Promise<CityTour[]>;
+  getFeaturedTours(): Promise<CityTour[]>;
+  getNonFeaturedTours(): Promise<CityTour[]>;
+  getFeaturedActiveTours(): Promise<CityTour[]>;
+  getNonFeaturedActiveTours(): Promise<CityTour[]>;
   getTour(id: string): Promise<CityTour | undefined>;
   getTourBySlug(slug: string): Promise<CityTour | undefined>;
   getToursByProvider(providerId: string): Promise<CityTour[]>;
@@ -202,6 +206,38 @@ export class DatabaseStorage implements IStorage {
       .from(cityTours)
       .where(eq(cityTours.isActive, true))
       .orderBy(cityTours.featured, cityTours.name);
+  }
+
+  async getFeaturedTours(): Promise<CityTour[]> {
+    return await db
+      .select()
+      .from(cityTours)
+      .where(eq(cityTours.featured, true))
+      .orderBy(desc(cityTours.createdAt));
+  }
+
+  async getNonFeaturedTours(): Promise<CityTour[]> {
+    return await db
+      .select()
+      .from(cityTours)
+      .where(eq(cityTours.featured, false))
+      .orderBy(desc(cityTours.createdAt));
+  }
+
+  async getFeaturedActiveTours(): Promise<CityTour[]> {
+    return await db
+      .select()
+      .from(cityTours)
+      .where(and(eq(cityTours.isActive, true), eq(cityTours.featured, true)))
+      .orderBy(desc(cityTours.createdAt));
+  }
+
+  async getNonFeaturedActiveTours(): Promise<CityTour[]> {
+    return await db
+      .select()
+      .from(cityTours)
+      .where(and(eq(cityTours.isActive, true), eq(cityTours.featured, false)))
+      .orderBy(desc(cityTours.createdAt));
   }
 
   async getTour(id: string): Promise<CityTour | undefined> {
