@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import TransferBooking from "@/components/TransferBooking";
 import CityTours from "@/components/CityTours";
+import TunisiaHighlights from "@/components/TunisiaHighlights";
 import VehicleTypes from "@/components/VehicleTypes";
 import Footer from "@/components/Footer";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -33,6 +34,9 @@ export default function HomePage() {
         
         {/* City tours section */}
         <CityTours />
+        
+        {/* Tunisia highlights section */}
+        <TunisiaHighlights />
       </main>
 
       {/* Footer */}

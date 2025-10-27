@@ -30,7 +30,7 @@ export default function CityTours() {
     .filter(tour => tour.latitude && tour.longitude)
     .map(tour => ({
       id: tour.id,
-      position: { lat: tour.latitude!, lng: tour.longitude! },
+      position: { lat: parseFloat(tour.latitude!), lng: parseFloat(tour.longitude!) },
       title: tour.name,
       description: tour.description,
       type: "tour" as const,
@@ -76,7 +76,7 @@ export default function CityTours() {
             </h2>
           </div>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Découvrez la France autrement avec nos guides experts. Expériences authentiques et inoubliables garanties.
+            Découvrez la Tunisie autrement avec nos guides experts. Expériences authentiques et inoubliables garanties.
           </p>
         </div>
 
@@ -94,8 +94,8 @@ export default function CityTours() {
               </CardHeader>
               <CardContent className="p-0">
                 <GoogleMap 
-                  center={{ lat: 48.8566, lng: 2.3522 }}
-                  zoom={10}
+                  center={{ lat: 36.8065, lng: 10.1815 }}
+                  zoom={8}
                   locations={tourLocations}
                   height="400px"
                   className="w-full"
