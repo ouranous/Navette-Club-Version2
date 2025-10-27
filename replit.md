@@ -23,11 +23,18 @@ The backend is built with Express.js following a minimalist API-first approach:
 - **Server Framework**: Express.js with TypeScript for type safety
 - **Database Integration**: Drizzle ORM configured for PostgreSQL with full production database support
 - **Storage Layer**: Abstracted storage interface with PostgreSQL implementation for production use
-- **API Routes**: Complete RESTful API endpoints for providers, vehicles, city tours, and bookings
+- **Object Storage**: Replit Object Storage integration for photo uploads via Google Cloud Storage
+  - ObjectStorageService for managing file uploads and downloads
+  - ObjectAcl for access control policies (public/private visibility)
+  - Direct-to-storage uploads using presigned URLs
+- **API Routes**: Complete RESTful API endpoints for providers, vehicles, city tours, bookings, and file uploads
   - GET /api/providers, POST /api/providers, PATCH /api/providers/:id, DELETE /api/providers/:id
   - GET /api/vehicles, POST /api/vehicles, PATCH /api/vehicles/:id, DELETE /api/vehicles/:id
   - GET /api/tours, GET /api/tours/:id, POST /api/tours, PATCH /api/tours/:id, DELETE /api/tours/:id
   - GET /api/bookings, POST /api/bookings
+  - POST /api/objects/upload (get presigned URL for file upload)
+  - GET /objects/:objectPath (serve uploaded files)
+  - GET /public-objects/:filePath (serve public assets)
 - **Validation**: All request bodies validated using Zod schemas before database operations
 - **Development Setup**: Vite middleware integration for seamless development experience
 

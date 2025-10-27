@@ -413,6 +413,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== OBJECT STORAGE (Photo Upload) ==========
   // Reference: blueprint:javascript_object_storage
+  // SECURITY NOTE: These routes are currently unprotected, consistent with the rest of the API.
+  // TODO: Add authentication middleware when implementing user authentication system.
   
   // Endpoint to get upload URL for images
   app.post("/api/objects/upload", async (req, res) => {
