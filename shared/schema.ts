@@ -227,6 +227,8 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  type: z.enum(["economy", "comfort", "business", "premium", "vip", "suv", "van", "minibus"]),
 });
 
 export const insertCityTourSchema = createInsertSchema(cityTours).omit({

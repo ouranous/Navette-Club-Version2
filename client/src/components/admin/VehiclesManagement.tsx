@@ -82,7 +82,7 @@ export default function VehiclesManagement() {
     resolver: zodResolver(insertVehicleSchema),
     defaultValues: {
       name: "",
-      type: "sedan",
+      type: "economy",
       capacity: 4,
       luggage: 2,
       description: "",
