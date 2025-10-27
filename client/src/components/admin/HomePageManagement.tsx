@@ -271,12 +271,52 @@ export default function HomePageManagement() {
                         <FormItem>
                           <FormLabel>Image de bannière*</FormLabel>
                           <FormControl>
-                            <ObjectUploader
-                              value={field.value}
-                              onChange={field.onChange}
-                              accept="image/*"
-                              directory="public"
-                            />
+                            <div className="space-y-4">
+                              {field.value && (
+                                <div className="relative w-full max-w-2xl h-64 bg-muted rounded-md overflow-hidden border">
+                                  <img
+                                    src={field.value}
+                                    alt="Aperçu"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex gap-2">
+                                <ObjectUploader
+                                  maxNumberOfFiles={1}
+                                  maxFileSize={10485760}
+                                  onGetUploadParameters={async () => {
+                                    const res = await apiRequest("POST", "/api/objects/upload");
+                                    const data = await res.json();
+                                    return {
+                                      method: "PUT" as const,
+                                      url: data.uploadURL,
+                                    };
+                                  }}
+                                  onComplete={(result) => {
+                                    if (result.successful.length > 0) {
+                                      const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
+                                      const objectPath = uploadedUrl.replace('https://storage.googleapis.com', '/objects');
+                                      field.onChange(objectPath);
+                                      toast({ title: "Bannière uploadée avec succès" });
+                                    }
+                                  }}
+                                  buttonVariant="outline"
+                                >
+                                  <Upload className="w-4 h-4 mr-2" />
+                                  {field.value ? "Changer la bannière" : "Ajouter une bannière"}
+                                </ObjectUploader>
+                                {field.value && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => field.onChange("")}
+                                  >
+                                    Supprimer
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
                           </FormControl>
                           <FormDescription>
                             Recommandé : 1920x1080px minimum, format JPG ou PNG
