@@ -3,27 +3,26 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Star, Clock, Users, MapPin, Camera, Globe } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import GoogleMap from "./GoogleMap";
-
-interface Tour {
-  id: string;
-  title: string;
-  description: string;
-  duration: string;
-  maxPeople: number;
-  price: number;
-  rating: number;
-  reviews: number;
-  image: string;
-  highlights: string[];
-  difficulty: "Facile" | "Modéré" | "Difficile";
-}
+import type { CityTour } from "@shared/schema";
 
 export default function CityTours() {
   const [selectedTour, setSelectedTour] = useState<string | null>(null);
+  const [, navigate] = useLocation();
 
-  // todo: remove mock functionality
-  const tours: Tour[] = [
+  const { data: tours = [], isLoading } = useQuery<CityTour[]>({
+    queryKey: ["/api/tours", { active: true }],
+    queryFn: async () => {
+      const res = await fetch("/api/tours?active=true");
+      if (!res.ok) throw new Error("Failed to fetch tours");
+      return res.json();
+    },
+  });
+
+  // Fallback mock data if no tours in database
+  const mockTours: CityTour[] = isLoading || tours.length > 0 ? [] : [
     {
       id: "paris-classic",
       title: "Paris Classique",
