@@ -33,6 +33,7 @@ export const providers = pgTable("providers", {
 export const vehicles = pgTable("vehicles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   providerId: varchar("provider_id").references(() => providers.id),
+  name: text("name"), // Auto-generated from brand + model (for compatibility)
   brand: text("brand").notNull(), // "Mercedes", "BMW", "Toyota"
   model: text("model").notNull(), // "Classe E", "Série 5", "Camry"
   licensePlate: text("license_plate"), // Matricule du véhicule

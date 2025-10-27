@@ -2,7 +2,8 @@
 import { 
   users, 
   providers,
-  vehicles, 
+  vehicles,
+  vehicleSeasonalPrices,
   cityTours, 
   tourStops,
   customers,
@@ -15,6 +16,8 @@ import {
   type InsertProvider,
   type Vehicle,
   type InsertVehicle,
+  type VehicleSeasonalPrice,
+  type InsertVehicleSeasonalPrice,
   type CityTour,
   type InsertCityTour,
   type TourStop,
@@ -52,6 +55,12 @@ export interface IStorage {
   createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
   updateVehicle(id: string, vehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined>;
   deleteVehicle(id: string): Promise<boolean>;
+  
+  // Vehicle Seasonal Prices
+  getVehicleSeasonalPrices(vehicleId: string): Promise<VehicleSeasonalPrice[]>;
+  createVehicleSeasonalPrice(price: InsertVehicleSeasonalPrice): Promise<VehicleSeasonalPrice>;
+  updateVehicleSeasonalPrice(id: string, price: Partial<InsertVehicleSeasonalPrice>): Promise<VehicleSeasonalPrice | undefined>;
+  deleteVehicleSeasonalPrice(id: string): Promise<boolean>;
   
   // City Tours
   getAllTours(): Promise<CityTour[]>;
@@ -192,6 +201,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteVehicle(id: string): Promise<boolean> {
     const result = await db.delete(vehicles).where(eq(vehicles.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Vehicle Seasonal Prices
+  async getVehicleSeasonalPrices(vehicleId: string): Promise<VehicleSeasonalPrice[]> {
+    return await db
+      .select()
+      .from(vehicleSeasonalPrices)
+      .where(eq(vehicleSeasonalPrices.vehicleId, vehicleId))
+      .orderBy(vehicleSeasonalPrices.startDate);
+  }
+
+  async createVehicleSeasonalPrice(price: InsertVehicleSeasonalPrice): Promise<VehicleSeasonalPrice> {
+    const [created] = await db.insert(vehicleSeasonalPrices).values(price).returning();
+    return created;
+  }
+
+  async updateVehicleSeasonalPrice(id: string, price: Partial<InsertVehicleSeasonalPrice>): Promise<VehicleSeasonalPrice | undefined> {
+    const [updated] = await db
+      .update(vehicleSeasonalPrices)
+      .set(price)
+      .where(eq(vehicleSeasonalPrices.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteVehicleSeasonalPrice(id: string): Promise<boolean> {
+    const result = await db.delete(vehicleSeasonalPrices).where(eq(vehicleSeasonalPrices.id, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 

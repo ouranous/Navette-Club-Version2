@@ -37,15 +37,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Car, Users, Briefcase, Upload, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Car, Users, Briefcase, Upload, Image as ImageIcon, Calendar, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { insertVehicleSchema, type Vehicle, type Provider } from "@shared/schema";
+import { insertVehicleSchema, type Vehicle, type Provider, type VehicleSeasonalPrice } from "@shared/schema";
 import type { z } from "zod";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from "@uppy/core";
 
 type VehicleFormData = z.infer<typeof insertVehicleSchema>;
+
+type SeasonalPriceForm = {
+  id?: string;
+  seasonName: string;
+  startDate: string;
+  endDate: string;
+  basePrice: string;
+  pricePerKm: string;
+};
 
 // Helper function to display vehicle type names
 const getVehicleTypeName = (type: string): string => {
@@ -69,6 +79,15 @@ export default function VehiclesManagement() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [seasonalPrices, setSeasonalPrices] = useState<SeasonalPriceForm[]>([]);
+  const [isAddingPrice, setIsAddingPrice] = useState(false);
+  const [newPrice, setNewPrice] = useState<SeasonalPriceForm>({
+    seasonName: "",
+    startDate: "",
+    endDate: "",
+    basePrice: "0",
+    pricePerKm: "0",
+  });
 
   const { data: vehicles = [], isLoading } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],
@@ -142,7 +161,7 @@ export default function VehiclesManagement() {
     },
   });
 
-  const handleEdit = (vehicle: Vehicle) => {
+  const handleEdit = async (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     form.reset({
       brand: vehicle.brand || "",
@@ -160,14 +179,99 @@ export default function VehiclesManagement() {
       isAvailable: vehicle.isAvailable,
       providerId: vehicle.providerId ?? undefined,
     });
+    
+    // Charger les prix saisonniers
+    try {
+      const res = await fetch(`/api/vehicles/${vehicle.id}/seasonal-prices`);
+      if (res.ok) {
+        const prices: VehicleSeasonalPrice[] = await res.json();
+        setSeasonalPrices(prices.map(p => ({
+          id: p.id,
+          seasonName: p.seasonName,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          basePrice: p.basePrice || "0",
+          pricePerKm: p.pricePerKm || "0",
+        })));
+      }
+    } catch (error) {
+      console.error("Failed to load seasonal prices", error);
+    }
+    
     setIsDialogOpen(true);
   };
 
-  const onSubmit = (data: VehicleFormData) => {
-    if (editingVehicle) {
-      updateMutation.mutate({ id: editingVehicle.id, data });
-    } else {
-      createMutation.mutate(data);
+  const handleAddSeasonalPrice = () => {
+    if (newPrice.seasonName && newPrice.startDate && newPrice.endDate && newPrice.basePrice) {
+      setSeasonalPrices([...seasonalPrices, { ...newPrice }]);
+      setNewPrice({
+        seasonName: "",
+        startDate: "",
+        endDate: "",
+        basePrice: "0",
+        pricePerKm: "0",
+      });
+      setIsAddingPrice(false);
+    }
+  };
+
+  const handleRemoveSeasonalPrice = (index: number) => {
+    setSeasonalPrices(seasonalPrices.filter((_, i) => i !== index));
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      setEditingVehicle(null);
+      setSeasonalPrices([]);
+      setIsAddingPrice(false);
+      form.reset();
+    }
+    setIsDialogOpen(open);
+  };
+
+  const onSubmit = async (data: VehicleFormData) => {
+    try {
+      let vehicleId: string;
+      
+      // Créer ou mettre à jour le véhicule
+      if (editingVehicle) {
+        const res = await apiRequest("PATCH", `/api/vehicles/${editingVehicle.id}`, data);
+        const vehicle = await res.json();
+        vehicleId = vehicle.id;
+      } else {
+        const res = await apiRequest("POST", "/api/vehicles", data);
+        const vehicle = await res.json();
+        vehicleId = vehicle.id;
+      }
+      
+      // Sauvegarder les prix saisonniers
+      for (const price of seasonalPrices) {
+        if (price.id) {
+          // Mettre à jour un prix existant
+          await apiRequest("PATCH", `/api/vehicles/seasonal-prices/${price.id}`, {
+            seasonName: price.seasonName,
+            startDate: price.startDate,
+            endDate: price.endDate,
+            basePrice: price.basePrice,
+            pricePerKm: price.pricePerKm,
+          });
+        } else {
+          // Créer un nouveau prix
+          await apiRequest("POST", `/api/vehicles/${vehicleId}/seasonal-prices`, {
+            seasonName: price.seasonName,
+            startDate: price.startDate,
+            endDate: price.endDate,
+            basePrice: price.basePrice,
+            pricePerKm: price.pricePerKm,
+          });
+        }
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
+      toast({ title: editingVehicle ? "Véhicule modifié avec succès" : "Véhicule créé avec succès" });
+      handleDialogClose(false);
+    } catch (error) {
+      toast({ title: "Erreur lors de la sauvegarde", variant: "destructive" });
     }
   };
 
@@ -183,7 +287,7 @@ export default function VehiclesManagement() {
             Gérer le parc de véhicules disponibles
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
             <Button data-testid="button-add-vehicle">
               <Plus className="w-4 h-4 mr-2" />
@@ -492,6 +596,149 @@ export default function VehiclesManagement() {
                     </FormItem>
                   )}
                 />
+
+                <Separator className="my-6" />
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold">Prix saisonniers</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Définir les périodes de prix selon les saisons
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsAddingPrice(true)}
+                      data-testid="button-add-seasonal-price"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Ajouter
+                    </Button>
+                  </div>
+
+                  {seasonalPrices.length > 0 && (
+                    <div className="space-y-2">
+                      {seasonalPrices.map((price, index) => (
+                        <Card key={index}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                  <span className="font-medium">{price.seasonName}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                  <Calendar className="w-3 h-3" />
+                                  <span>{price.startDate} → {price.endDate}</span>
+                                </div>
+                                <div className="text-muted-foreground">
+                                  Prix de base: <span className="font-medium text-foreground">{price.basePrice} €</span>
+                                </div>
+                                <div className="text-muted-foreground">
+                                  Prix/km: <span className="font-medium text-foreground">{price.pricePerKm} €</span>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveSeasonalPrice(index)}
+                                data-testid={`button-remove-seasonal-price-${index}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+
+                  {isAddingPrice && (
+                    <Card className="border-primary">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-sm font-medium">Nom de la saison*</label>
+                            <Input
+                              value={newPrice.seasonName}
+                              onChange={(e) => setNewPrice({ ...newPrice, seasonName: e.target.value })}
+                              placeholder="Basse saison, Haute saison, etc."
+                              data-testid="input-new-season-name"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-sm font-medium">Date de début* (MM-DD)</label>
+                              <Input
+                                value={newPrice.startDate}
+                                onChange={(e) => setNewPrice({ ...newPrice, startDate: e.target.value })}
+                                placeholder="01-01"
+                                data-testid="input-new-start-date"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Date de fin* (MM-DD)</label>
+                              <Input
+                                value={newPrice.endDate}
+                                onChange={(e) => setNewPrice({ ...newPrice, endDate: e.target.value })}
+                                placeholder="12-31"
+                                data-testid="input-new-end-date"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-sm font-medium">Prix de base (€)*</label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={newPrice.basePrice}
+                                onChange={(e) => setNewPrice({ ...newPrice, basePrice: e.target.value })}
+                                placeholder="0.00"
+                                data-testid="input-new-base-price"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Prix par km (€)*</label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={newPrice.pricePerKm}
+                                onChange={(e) => setNewPrice({ ...newPrice, pricePerKm: e.target.value })}
+                                placeholder="0.00"
+                                data-testid="input-new-price-per-km"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsAddingPrice(false)}
+                              data-testid="button-cancel-new-price"
+                            >
+                              Annuler
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleAddSeasonalPrice}
+                              data-testid="button-save-new-price"
+                            >
+                              Ajouter
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
 
                 <DialogFooter>
                   <Button type="submit" disabled={isPending} data-testid="button-submit">

@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import {
   insertProviderSchema,
   insertVehicleSchema,
+  insertVehicleSeasonalPriceSchema,
   insertCityTourSchema,
   insertTourStopSchema,
   insertCustomerSchema,
@@ -106,7 +107,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/vehicles", async (req, res) => {
     try {
       const validatedData = insertVehicleSchema.parse(req.body);
-      const vehicle = await storage.createVehicle(validatedData);
+      // Generate name from brand and model if not provided
+      const vehicleData = {
+        ...validatedData,
+        name: validatedData.name || `${validatedData.brand} ${validatedData.model}`,
+      };
+      const vehicle = await storage.createVehicle(vehicleData);
       res.status(201).json(vehicle);
     } catch (error) {
       res.status(400).json({ error: "Invalid vehicle data", details: error });
@@ -116,7 +122,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/vehicles/:id", async (req, res) => {
     try {
       const validatedData = insertVehicleSchema.partial().parse(req.body);
-      const vehicle = await storage.updateVehicle(req.params.id, validatedData);
+      // Generate name from brand and model if both are provided
+      const vehicleData = { ...validatedData };
+      if (validatedData.brand || validatedData.model) {
+        const existingVehicle = await storage.getVehicle(req.params.id);
+        if (existingVehicle) {
+          const brand = validatedData.brand || existingVehicle.brand;
+          const model = validatedData.model || existingVehicle.model;
+          vehicleData.name = `${brand} ${model}`;
+        }
+      }
+      const vehicle = await storage.updateVehicle(req.params.id, vehicleData);
       if (!vehicle) {
         return res.status(404).json({ error: "Vehicle not found" });
       }
@@ -135,6 +151,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete vehicle" });
+    }
+  });
+
+  // ========== VEHICLE SEASONAL PRICES ==========
+  app.get("/api/vehicles/:vehicleId/seasonal-prices", async (req, res) => {
+    try {
+      const prices = await storage.getVehicleSeasonalPrices(req.params.vehicleId);
+      res.json(prices);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch seasonal prices" });
+    }
+  });
+
+  app.post("/api/vehicles/:vehicleId/seasonal-prices", async (req, res) => {
+    try {
+      const validatedData = insertVehicleSeasonalPriceSchema.parse({
+        ...req.body,
+        vehicleId: req.params.vehicleId,
+      });
+      const price = await storage.createVehicleSeasonalPrice(validatedData);
+      res.status(201).json(price);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid seasonal price data", details: error });
+    }
+  });
+
+  app.patch("/api/vehicles/seasonal-prices/:id", async (req, res) => {
+    try {
+      const validatedData = insertVehicleSeasonalPriceSchema.partial().parse(req.body);
+      const price = await storage.updateVehicleSeasonalPrice(req.params.id, validatedData);
+      if (!price) {
+        return res.status(404).json({ error: "Seasonal price not found" });
+      }
+      res.json(price);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid seasonal price data", details: error });
+    }
+  });
+
+  app.delete("/api/vehicles/seasonal-prices/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteVehicleSeasonalPrice(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Seasonal price not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete seasonal price" });
     }
   });
 
