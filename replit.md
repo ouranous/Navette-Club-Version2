@@ -2,6 +2,47 @@
 
 NavetteClub is a premium transportation platform offering high-end transfer services and city tour experiences. It features a sophisticated booking interface for transfers and guided city tours, aiming to provide a reliable and premium service.
 
+# Recent Changes
+
+## October 27, 2025 - Phase 3 Public UI Progress
+
+### Completed Features
+- **Vehicle Catalog Page** (`/vehicles`): Full catalog with type filtering
+  - Grid display of all vehicles with images/placeholders
+  - Type filter sidebar mapping UI labels to backend enum values
+  - Type enum mapping: "Économique" → "economy", "Confort" → "comfort", etc.
+  - Responsive cards with availability badges, capacity info, price indicators
+  - Navigation to detail pages via vehicle cards
+  
+- **Vehicle Detail Page** (`/vehicles/:id`): Comprehensive vehicle information with pricing calculators
+  - Custom `queryFn` to fetch individual vehicle from `/api/vehicles/:id`
+  - Full vehicle specifications display (capacity, luggage, features, description)
+  - **Transfer Calculator**: Origin/destination, distance, date → seasonal per-km pricing
+  - **Disposal Calculator**: Date, duration (hours) → seasonal hourly pricing
+  - Error handling for pricing API failures with user notifications
+  - Pre-filled navigation to booking forms (`/book/transfer`, `/book/disposal`)
+  - Responsive three-column layout with image gallery
+
+### API Routes Added
+- `GET /api/pricing/transfer?vehicleId=X&distance=Y&date=Z`
+  - Returns: `{basePrice, distance, totalPrice, season, validFrom, validTo}`
+  - Uses seasonal pricing logic from `server/pricing.ts`
+- `GET /api/pricing/disposal?vehicleId=X&hours=Y&date=Z`
+  - Returns: `{basePrice, duration, totalPrice, season, validFrom, validTo}`
+  - Uses seasonal hourly pricing logic
+
+### Architectural Decisions
+- **Vehicle Type Enums**: Lowercase backend values ("economy", "business", "comfort", "premium", "vip", "suv", "van", "minibus") with UI label mapping for French display
+- **Seasonal Pricing**: Year-wrap handling fixed in `buildSeasonDates()` for cross-year seasons (e.g., Dec–Feb correctly adjusts years)
+- **Custom Query Functions**: VehicleDetailPage uses explicit `queryFn` to fetch specific vehicle instead of relying on default fetcher
+- **Error Handling**: Pricing calculators validate `response.ok` before parsing JSON and surface errors via alerts
+
+### Next Steps
+- Task 8: Create Transfer booking form (`/book/transfer`)
+- Task 9: Create Disposal booking form (`/book/disposal`)
+- Phase 4: KONNECT payment integration
+- Phase 5: SendGrid email notifications
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
