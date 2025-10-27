@@ -40,10 +40,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Clock, Users, Euro } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, Users, Euro, Upload } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertCityTourSchema, type CityTour, type Provider } from "@shared/schema";
 import type { z } from "zod";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 type TourFormData = z.infer<typeof insertCityTourSchema>;
 
@@ -472,6 +474,63 @@ export default function ToursManagement() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Photo du circuit</FormLabel>
+                      <div className="space-y-3">
+                        {field.value && (
+                          <div className="relative w-full h-48 bg-muted rounded-md overflow-hidden">
+                            <img
+                              src={field.value}
+                              alt="Aperçu"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={10485760}
+                            onGetUploadParameters={async () => {
+                              const res = await apiRequest("POST", "/api/objects/upload");
+                              const data = await res.json();
+                              return {
+                                method: "PUT" as const,
+                                url: data.uploadURL,
+                              };
+                            }}
+                            onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                              if (result.successful[0]?.uploadURL) {
+                                const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
+                                const objectPath = uploadedUrl.replace('https://storage.googleapis.com', '/objects');
+                                field.onChange(objectPath);
+                                toast({ title: "Photo uploadée avec succès" });
+                              }
+                            }}
+                            buttonVariant="outline"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {field.value ? "Changer la photo" : "Ajouter une photo"}
+                          </ObjectUploader>
+                          {field.value && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => field.onChange("")}
+                            >
+                              Supprimer
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
