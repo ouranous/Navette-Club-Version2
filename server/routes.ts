@@ -550,6 +550,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint to normalize object path after upload
+  app.post("/api/objects/normalize-path", async (req, res) => {
+    try {
+      const { uploadURL } = req.body;
+      if (!uploadURL) {
+        return res.status(400).json({ error: "uploadURL is required" });
+      }
+      const objectStorageService = new ObjectStorageService();
+      const normalizedPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+      res.json({ path: normalizedPath });
+    } catch (error) {
+      console.error("Error normalizing path:", error);
+      res.status(500).json({ error: "Failed to normalize path" });
+    }
+  });
+
   // Endpoint to serve uploaded images (public access)
   app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();

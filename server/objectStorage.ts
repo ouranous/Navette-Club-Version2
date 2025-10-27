@@ -176,15 +176,17 @@ export class ObjectStorageService {
     const rawObjectPath = url.pathname;
   
     let objectEntityDir = this.getPrivateObjectDir();
-    if (!objectEntityDir.endsWith("/")) {
-      objectEntityDir = `${objectEntityDir}/`;
-    }
+    
+    // Normalize both paths by splitting into segments and filtering empty ones
+    // This handles duplicate slashes anywhere in the path
+    const normalizedRawPath = '/' + rawObjectPath.split('/').filter(Boolean).join('/');
+    const normalizedEntityDir = '/' + objectEntityDir.split('/').filter(Boolean).join('/') + '/';
   
-    if (!rawObjectPath.startsWith(objectEntityDir)) {
+    if (!normalizedRawPath.startsWith(normalizedEntityDir)) {
       return rawObjectPath;
     }
   
-    const entityId = rawObjectPath.slice(objectEntityDir.length);
+    const entityId = normalizedRawPath.slice(normalizedEntityDir.length);
     return `/objects/${entityId}`;
   }
 

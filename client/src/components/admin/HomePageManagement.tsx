@@ -293,12 +293,18 @@ export default function HomePageManagement() {
                                       url: data.uploadURL,
                                     };
                                   }}
-                                  onComplete={(result) => {
+                                  onComplete={async (result) => {
                                     if (result.successful && result.successful.length > 0 && result.successful[0]?.uploadURL) {
                                       const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
-                                      const objectPath = uploadedUrl.replace('https://storage.googleapis.com', '/objects');
-                                      field.onChange(objectPath);
-                                      toast({ title: "Bannière uploadée avec succès" });
+                                      try {
+                                        const res = await apiRequest("POST", "/api/objects/normalize-path", { uploadURL: uploadedUrl });
+                                        const data = await res.json();
+                                        field.onChange(data.path);
+                                        toast({ title: "Bannière uploadée avec succès" });
+                                      } catch (error) {
+                                        console.error("Error normalizing path:", error);
+                                        toast({ title: "Erreur lors de l'upload", variant: "destructive" });
+                                      }
                                     }
                                   }}
                                   buttonVariant="outline"

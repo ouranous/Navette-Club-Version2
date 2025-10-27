@@ -673,12 +673,18 @@ export default function VehiclesManagement() {
                                 url: data.uploadURL,
                               };
                             }}
-                            onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                            onComplete={async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
                               if (result.successful && result.successful[0]?.uploadURL) {
                                 const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
-                                const objectPath = uploadedUrl.replace('https://storage.googleapis.com', '/objects');
-                                field.onChange(objectPath);
-                                toast({ title: "Photo uploadée avec succès" });
+                                try {
+                                  const res = await apiRequest("POST", "/api/objects/normalize-path", { uploadURL: uploadedUrl });
+                                  const data = await res.json();
+                                  field.onChange(data.path);
+                                  toast({ title: "Photo uploadée avec succès" });
+                                } catch (error) {
+                                  console.error("Error normalizing path:", error);
+                                  toast({ title: "Erreur lors de l'upload", variant: "destructive" });
+                                }
                               }
                             }}
                             buttonVariant="outline"
