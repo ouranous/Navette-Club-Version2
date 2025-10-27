@@ -80,6 +80,13 @@ All numeric form fields in the admin interface properly convert string inputs to
 - **drizzle-orm**: Type-safe ORM with PostgreSQL dialect support
 - **@tanstack/react-query**: Server state management for data fetching and caching
 
+## File Upload and Storage
+- **@google-cloud/storage**: Google Cloud Storage client for object storage operations
+- **@uppy/core**: Core upload functionality with file validation and progress tracking
+- **@uppy/react**: React components for Uppy integration (DashboardModal)
+- **@uppy/aws-s3**: S3-compatible upload plugin for direct-to-storage uploads via presigned URLs
+- **@uppy/dashboard**: Interactive upload modal with file preview and management
+
 ## UI and Styling
 - **@radix-ui/**: Complete suite of accessible React primitives for UI components
 - **tailwindcss**: Utility-first CSS framework with custom configuration
@@ -99,4 +106,15 @@ All numeric form fields in the admin interface properly convert string inputs to
 - **@hookform/resolvers**: Resolver integration for schema validation
 - **zod**: Runtime type validation for forms and API responses
 
-The architecture prioritizes developer experience with TypeScript throughout, maintains separation of concerns with clear abstraction layers, and implements a scalable component structure that can accommodate future feature expansion.
+The architecture prioritizes developer experience with TypeScript throughout, maintains separation of concerns with clear abstraction layers, implements a scalable component structure that can accommodate future feature expansion, and uses Replit Object Storage for secure and efficient file uploads.
+
+# Security Considerations
+
+**Authentication Status**: The application currently does not implement user authentication. All API routes, including admin operations (create/modify/delete providers, vehicles, tours) and file upload endpoints, are currently unprotected. This is acceptable for development but must be addressed before production deployment.
+
+**Future Security Requirements**:
+- Implement user authentication system using the existing `users` table schema
+- Add authentication middleware to protect admin routes
+- Implement session management
+- Add role-based access control for admin operations
+- Secure file upload endpoints with authentication checks
