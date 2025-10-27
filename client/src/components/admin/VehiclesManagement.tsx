@@ -80,6 +80,7 @@ export default function VehiclesManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [seasonalPrices, setSeasonalPrices] = useState<SeasonalPriceForm[]>([]);
+  const [originalSeasonalPriceIds, setOriginalSeasonalPriceIds] = useState<string[]>([]);
   const [isAddingPrice, setIsAddingPrice] = useState(false);
   const [newPrice, setNewPrice] = useState<SeasonalPriceForm>({
     seasonName: "",
@@ -185,6 +186,8 @@ export default function VehiclesManagement() {
       const res = await fetch(`/api/vehicles/${vehicle.id}/seasonal-prices`);
       if (res.ok) {
         const prices: VehicleSeasonalPrice[] = await res.json();
+        const priceIds = prices.map(p => p.id);
+        setOriginalSeasonalPriceIds(priceIds);
         setSeasonalPrices(prices.map(p => ({
           id: p.id,
           seasonName: p.seasonName,
@@ -223,6 +226,7 @@ export default function VehiclesManagement() {
     if (!open) {
       setEditingVehicle(null);
       setSeasonalPrices([]);
+      setOriginalSeasonalPriceIds([]);
       setIsAddingPrice(false);
       form.reset();
     }
@@ -242,6 +246,15 @@ export default function VehiclesManagement() {
         const res = await apiRequest("POST", "/api/vehicles", data);
         const vehicle = await res.json();
         vehicleId = vehicle.id;
+      }
+      
+      // Détecter les prix saisonniers supprimés
+      const currentPriceIds = seasonalPrices.map(p => p.id).filter(Boolean) as string[];
+      const deletedPriceIds = originalSeasonalPriceIds.filter(id => !currentPriceIds.includes(id));
+      
+      // Supprimer les prix saisonniers qui ont été retirés
+      for (const priceId of deletedPriceIds) {
+        await apiRequest("DELETE", `/api/vehicles/seasonal-prices/${priceId}`);
       }
       
       // Sauvegarder les prix saisonniers
