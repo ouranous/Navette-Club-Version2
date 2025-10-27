@@ -45,10 +45,14 @@ The application is organized into well-defined functional components:
 
 - **Layout Components**: Header with navigation, Hero section, Footer with company information
 - **Feature Components**: Transfer booking form, City tours showcase, Vehicle types display
-- **Admin Components**: Complete admin interface with tabs for managing providers, vehicles, and city tours (ProvidersManagement, VehiclesManagement, ToursManagement)
+- **Admin Components**: Complete admin interface with tabs for managing providers, vehicles, city tours, and homepage content
+  - ProvidersManagement: Manage transport providers
+  - VehiclesManagement: Manage vehicle fleet (supports 8 vehicle types: economy, comfort, business, premium, vip, suv, van, minibus)
+  - ToursManagement: Manage city tours with full itinerary support
+  - HomePageManagement: Manage homepage service badges (currently local state only, not persisted to database)
 - **Page Components**: Home page, Admin page, Tour detail page with booking forms
 - **UI Components**: Comprehensive shadcn/ui component library with custom theming
-- **Utility Components**: Theme toggle, notification center, mobile responsiveness hooks
+- **Utility Components**: Theme toggle, notification center, mobile responsiveness hooks, ObjectUploader for file uploads
 
 All public-facing components (VehicleTypes, CityTours) are connected to real backend APIs via React Query, with proper loading states and empty state handling. Mock data is used only as fallback when the database is empty.
 
@@ -65,8 +69,15 @@ The application implements a comprehensive PostgreSQL schema with the following 
 
 - **Providers Table**: Transport providers (rental companies, travel agencies) with contact information and location data
 - **Vehicles Table**: Vehicle fleet with capacity, luggage space, pricing (base price and per-km), features, and availability status
+  - **Vehicle Types**: Supports 8 standardized types with Zod validation: economy, comfort, business, premium, vip, suv, van, minibus
+  - Default type is "economy" for new vehicles
+  - French labels displayed in UI: Économie, Confort, Business, Premium, VIP, SUV, Van, Minibus
 - **City Tours Table**: City tour programs with detailed descriptions, itineraries, pricing, duration, capacity, and booking constraints
+  - **Category Labels**: French labels for tour categories (Culturel, Gastronomique, Aventure, Historique, Nature)
+  - **Difficulty Badges**: Color-coded difficulty levels (Facile/green, Modéré/yellow, Difficile/red)
 - **Tour Stops Table**: Individual stops for each tour with order, description, and duration
+- **Home Page Content Table**: Homepage content management (type, title, description, icon, order, isActive)
+  - Currently used in schema but HomePageManagement component uses local state only
 - **Bookings Table**: Customer bookings with contact details, service type (transfer/tour), pricing, and status tracking
 - **Schema Generation**: Drizzle-zod integration for type-safe schema definitions with automatic insert/select type generation
 - **Migration System**: Drizzle Kit for database schema migrations and management
