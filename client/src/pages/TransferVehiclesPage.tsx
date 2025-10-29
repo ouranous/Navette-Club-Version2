@@ -155,7 +155,7 @@ export default function TransferVehiclesPage() {
         <div className="grid lg:grid-cols-12 gap-6">
           {/* COLONNE GAUCHE - Récapitulatif de la réservation */}
           <div className="lg:col-span-4">
-            <Card className="sticky top-4">
+            <Card className="sticky top-4 z-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-primary" />
