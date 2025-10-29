@@ -19,6 +19,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { calculateTransferCost, calculateDisposalCost } from "./pricing";
 import { calculateDistance, calculateTransferPrice } from "./googleMaps";
+import { getGeographicZone, filterAndSortVehiclesByZones } from "./geographicZones";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
@@ -923,6 +924,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn("Google Maps API unavailable, using fallback distance");
       }
 
+      // Déterminer les zones géographiques
+      const originZone = getGeographicZone(origin as string);
+      const destinationZone = getGeographicZone(destination as string);
+
+      console.log("Geographic zones:", {
+        origin: origin as string,
+        originZone,
+        destination: destination as string,
+        destinationZone,
+      });
+
+      // Récupérer tous les transporteurs pour le filtrage par zones
+      const allProviders = await storage.getAllProviders();
+      const providersMap = new Map(
+        allProviders.map(p => [p.id, { serviceZones: p.serviceZones }])
+      );
+
       // Récupérer tous les véhicules disponibles
       const allVehicles = await storage.getAllVehicles();
       const availableVehicles = allVehicles.filter(v => v.isAvailable);
@@ -958,12 +976,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
 
-      // Trier par prix croissant
-      vehiclesWithPrices.sort((a, b) => a.calculatedPrice - b.calculatedPrice);
+      // Filtrer et trier par zones géographiques et prix
+      const filteredVehicles = filterAndSortVehiclesByZones(
+        vehiclesWithPrices.map(v => ({
+          ...v,
+          providerId: v.providerId || "",
+          price: v.calculatedPrice,
+        })),
+        providersMap,
+        originZone,
+        destinationZone
+      );
 
       res.json({
         distance: distance,
-        vehicles: vehiclesWithPrices,
+        vehicles: filteredVehicles,
+        zones: {
+          origin: originZone,
+          destination: destinationZone,
+        },
         searchCriteria: {
           origin: origin as string,
           destination: destination as string,
