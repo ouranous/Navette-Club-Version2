@@ -111,12 +111,63 @@ export default function VehiclesManagement() {
     minimumHours: "4",
   });
 
+  // Filter states
+  const [filterProvider, setFilterProvider] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterZone, setFilterZone] = useState<string>("all");
+
   const { data: vehicles = [], isLoading } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],
   });
 
   const { data: providers = [] } = useQuery<Provider[]>({
     queryKey: ["/api/providers"],
+  });
+
+  // Geographic zones for filtering
+  const geographicZones = [
+    "Tunis et Nord",
+    "Sousse et Sahel",
+    "Djerba et Sud",
+    "Tozeur et Désert",
+    "Sfax",
+    "Kairouan",
+    "Monastir et Mahdia",
+  ];
+
+  // Vehicle types for filtering
+  const vehicleTypes = [
+    { value: "economy", label: "Économie" },
+    { value: "comfort", label: "Confort" },
+    { value: "business", label: "Business" },
+    { value: "premium", label: "Premium" },
+    { value: "vip", label: "VIP" },
+    { value: "suv", label: "SUV" },
+    { value: "van", label: "Van" },
+    { value: "minibus", label: "Minibus" },
+  ];
+
+  // Filter vehicles based on selected filters
+  const filteredVehicles = vehicles.filter((vehicle) => {
+    // Filter by provider
+    if (filterProvider !== "all" && vehicle.providerId !== filterProvider) {
+      return false;
+    }
+
+    // Filter by type
+    if (filterType !== "all" && vehicle.type !== filterType) {
+      return false;
+    }
+
+    // Filter by zone (check if provider's service zones include the selected zone)
+    if (filterZone !== "all" && vehicle.providerId) {
+      const provider = providers.find((p) => p.id === vehicle.providerId);
+      if (!provider || !provider.serviceZones?.includes(filterZone)) {
+        return false;
+      }
+    }
+
+    return true;
   });
 
   const form = useForm<VehicleFormData>({
@@ -1031,6 +1082,67 @@ export default function VehiclesManagement() {
         </Dialog>
       </div>
 
+      {/* Filters section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Filtres</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Transporteur</label>
+              <Select value={filterProvider} onValueChange={setFilterProvider}>
+                <SelectTrigger data-testid="select-filter-provider">
+                  <SelectValue placeholder="Tous les transporteurs" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les transporteurs</SelectItem>
+                  {providers.map((provider) => (
+                    <SelectItem key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Type de véhicule</label>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger data-testid="select-filter-type">
+                  <SelectValue placeholder="Tous les types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les types</SelectItem>
+                  {vehicleTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Zone géographique</label>
+              <Select value={filterZone} onValueChange={setFilterZone}>
+                <SelectTrigger data-testid="select-filter-zone">
+                  <SelectValue placeholder="Toutes les zones" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les zones</SelectItem>
+                  {geographicZones.map((zone) => (
+                    <SelectItem key={zone} value={zone}>
+                      {zone}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {isLoading ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">Chargement...</p>
@@ -1043,9 +1155,17 @@ export default function VehiclesManagement() {
             </p>
           </CardContent>
         </Card>
+      ) : filteredVehicles.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground">
+              Aucun véhicule ne correspond aux filtres sélectionnés.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {vehicles.map((vehicle) => (
+          {filteredVehicles.map((vehicle) => (
             <Card key={vehicle.id} data-testid={`card-vehicle-${vehicle.id}`}>
               <CardHeader>
                 <div className="flex items-start justify-between">
