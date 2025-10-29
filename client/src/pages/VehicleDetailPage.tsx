@@ -151,9 +151,9 @@ export default function VehicleDetailPage() {
               <p className="text-muted-foreground mb-6">
                 Le véhicule que vous recherchez n'existe pas ou a été supprimé.
               </p>
-              <Button onClick={() => setLocation("/vehicles")} data-testid="button-back-to-vehicles">
+              <Button onClick={() => setLocation("/")} data-testid="button-back-to-home">
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                Retour aux véhicules
+                Retour à l'accueil
               </Button>
             </Card>
           </div>
@@ -171,12 +171,12 @@ export default function VehicleDetailPage() {
           {/* Back Button */}
           <Button
             variant="ghost"
-            onClick={() => setLocation("/vehicles")}
+            onClick={() => setLocation("/")}
             className="mb-6 hover-elevate"
             data-testid="button-back"
           >
             <ChevronLeft className="mr-2 h-4 w-4" />
-            Retour aux véhicules
+            Retour à l'accueil
           </Button>
 
           {/* Vehicle Header */}
