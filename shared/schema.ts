@@ -38,6 +38,7 @@ export const providers = pgTable("providers", {
   address: text("address"),
   city: text("city"),
   country: text("country").default("France"),
+  serviceZones: text("service_zones").array(), // ["Djerba et Sud", "Sousse", "Tunis et Nord"] - Zones géographiques desservies
   notes: text("notes"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -174,6 +175,7 @@ export const transferBookings = pgTable("transfer_bookings", {
   passengers: integer("passengers").notNull(),
   luggage: integer("luggage").notNull(),
   flightNumber: text("flight_number"),
+  nameOnPlacard: text("name_on_placard"), // Nom à afficher sur la pancarte d'accueil
   specialRequests: text("special_requests"),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"), // "pending", "confirmed", "completed", "cancelled"

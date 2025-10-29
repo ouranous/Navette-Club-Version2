@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -38,10 +40,21 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertProviderSchema, type Provider } from "@shared/schema";
 import type { z } from "zod";
+
+// Zones géographiques disponibles en Tunisie
+const GEOGRAPHIC_ZONES = [
+  "Tunis et Nord",
+  "Sousse et Sahel",
+  "Djerba et Sud",
+  "Tozeur et Désert",
+  "Sfax",
+  "Kairouan",
+  "Monastir et Mahdia",
+] as const;
 
 type ProviderFormData = z.infer<typeof insertProviderSchema>;
 
@@ -65,6 +78,7 @@ export default function ProvidersManagement() {
       address: "",
       city: "",
       country: "France",
+      serviceZones: [],
       notes: "",
       isActive: true,
     },
@@ -146,6 +160,7 @@ export default function ProvidersManagement() {
       address: provider.address || "",
       city: provider.city || "",
       country: provider.country || "France",
+      serviceZones: provider.serviceZones || [],
       notes: provider.notes || "",
       isActive: provider.isActive,
     });
@@ -326,6 +341,60 @@ export default function ProvidersManagement() {
 
                 <FormField
                   control={form.control}
+                  name="serviceZones"
+                  render={() => (
+                    <FormItem>
+                      <div className="mb-4">
+                        <FormLabel className="text-base">
+                          Zones géographiques desservies
+                        </FormLabel>
+                        <FormDescription>
+                          Sélectionnez les régions où ce transporteur opère
+                        </FormDescription>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {GEOGRAPHIC_ZONES.map((zone) => (
+                          <FormField
+                            key={zone}
+                            control={form.control}
+                            name="serviceZones"
+                            render={({ field }) => {
+                              return (
+                                <FormItem
+                                  key={zone}
+                                  className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(zone)}
+                                      onCheckedChange={(checked) => {
+                                        const currentValues = field.value || [];
+                                        return checked
+                                          ? field.onChange([...currentValues, zone])
+                                          : field.onChange(
+                                              currentValues.filter((val: string) => val !== zone)
+                                            );
+                                      }}
+                                      data-testid={`checkbox-zone-${zone}`}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal flex items-center gap-2">
+                                    <MapPin className="w-3 h-3" />
+                                    {zone}
+                                  </FormLabel>
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
@@ -422,6 +491,19 @@ export default function ProvidersManagement() {
                     <span className="font-medium">Ville:</span> {provider.city}
                     {provider.country && `, ${provider.country}`}
                   </p>
+                )}
+                {provider.serviceZones && provider.serviceZones.length > 0 && (
+                  <div>
+                    <span className="font-medium">Zones desservies:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {provider.serviceZones.map((zone) => (
+                        <Badge key={zone} variant="outline" className="text-xs">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {zone}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
