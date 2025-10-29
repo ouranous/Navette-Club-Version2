@@ -3,7 +3,30 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes
 
-## October 29, 2025 - Unified Header & Footer + UI Improvements
+## October 29, 2025 - City Tours Dedicated Page + UI Improvements
+
+### New City Tours Page
+- **Objective**: Create a dedicated, professional page for exploring City Tours (similar to Transfer booking page)
+- **Route**: `/city-tours` accessible from Header navigation
+- **Design Features**:
+  - Hero section with platform statistics (4.9/5 rating, 2000+ travelers, tours count)
+  - Interactive category filters (Tous, Culturel, Gastronomique, Aventure, Historique, Nature)
+  - Difficulty filters (Tous, Facile, Modéré, Difficile) with AND logic
+  - Interactive Google Map showing tour locations with clickable markers
+  - Responsive 3-column grid layout (1 col mobile, 2 tablet, 3 desktop)
+  - Professional tour cards with images, badges, pricing, and details
+  - CTA section for custom tour requests
+- **Features**:
+  - Real-time filtering by category and difficulty
+  - Formatted duration display using `formatDuration()` helper
+  - Clean highlights display using `parseHighlight()` helper
+  - Click-through to individual tour detail pages
+  - Unified Header and Footer for consistent navigation
+- **Files Created**:
+  - `client/src/pages/CityToursPage.tsx`: Main page component
+- **Files Modified**:
+  - `client/src/App.tsx`: Added route for /city-tours
+  - `client/src/components/Header.tsx`: Updated navigation links to point to /city-tours
 
 ### Header & Footer Standardization
 - **Objective**: Provide consistent navigation and branding across all pages
