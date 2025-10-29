@@ -78,6 +78,18 @@ export default function TransferVehiclesPage() {
 
   const { data: searchResponse, isLoading, error } = useQuery<SearchResponse>({
     queryKey: ["/api/pricing/auto-transfer", origin, destination, passengers],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        origin,
+        destination,
+        passengers,
+      });
+      const response = await fetch(`/api/pricing/auto-transfer?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error("Failed to calculate prices");
+      }
+      return response.json();
+    },
     enabled: !!origin && !!destination,
     retry: 1,
   });

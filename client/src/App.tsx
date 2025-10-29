@@ -9,6 +9,7 @@ import VehiclesPage from "@/pages/VehiclesPage";
 import VehicleDetailPage from "@/pages/VehicleDetailPage";
 import TransferSearchPage from "@/pages/TransferSearchPage";
 import TransferVehiclesPage from "@/pages/TransferVehiclesPage";
+import TransferConfirmPage from "@/pages/TransferConfirmPage";
 import AdminPage from "@/pages/AdminPage";
 import NotFound from "@/pages/not-found";
 
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/vehicles/:id" component={VehicleDetailPage} />
       <Route path="/book/transfer" component={TransferSearchPage} />
       <Route path="/book/transfer/vehicles" component={TransferVehiclesPage} />
+      <Route path="/book/transfer/confirm" component={TransferConfirmPage} />
       <Route path="/admin" component={AdminPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
