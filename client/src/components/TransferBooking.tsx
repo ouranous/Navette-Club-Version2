@@ -8,6 +8,7 @@ import { MapPin, Calendar, Users, Clock } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import GooglePlacesInput from "@/components/GooglePlacesInput";
 
 export default function TransferBooking() {
   const [, setLocation] = useLocation();
@@ -124,21 +125,21 @@ export default function TransferBooking() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="origin">Origine *</Label>
-                    <Input
+                    <GooglePlacesInput
                       id="origin"
                       placeholder="Ex: Aéroport Tunis Carthage"
                       value={origin}
-                      onChange={(e) => setOrigin(e.target.value)}
+                      onChange={setOrigin}
                       data-testid="input-origin"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="destination">Destination *</Label>
-                    <Input
+                    <GooglePlacesInput
                       id="destination"
                       placeholder="Ex: Hammamet"
                       value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
+                      onChange={setDestination}
                       data-testid="input-destination"
                     />
                   </div>
@@ -194,21 +195,21 @@ export default function TransferBooking() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="origin-return">Origine *</Label>
-                    <Input
+                    <GooglePlacesInput
                       id="origin-return"
                       placeholder="Ex: Aéroport Tunis Carthage"
                       value={origin}
-                      onChange={(e) => setOrigin(e.target.value)}
+                      onChange={setOrigin}
                       data-testid="input-origin-return"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="destination-return">Destination *</Label>
-                    <Input
+                    <GooglePlacesInput
                       id="destination-return"
                       placeholder="Ex: Hammamet"
                       value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
+                      onChange={setDestination}
                       data-testid="input-destination-return"
                     />
                   </div>
