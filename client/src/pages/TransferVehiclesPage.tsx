@@ -96,6 +96,27 @@ export default function TransferVehiclesPage() {
   });
 
   const handleSelectVehicle = (vehicle: VehicleWithPrice) => {
+    // Validation: s'assurer que tous les paramètres requis sont présents
+    if (!date || !time) {
+      toast({
+        title: "Paramètres manquants",
+        description: "La date et l'heure sont requises pour continuer la réservation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (tripType === "return" && (!returnDate || !returnTime)) {
+      toast({
+        title: "Paramètres manquants",
+        description: "La date et l'heure de retour sont requises",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("Selected vehicle:", vehicle.id);
+
     const bookingParams = new URLSearchParams({
       vehicleId: vehicle.id,
       origin,
