@@ -3,6 +3,30 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes
 
+## October 29, 2025 - Admin Vehicle Filters
+
+### Admin Vehicle Management Filters
+- **Problem**: With potentially 100+ vehicles in the database, admins needed efficient ways to find and manage specific vehicles
+- **Solution**: Added three filter controls to the admin vehicles page
+- **Implementation**:
+  - Added three dropdown Select filters: Transporteur (Provider), Type de véhicule, Zone géographique
+  - Client-side filtering logic that works independently and can be combined
+  - Filter by provider: matches `vehicle.providerId`
+  - Filter by type: matches vehicle type (economy, comfort, business, premium, vip, suv, van, minibus)
+  - Filter by zone: checks if provider's `serviceZones` array includes selected zone
+- **Admin Experience**:
+  - Navigate to Admin → Véhicules
+  - Use dropdown filters to narrow down displayed vehicles
+  - Each filter defaults to "all" (show all)
+  - Selecting a filter value immediately updates the vehicle list
+  - Empty state message when no vehicles match filters
+- **UI Design**:
+  - Filters displayed in a Card with 3-column responsive grid layout
+  - All Select components include proper data-testid attributes for testing
+- **Files Modified**:
+  - `client/src/components/admin/VehiclesManagement.tsx`: Added filter state, UI, and logic
+- **Testing**: E2E test confirmed all filters work correctly (type filter: 7→2 vehicles, provider filter: 7→2 vehicles)
+
 ## October 29, 2025 - Homepage Vehicle Display Control
 
 ### Admin Control for Vehicle Homepage Visibility
