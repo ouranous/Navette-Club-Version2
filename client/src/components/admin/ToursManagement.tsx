@@ -242,6 +242,15 @@ export default function ToursManagement() {
     return labels[difficulty] || difficulty;
   };
 
+  const formatDuration = (hours: number) => {
+    if (hours === 4) return "Demi journée";
+    if (hours >= 24 && hours % 24 === 0) {
+      const days = hours / 24;
+      return `${days} jour${days > 1 ? 's' : ''}`;
+    }
+    return `${hours}h`;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -594,16 +603,27 @@ export default function ToursManagement() {
                                 name="duration"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Durée (heures)*</FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        type="number"
-                                        min="1"
-                                        {...field}
-                                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                                        data-testid="input-duration"
-                                      />
-                                    </FormControl>
+                                    <FormLabel>Durée*</FormLabel>
+                                    <Select
+                                      value={field.value?.toString()}
+                                      onValueChange={(value) => field.onChange(parseInt(value))}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger data-testid="select-duration">
+                                          <SelectValue placeholder="Sélectionner la durée" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="4">Demi journée</SelectItem>
+                                        <SelectItem value="24">1 jour</SelectItem>
+                                        <SelectItem value="48">2 jours</SelectItem>
+                                        <SelectItem value="72">3 jours</SelectItem>
+                                        <SelectItem value="96">4 jours</SelectItem>
+                                        <SelectItem value="120">5 jours</SelectItem>
+                                        <SelectItem value="144">6 jours</SelectItem>
+                                        <SelectItem value="168">7 jours</SelectItem>
+                                      </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -864,7 +884,7 @@ export default function ToursManagement() {
                       </Badge>
                       <Badge variant="outline">
                         <Clock className="w-3 h-3 mr-1" />
-                        {tour.duration}h
+                        {formatDuration(tour.duration)}
                       </Badge>
                       <Badge variant="outline">
                         <Users className="w-3 h-3 mr-1" />

@@ -179,6 +179,15 @@ export function TourPreviewCard({
   const categoryInfo = categoryConfig[category as keyof typeof categoryConfig];
   const difficultyInfo = difficultyConfig[difficulty as keyof typeof difficultyConfig];
   
+  const formatDuration = (hours: number) => {
+    if (hours === 4) return "Demi journée";
+    if (hours >= 24 && hours % 24 === 0) {
+      const days = hours / 24;
+      return `${days} jour${days > 1 ? 's' : ''}`;
+    }
+    return `${hours}h`;
+  };
+  
   return (
     <div className="rounded-xl overflow-hidden border bg-card shadow-lg">
       {/* Hero Image with Gradient Overlay */}
@@ -220,7 +229,7 @@ export function TourPreviewCard({
       
       {/* Metadata Section */}
       <div className="p-4 grid grid-cols-3 gap-2">
-        <TourMetadataBadge icon={Clock} label="Durée" value={`${duration}h`} />
+        <TourMetadataBadge icon={Clock} label="Durée" value={formatDuration(duration)} />
         <TourMetadataBadge icon={Users} label="Max" value={maxCapacity} />
         <TourMetadataBadge icon={Euro} label="À partir de" value={`${price}€`} />
       </div>
