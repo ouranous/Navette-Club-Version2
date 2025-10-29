@@ -18,6 +18,7 @@ import {
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { calculateTransferCost, calculateDisposalCost } from "./pricing";
+import { calculateDistance, calculateTransferPrice } from "./googleMaps";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
@@ -887,6 +888,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========== PRICING CALCULATOR ==========
+  
+  // Nouvelle route: Calcul automatique de distance et prix pour tous les véhicules
+  app.get("/api/pricing/auto-transfer", async (req, res) => {
+    try {
+      const { origin, destination, passengers } = req.query;
+      
+      if (!origin || !destination) {
+        return res.status(400).json({ 
+          error: "Missing required parameters: origin and destination are required" 
+        });
+      }
+
+      // Calculer la distance via Google Maps
+      const distanceData = await calculateDistance(
+        origin as string,
+        destination as string
+      );
+
+      if (!distanceData) {
+        return res.status(500).json({ 
+          error: "Unable to calculate distance. Please verify the addresses." 
+        });
+      }
+
+      // Récupérer tous les véhicules disponibles
+      const allVehicles = await storage.getAllVehicles();
+      const availableVehicles = allVehicles.filter(v => v.isAvailable);
+
+      // Filtrer par capacité si spécifié
+      const passengerCount = passengers ? parseInt(passengers as string, 10) : 0;
+      const suitableVehicles = passengerCount > 0
+        ? availableVehicles.filter(v => v.capacity >= passengerCount)
+        : availableVehicles;
+
+      // Calculer le prix pour chaque véhicule
+      const vehiclesWithPrices = suitableVehicles.map(vehicle => {
+        const basePrice = parseFloat(vehicle.basePrice.toString());
+        const pricePerKm = vehicle.pricePerKm 
+          ? parseFloat(vehicle.pricePerKm.toString()) 
+          : 0;
+
+        const totalPrice = calculateTransferPrice(
+          basePrice,
+          pricePerKm,
+          distanceData.distanceKm
+        );
+
+        return {
+          ...vehicle,
+          calculatedPrice: totalPrice,
+          priceBreakdown: {
+            basePrice,
+            pricePerKm,
+            distance: distanceData.distanceKm,
+            total: totalPrice,
+          },
+        };
+      });
+
+      // Trier par prix croissant
+      vehiclesWithPrices.sort((a, b) => a.calculatedPrice - b.calculatedPrice);
+
+      res.json({
+        distance: distanceData,
+        vehicles: vehiclesWithPrices,
+        searchCriteria: {
+          origin: origin as string,
+          destination: destination as string,
+          passengers: passengerCount,
+        },
+      });
+    } catch (error) {
+      console.error("Error calculating auto-transfer prices:", error);
+      res.status(500).json({ error: "Failed to calculate transfer prices" });
+    }
+  });
+
   app.get("/api/pricing/transfer", async (req, res) => {
     try {
       const { vehicleId, distance, date } = req.query;
