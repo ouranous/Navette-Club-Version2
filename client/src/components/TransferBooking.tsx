@@ -4,39 +4,60 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { MapPin, Calendar, Users, Luggage } from "lucide-react";
+import { MapPin, Calendar, Users } from "lucide-react";
 import { useState } from "react";
-
-// Import des photos pour chaque type de véhicule
-import economyImg from "@assets/generated_images/Economy_sedan_transfer_vehicle_564e6815.png";
-import comfortImg from "@assets/generated_images/Comfort_sedan_transfer_vehicle_9a876888.png";
-import businessImg from "@assets/generated_images/Business_sedan_transfer_vehicle_d44bfa46.png";
-import premiumImg from "@assets/generated_images/Premium_sedan_transfer_vehicle_5f3b93f7.png";
-import vipImg from "@assets/generated_images/VIP_luxury_sedan_vehicle_27daaf98.png";
-import suvImg from "@assets/generated_images/Luxury_SUV_transfer_vehicle_6e3cb7bd.png";
-import vanImg from "@assets/generated_images/Passenger_van_transfer_vehicle_8ef8caf6.png";
-import minibusImg from "@assets/generated_images/Minibus_transfer_vehicle_c075b9d7.png";
-
-// 8 types de véhicules fixes avec leurs photos
-const vehicleTypes = [
-  { type: "economy", name: "Économie", image: economyImg, capacity: 4, luggage: 2 },
-  { type: "comfort", name: "Confort", image: comfortImg, capacity: 4, luggage: 3 },
-  { type: "business", name: "Business", image: businessImg, capacity: 4, luggage: 3 },
-  { type: "premium", name: "Premium", image: premiumImg, capacity: 4, luggage: 3 },
-  { type: "vip", name: "VIP", image: vipImg, capacity: 4, luggage: 4 },
-  { type: "suv", name: "SUV", image: suvImg, capacity: 7, luggage: 5 },
-  { type: "van", name: "Van", image: vanImg, capacity: 8, luggage: 6 },
-  { type: "minibus", name: "Minibus", image: minibusImg, capacity: 16, luggage: 10 },
-];
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TransferBooking() {
-  const [tripType, setTripType] = useState("one-way");
-  const [selectedVehicle, setSelectedVehicle] = useState("");
-  const [passengers, setPassengers] = useState("1");
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  
+  const [tripType, setTripType] = useState("oneway");
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [returnTime, setReturnTime] = useState("");
+  const [passengers, setPassengers] = useState("2");
 
   const handleSearch = () => {
-    console.log('Search transfers clicked', { tripType, selectedVehicle, passengers });
+    // Validation
+    if (!origin || !destination || !date || !time) {
+      toast({
+        title: "Champs requis",
+        description: "Veuillez remplir l'origine, la destination, la date et l'heure",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (tripType === "return" && (!returnDate || !returnTime)) {
+      toast({
+        title: "Champs requis",
+        description: "Veuillez remplir la date et l'heure de retour",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Navigation vers la page de recherche avec paramètres
+    const params = new URLSearchParams({
+      origin,
+      destination,
+      date,
+      time,
+      passengers,
+      tripType,
+    });
+
+    if (tripType === "return") {
+      params.append("returnDate", returnDate);
+      params.append("returnTime", returnTime);
+    }
+
+    setLocation(`/book/transfer/vehicles?${params.toString()}`);
   };
 
   return (
@@ -47,7 +68,7 @@ export default function TransferBooking() {
             Réservez Votre Transfert
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choisissez votre véhicule et réservez en quelques clics. Service premium garanti.
+            Service de transfert premium avec calcul automatique du prix. Réservez en quelques clics.
           </p>
         </div>
 
@@ -55,165 +76,189 @@ export default function TransferBooking() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
-              Réservation de Transfert
+              Recherche de Transfert
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Trip Type */}
+            {/* Trip Type Tabs */}
             <Tabs value={tripType} onValueChange={setTripType} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="one-way" data-testid="tab-one-way">Aller Simple</TabsTrigger>
-                <TabsTrigger value="round-trip" data-testid="tab-round-trip">Aller-Retour</TabsTrigger>
+                <TabsTrigger value="oneway" data-testid="tab-oneway">
+                  Aller Simple
+                </TabsTrigger>
+                <TabsTrigger value="return" data-testid="tab-return">
+                  Aller-Retour
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="one-way" className="space-y-6 mt-6">
+              {/* Aller Simple */}
+              <TabsContent value="oneway" className="space-y-6 mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="pickup" className="text-sm font-medium">Lieu de prise en charge</Label>
+                    <Label htmlFor="origin">Origine *</Label>
                     <Input
-                      id="pickup"
-                      placeholder="Aéroport, hôtel, adresse..."
-                      data-testid="input-pickup"
+                      id="origin"
+                      placeholder="Ex: Aéroport Tunis Carthage"
+                      value={origin}
+                      onChange={(e) => setOrigin(e.target.value)}
+                      data-testid="input-origin"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="destination" className="text-sm font-medium">Destination</Label>
+                    <Label htmlFor="destination">Destination *</Label>
                     <Input
                       id="destination"
-                      placeholder="Aéroport, hôtel, adresse..."
+                      placeholder="Ex: Hammamet"
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
                       data-testid="input-destination"
                     />
                   </div>
                 </div>
-              </TabsContent>
 
-              <TabsContent value="round-trip" className="space-y-6 mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="pickup-rt" className="text-sm font-medium">Lieu de prise en charge</Label>
+                    <Label htmlFor="date" className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Date *
+                    </Label>
                     <Input
-                      id="pickup-rt"
-                      placeholder="Aéroport, hôtel, adresse..."
-                      data-testid="input-pickup-roundtrip"
+                      id="date"
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      data-testid="input-date"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="destination-rt" className="text-sm font-medium">Destination</Label>
+                    <Label htmlFor="time">Heure *</Label>
                     <Input
-                      id="destination-rt"
-                      placeholder="Aéroport, hôtel, adresse..."
-                      data-testid="input-destination-roundtrip"
+                      id="time"
+                      type="time"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      data-testid="input-time"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="return-date" className="text-sm font-medium">Date de retour</Label>
+                    <Label htmlFor="passengers" className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Passagers
+                    </Label>
+                    <Select value={passengers} onValueChange={setPassengers}>
+                      <SelectTrigger data-testid="select-passengers">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} passager{num > 1 ? "s" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Aller-Retour */}
+              <TabsContent value="return" className="space-y-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="origin-return">Origine *</Label>
+                    <Input
+                      id="origin-return"
+                      placeholder="Ex: Aéroport Tunis Carthage"
+                      value={origin}
+                      onChange={(e) => setOrigin(e.target.value)}
+                      data-testid="input-origin-return"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="destination-return">Destination *</Label>
+                    <Input
+                      id="destination-return"
+                      placeholder="Ex: Hammamet"
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      data-testid="input-destination-return"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date-return">Date aller *</Label>
+                    <Input
+                      id="date-return"
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      data-testid="input-date-return"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time-return">Heure aller *</Label>
+                    <Input
+                      id="time-return"
+                      type="time"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      data-testid="input-time-return"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="return-date">Date retour *</Label>
                     <Input
                       id="return-date"
-                      type="datetime-local"
+                      type="date"
+                      value={returnDate}
+                      onChange={(e) => setReturnDate(e.target.value)}
                       data-testid="input-return-date"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="return-time">Heure retour *</Label>
+                    <Input
+                      id="return-time"
+                      type="time"
+                      value={returnTime}
+                      onChange={(e) => setReturnTime(e.target.value)}
+                      data-testid="input-return-time"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="passengers-return" className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Passagers
+                  </Label>
+                  <Select value={passengers} onValueChange={setPassengers}>
+                    <SelectTrigger data-testid="select-passengers-return">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                        <SelectItem key={num} value={num.toString()}>
+                          {num} passager{num > 1 ? "s" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </TabsContent>
             </Tabs>
 
-            {/* Date and Passengers */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pickup-date" className="text-sm font-medium flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Date et heure
-                </Label>
-                <Input
-                  id="pickup-date"
-                  type="datetime-local"
-                  data-testid="input-pickup-date"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="passengers" className="text-sm font-medium flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Passagers
-                </Label>
-                <Select value={passengers} onValueChange={setPassengers}>
-                  <SelectTrigger data-testid="select-passengers">
-                    <SelectValue placeholder="Nombre de passagers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num} passager{num > 1 ? 's' : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center gap-2">
-                  <Luggage className="h-4 w-4" />
-                  Service
-                </Label>
-                <Select>
-                  <SelectTrigger data-testid="select-service">
-                    <SelectValue placeholder="Type de service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="transfer">Transfert</SelectItem>
-                    <SelectItem value="disposal">Mise à disposition</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Vehicle Types */}
-            <div className="space-y-4">
-              <Label className="text-sm font-medium">Type de véhicule</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {vehicleTypes.map((vehicle) => (
-                  <Card 
-                    key={vehicle.type}
-                    className={`cursor-pointer transition-all hover-elevate ${
-                      selectedVehicle === vehicle.type 
-                        ? 'ring-2 ring-primary bg-primary/5' 
-                        : 'hover:shadow-md'
-                    }`}
-                    onClick={() => setSelectedVehicle(vehicle.type)}
-                    data-testid={`card-vehicle-${vehicle.type}`}
-                  >
-                    <CardContent className="p-3 text-center space-y-2">
-                      <div className="aspect-video bg-muted rounded-md overflow-hidden">
-                        <img 
-                          src={vehicle.image} 
-                          alt={vehicle.name} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <h4 className="font-medium text-sm">{vehicle.name}</h4>
-                      <div className="flex justify-center gap-2">
-                        <Badge variant="secondary" className="text-xs">
-                          <Users className="h-3 w-3 mr-1" />
-                          {vehicle.capacity}
-                        </Badge>
-                        <Badge variant="secondary" className="text-xs">
-                          <Luggage className="h-3 w-3 mr-1" />
-                          {vehicle.luggage}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
             {/* Search Button */}
             <div className="flex justify-center pt-4">
-              <Button 
+              <Button
                 size="lg"
                 onClick={handleSearch}
-                className="w-full sm:w-auto px-8"
+                className="w-full sm:w-auto px-12"
                 data-testid="button-search-transfers"
               >
-                Obtenir des Offres
+                Rechercher les véhicules disponibles
               </Button>
             </div>
           </CardContent>
