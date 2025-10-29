@@ -4,44 +4,75 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes
 
+## October 29, 2025 - Automatic Transfer Pricing & Booking Flow
+
+### Completed Features
+- **Google Maps Distance Matrix API Integration** (`server/googleMaps.ts`)
+  - Automatic distance and duration calculation between two addresses
+  - Fallback mode (50km/45min) when API unavailable for seamless testing
+  - Full error handling and logging
+
+- **Auto-Transfer Pricing API** (`GET /api/pricing/auto-transfer`)
+  - Calculates distance via Google Maps
+  - Returns all suitable vehicles with computed prices
+  - Filters vehicles by passenger capacity
+  - Formula: `Price = basePrice + (pricePerKm × distance)`
+  - Sorts results by price (lowest first)
+  - Graceful fallback when Google Maps unavailable
+
+- **3-Step Transfer Booking Flow**
+  - **Step 1** (`/book/transfer`): Search form with origin, destination, date, time, passengers
+    - Toggle aller-simple / aller-retour
+    - Popular routes section for quick selection
+    - Full form validation
+  - **Step 2** (`/book/transfer/vehicles`): Vehicle selection with auto-calculated prices
+    - Displays distance, duration, and passenger count
+    - Shows vehicles filtered by capacity
+    - Price breakdown (base + per km)
+    - Handles round-trip pricing (price × 2)
+  - **Step 3** (`/book/transfer/confirm`): Customer details and payment
+    - React Hook Form with Zod validation
+    - Booking summary sidebar with all trip details
+    - Price breakdown and total
+    - Placeholder KONNECT payment integration
+
+### Technical Implementation
+- **Files Created**:
+  - `server/googleMaps.ts`: Google Maps API service
+  - `client/src/pages/TransferSearchPage.tsx`: Search form (Step 1)
+  - `client/src/pages/TransferVehiclesPage.tsx`: Vehicle selection (Step 2)
+  - `client/src/pages/TransferConfirmPage.tsx`: Confirmation (Step 3)
+
+- **Files Modified**:
+  - `server/routes.ts`: Added `/api/pricing/auto-transfer` route with fallback
+  - `client/src/App.tsx`: Registered 3 new routes
+  - `client/src/components/Header.tsx`: Added "Réserver un Transfer" link
+
+### Architectural Decisions
+- **Custom queryFn**: TransferVehiclesPage uses explicit queryFn to pass URL params
+- **Fallback Strategy**: System continues working even if Google Maps API fails (uses 50km default)
+- **Price Calculation**: Server-side only for security and consistency
+- **State Management**: URL query params pass data between booking steps
+- **Vehicle Type Enums**: Consistent lowercase backend with French UI labels
+
+### Testing
+- **End-to-End Test**: Full 3-step booking flow validated with Playwright
+  - Search form → Vehicle selection → Customer details
+  - Tested with Google Maps fallback mode
+  - Confirmed graceful error handling
+  - All interactive elements verified with data-testid attributes
+
+### Next Steps
+- Implement KONNECT payment integration (replace placeholder)
+- Create actual reservation in database
+- SendGrid email confirmation
+- Admin interface for basePrice/pricePerKm configuration
+
 ## October 27, 2025 - Phase 3 Public UI Progress
 
 ### Completed Features
 - **Vehicle Catalog Page** (`/vehicles`): Full catalog with type filtering
-  - Grid display of all vehicles with images/placeholders
-  - Type filter sidebar mapping UI labels to backend enum values
-  - Type enum mapping: "Économique" → "economy", "Confort" → "comfort", etc.
-  - Responsive cards with availability badges, capacity info, price indicators
-  - Navigation to detail pages via vehicle cards
-  
-- **Vehicle Detail Page** (`/vehicles/:id`): Comprehensive vehicle information with pricing calculators
-  - Custom `queryFn` to fetch individual vehicle from `/api/vehicles/:id`
-  - Full vehicle specifications display (capacity, luggage, features, description)
-  - **Transfer Calculator**: Origin/destination, distance, date → seasonal per-km pricing
-  - **Disposal Calculator**: Date, duration (hours) → seasonal hourly pricing
-  - Error handling for pricing API failures with user notifications
-  - Pre-filled navigation to booking forms (`/book/transfer`, `/book/disposal`)
-  - Responsive three-column layout with image gallery
-
-### API Routes Added
-- `GET /api/pricing/transfer?vehicleId=X&distance=Y&date=Z`
-  - Returns: `{basePrice, distance, totalPrice, season, validFrom, validTo}`
-  - Uses seasonal pricing logic from `server/pricing.ts`
-- `GET /api/pricing/disposal?vehicleId=X&hours=Y&date=Z`
-  - Returns: `{basePrice, duration, totalPrice, season, validFrom, validTo}`
-  - Uses seasonal hourly pricing logic
-
-### Architectural Decisions
-- **Vehicle Type Enums**: Lowercase backend values ("economy", "business", "comfort", "premium", "vip", "suv", "van", "minibus") with UI label mapping for French display
-- **Seasonal Pricing**: Year-wrap handling fixed in `buildSeasonDates()` for cross-year seasons (e.g., Dec–Feb correctly adjusts years)
-- **Custom Query Functions**: VehicleDetailPage uses explicit `queryFn` to fetch specific vehicle instead of relying on default fetcher
-- **Error Handling**: Pricing calculators validate `response.ok` before parsing JSON and surface errors via alerts
-
-### Next Steps
-- Task 8: Create Transfer booking form (`/book/transfer`)
-- Task 9: Create Disposal booking form (`/book/disposal`)
-- Phase 4: KONNECT payment integration
-- Phase 5: SendGrid email notifications
+- **Vehicle Detail Page** (`/vehicles/:id`): Comprehensive information with pricing calculators
 
 # User Preferences
 
