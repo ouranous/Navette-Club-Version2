@@ -67,6 +67,9 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 # User Preferences
 Preferred communication style: Simple, everyday language.
 
+# Recent Fixes
+- Fixed vehicle type data inconsistency: Vehicle "Berline Confort uOdo" had wrong type (economy instead of comfort)
+
 # System Architecture
 
 ## Frontend

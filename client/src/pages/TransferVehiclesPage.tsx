@@ -290,7 +290,7 @@ export default function TransferVehiclesPage() {
             <div className="mb-6">
               <h1 className="text-3xl font-bold mb-2">Véhicules Disponibles</h1>
               <p className="text-muted-foreground">
-                {searchResponse ? `${filteredVehicles.length} véhicule(s) trouvé(s)${selectedVehicleType ? ` (type: ${selectedVehicleType})` : ""}` : "Recherche en cours..."}
+                {searchResponse ? `${filteredVehicles.length} véhicule(s) trouvé(s)${selectedVehicleType ? ` (type: ${VEHICLE_TYPE_LABELS[selectedVehicleType] || selectedVehicleType})` : ""}` : "Recherche en cours..."}
               </p>
             </div>
 

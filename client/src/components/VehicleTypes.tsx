@@ -6,6 +6,31 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import type { Vehicle } from "@shared/schema";
 
+// Map vehicle types to localized labels
+export const VEHICLE_TYPE_LABELS: Record<string, string> = {
+  economy: "Économie",
+  comfort: "Confort",
+  business: "Business",
+  premium: "Premium",
+  vip: "VIP",
+  suv: "SUV",
+  van: "Van",
+  minibus: "Minibus",
+};
+
+// Get vehicle type slug from name (for backward compatibility with mock data)
+const getVehicleTypeSlug = (name: string): string => {
+  const normalized = name.toLowerCase().trim();
+  // Direct match
+  if (normalized in VEHICLE_TYPE_LABELS) return normalized;
+  // Match by label
+  for (const [slug, label] of Object.entries(VEHICLE_TYPE_LABELS)) {
+    if (label.toLowerCase() === normalized) return slug;
+  }
+  // Fallback: try to normalize the name
+  return normalized.replace(/[éè]/g, 'e').replace(/\s+/g, '');
+};
+
 export default function VehicleTypes() {
   const [, setLocation] = useLocation();
   const { data: vehicles = [], isLoading } = useQuery<Vehicle[]>({
@@ -13,9 +38,10 @@ export default function VehicleTypes() {
   });
 
   // Fallback mock data if database is empty
-  const mockVehicles: Vehicle[] = isLoading || vehicles.length > 0 ? [] : [
+  const mockVehicles: any[] = isLoading || vehicles.length > 0 ? [] : [
     {
       id: "economy",
+      type: "economy",
       name: "Économie",
       description: "Parfait pour les trajets courts et économiques",
       passengers: 4,
@@ -26,6 +52,7 @@ export default function VehicleTypes() {
     },
     {
       id: "comfort",
+      type: "comfort",
       name: "Confort",
       description: "L'équilibre parfait entre confort et prix",
       passengers: 4,
@@ -37,6 +64,7 @@ export default function VehicleTypes() {
     },
     {
       id: "business",
+      type: "business",
       name: "Business",
       description: "Voyagez avec style et professionnalisme",
       passengers: 4,
@@ -47,6 +75,7 @@ export default function VehicleTypes() {
     },
     {
       id: "premium",
+      type: "premium",
       name: "Premium",
       description: "L'expérience haut de gamme pour vos déplacements",
       passengers: 4,
@@ -57,6 +86,7 @@ export default function VehicleTypes() {
     },
     {
       id: "vip",
+      type: "vip",
       name: "VIP",
       description: "Le summum du luxe et du service",
       passengers: 4,
@@ -67,6 +97,7 @@ export default function VehicleTypes() {
     },
     {
       id: "suv",
+      type: "suv",
       name: "SUV",
       description: "Spacieux et confortable pour tous vos bagages",
       passengers: 7,
@@ -77,6 +108,7 @@ export default function VehicleTypes() {
     },
     {
       id: "van",
+      type: "van",
       name: "Van",
       description: "Idéal pour les groupes et familles nombreuses",
       passengers: 8,
@@ -87,6 +119,7 @@ export default function VehicleTypes() {
     },
     {
       id: "minibus",
+      type: "minibus",
       name: "Minibus",
       description: "Transport de groupe confortable et sécurisé",
       passengers: 16,
@@ -97,9 +130,11 @@ export default function VehicleTypes() {
     }
   ];
 
-  const handleSelectVehicle = (vehicleType: string) => {
+  const handleSelectVehicle = (vehicle: any) => {
+    // Get standardized vehicle type slug
+    const typeSlug = vehicle.type || getVehicleTypeSlug(vehicle.name || "");
     // Rediriger vers le formulaire de réservation avec le type de véhicule pré-sélectionné
-    setLocation(`/book/transfer?vehicleType=${encodeURIComponent(vehicleType)}`);
+    setLocation(`/book/transfer?vehicleType=${encodeURIComponent(typeSlug)}`);
   };
 
   // Use real data or fallback to mock
@@ -187,7 +222,7 @@ export default function VehicleTypes() {
 
                 <Button 
                   className="w-full"
-                  onClick={() => handleSelectVehicle(vehicle.type || vehicle.name || "")}
+                  onClick={() => handleSelectVehicle(vehicle)}
                   data-testid={`button-select-${vehicle.id}`}
                 >
                   Choisir ce véhicule

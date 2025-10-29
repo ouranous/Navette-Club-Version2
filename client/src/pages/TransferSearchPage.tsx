@@ -9,6 +9,7 @@ import { Calendar, Car } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { VEHICLE_TYPE_LABELS } from "@/components/VehicleTypes";
 
 export default function TransferSearchPage() {
   const [, setLocation] = useLocation();
@@ -136,7 +137,7 @@ export default function TransferSearchPage() {
                     <Label className="text-base font-semibold">Type de véhicule sélectionné</Label>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-medium">{formData.vehicleType}</p>
+                    <p className="text-lg font-medium">{VEHICLE_TYPE_LABELS[formData.vehicleType] || formData.vehicleType}</p>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -162,14 +163,14 @@ export default function TransferSearchPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les types</SelectItem>
-                      <SelectItem value="Économie">Économie</SelectItem>
-                      <SelectItem value="Confort">Confort</SelectItem>
-                      <SelectItem value="Business">Business</SelectItem>
-                      <SelectItem value="Premium">Premium</SelectItem>
-                      <SelectItem value="VIP">VIP</SelectItem>
-                      <SelectItem value="SUV">SUV</SelectItem>
-                      <SelectItem value="Van">Van</SelectItem>
-                      <SelectItem value="Minibus">Minibus</SelectItem>
+                      <SelectItem value="economy">Économie</SelectItem>
+                      <SelectItem value="comfort">Confort</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="vip">VIP</SelectItem>
+                      <SelectItem value="suv">SUV</SelectItem>
+                      <SelectItem value="van">Van</SelectItem>
+                      <SelectItem value="minibus">Minibus</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
