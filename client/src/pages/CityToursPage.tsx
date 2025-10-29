@@ -85,12 +85,7 @@ export default function CityToursPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
 
   const { data: tours = [], isLoading } = useQuery<CityTour[]>({
-    queryKey: ["/api/tours", { active: true }],
-    queryFn: async () => {
-      const res = await fetch("/api/tours?active=true");
-      if (!res.ok) throw new Error("Failed to fetch tours");
-      return res.json();
-    },
+    queryKey: ["/api/tours?active=true"],
   });
 
   const filteredTours = tours.filter(tour => {
@@ -274,6 +269,7 @@ export default function CityToursPage() {
                     setSelectedCategory("all");
                     setSelectedDifficulty("all");
                   }}
+                  data-testid="button-reset-filters"
                 >
                   Réinitialiser les filtres
                 </Button>
