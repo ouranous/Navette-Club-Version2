@@ -3,6 +3,30 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes
 
+## October 29, 2025 - Homepage Vehicle Display Control
+
+### Admin Control for Vehicle Homepage Visibility
+- **Problem**: With potentially 100+ vehicles in the database, displaying all on the homepage would be overwhelming
+- **Solution**: Added admin control to select which vehicles appear in the "Nos Types de Véhicules" section
+- **Implementation**:
+  - Added `showOnHomepage` boolean field to vehicles table (default: false)
+  - Created Switch control in admin interface to toggle homepage visibility
+  - Modified API endpoint to filter vehicles by `homepage=true` for homepage display
+  - Added `getHomepageVehicles()` storage method for efficient filtering
+- **Admin Experience**:
+  - Navigate to Admin → Véhicules
+  - When creating/editing a vehicle, use "Afficher sur la page d'accueil" switch
+  - Only vehicles with this toggle enabled will appear on the homepage
+- **User Impact**:
+  - Homepage now shows only curated vehicles selected by admin
+  - Cleaner, more focused presentation in "Nos Types de Véhicules" section
+- **Files Modified**:
+  - `shared/schema.ts`: Added showOnHomepage field to vehicles table
+  - `client/src/components/admin/VehiclesManagement.tsx`: Added Switch control
+  - `server/storage.ts`: Added getHomepageVehicles() method
+  - `server/routes.ts`: Added homepage query parameter support
+  - `client/src/components/VehicleTypes.tsx`: Changed to use homepage filter
+
 ## October 29, 2025 - Google Places Autocomplete Fix
 
 ### Transfer Booking Form Enhancement
