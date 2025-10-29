@@ -3,16 +3,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, Luggage, Star, Coffee } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import type { Vehicle } from "@shared/schema";
 
 export default function VehicleTypes() {
+  const [, setLocation] = useLocation();
   const { data: vehicles = [], isLoading } = useQuery<Vehicle[]>({
-    queryKey: ["/api/vehicles", { available: true }],
-    queryFn: async () => {
-      const res = await fetch("/api/vehicles?available=true");
-      if (!res.ok) throw new Error("Failed to fetch vehicles");
-      return res.json();
-    },
+    queryKey: ["/api/vehicles?available=true"],
   });
 
   // Fallback mock data if database is empty
@@ -100,8 +97,9 @@ export default function VehicleTypes() {
     }
   ];
 
-  const handleSelectVehicle = (vehicleId: string) => {
-    console.log('Selected vehicle:', vehicleId);
+  const handleSelectVehicle = (vehicleType: string) => {
+    // Rediriger vers le formulaire de réservation avec le type de véhicule pré-sélectionné
+    setLocation(`/book/transfer?vehicleType=${encodeURIComponent(vehicleType)}`);
   };
 
   // Use real data or fallback to mock
@@ -189,7 +187,7 @@ export default function VehicleTypes() {
 
                 <Button 
                   className="w-full"
-                  onClick={() => handleSelectVehicle(vehicle.id)}
+                  onClick={() => handleSelectVehicle(vehicle.type || vehicle.name)}
                   data-testid={`button-select-${vehicle.id}`}
                 >
                   Choisir ce véhicule

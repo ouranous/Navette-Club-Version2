@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Car } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,9 +21,19 @@ export default function TransferSearchPage() {
     passengers: "1",
     returnDate: "",
     returnTime: "",
+    vehicleType: "",
   });
   const [tripType, setTripType] = useState<"oneway" | "return">("oneway");
   const [isSearching, setIsSearching] = useState(false);
+
+  // Lire le type de véhicule depuis l'URL au chargement
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const vehicleType = params.get("vehicleType");
+    if (vehicleType) {
+      setFormData(prev => ({ ...prev, vehicleType }));
+    }
+  }, []);
 
   const handleSearch = async () => {
     // Validation
@@ -55,6 +66,10 @@ export default function TransferSearchPage() {
       passengers: formData.passengers,
       tripType,
     });
+
+    if (formData.vehicleType) {
+      params.append("vehicleType", formData.vehicleType);
+    }
 
     if (tripType === "return") {
       params.append("returnDate", formData.returnDate);
@@ -112,6 +127,53 @@ export default function TransferSearchPage() {
                   Aller-retour
                 </Button>
               </div>
+
+              {/* Vehicle Type Selection */}
+              {formData.vehicleType && (
+                <div className="space-y-2 p-4 bg-primary/10 rounded-lg border border-primary/20">
+                  <div className="flex items-center gap-2">
+                    <Car className="h-5 w-5 text-primary" />
+                    <Label className="text-base font-semibold">Type de véhicule sélectionné</Label>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-lg font-medium">{formData.vehicleType}</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, vehicleType: "" })}
+                      data-testid="button-clear-vehicle-type"
+                    >
+                      Changer
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Vehicle Type Dropdown (si aucun type n'est pré-sélectionné) */}
+              {!formData.vehicleType && (
+                <div className="space-y-2">
+                  <Label htmlFor="vehicleType">Type de véhicule (optionnel)</Label>
+                  <Select
+                    value={formData.vehicleType}
+                    onValueChange={(value) => setFormData({ ...formData, vehicleType: value })}
+                  >
+                    <SelectTrigger id="vehicleType" data-testid="select-vehicle-type">
+                      <SelectValue placeholder="Tous les types de véhicules" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les types</SelectItem>
+                      <SelectItem value="Économie">Économie</SelectItem>
+                      <SelectItem value="Confort">Confort</SelectItem>
+                      <SelectItem value="Business">Business</SelectItem>
+                      <SelectItem value="Premium">Premium</SelectItem>
+                      <SelectItem value="VIP">VIP</SelectItem>
+                      <SelectItem value="SUV">SUV</SelectItem>
+                      <SelectItem value="Van">Van</SelectItem>
+                      <SelectItem value="Minibus">Minibus</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Origin and Destination */}
               <div className="grid md:grid-cols-2 gap-4">
