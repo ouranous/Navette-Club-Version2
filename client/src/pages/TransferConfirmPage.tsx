@@ -27,6 +27,8 @@ const customerSchema = z.object({
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   email: z.string().email("Email invalide"),
   phone: z.string().min(8, "Numéro de téléphone invalide"),
+  flightNumber: z.string().optional(),
+  nameOnPlacard: z.string().optional(),
 });
 
 type CustomerFormData = z.infer<typeof customerSchema>;
@@ -83,6 +85,8 @@ export default function TransferConfirmPage() {
       lastName: "",
       email: "",
       phone: "",
+      flightNumber: "",
+      nameOnPlacard: "",
     },
   });
 
@@ -244,6 +248,44 @@ export default function TransferConfirmPage() {
                         </FormItem>
                       )}
                     />
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="flightNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Numéro de Vol (optionnel)</FormLabel>
+                            <FormControl>
+                              <Input
+                                data-testid="input-flight-number"
+                                placeholder="TU123"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="nameOnPlacard"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nom sur la Pancarte (optionnel)</FormLabel>
+                            <FormControl>
+                              <Input
+                                data-testid="input-name-on-placard"
+                                placeholder="M. Dupont"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     <Separator className="my-6" />
 
