@@ -3,9 +3,25 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes
 
-## October 29, 2025 - City Tours Improvements
+## October 29, 2025 - Unified Header & Footer + UI Improvements
 
-### Duration Field Enhancement
+### Header & Footer Standardization
+- **Objective**: Provide consistent navigation and branding across all pages
+- **Logo Made Clickable**: Logo in header now redirects to homepage (/)
+- **Pages Updated**:
+  - `TransferSearchPage`: Added Header and Footer
+  - `TransferVehiclesPage`: Added Header and Footer
+  - `TransferConfirmPage`: Added Header and Footer
+  - Adjusted page padding to account for fixed header (pt-24)
+- **Files Modified**:
+  - `client/src/components/Header.tsx`: Logo wrapped in Link component
+  - `client/src/pages/TransferSearchPage.tsx`
+  - `client/src/pages/TransferVehiclesPage.tsx`
+  - `client/src/pages/TransferConfirmPage.tsx`
+
+### City Tours Improvements
+
+#### Duration Field Enhancement
 - **Admin Interface**: Replaced free-text input with dropdown select for tour duration
   - Predefined options: Demi journée, 1-7 jours
   - Duration stored in hours (4h for half-day, 24h for 1 day, etc.)
@@ -16,7 +32,7 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
   - Displays "Xh" for other durations
   - Applied across: Admin preview, Homepage featured tours, City tours listing
 
-### Highlights Display Fix
+#### Highlights Display Fix
 - **Problem**: Highlights were displaying "sparkles:" prefix instead of clean text
 - **Solution**: Added `parseHighlight()` function to extract clean text from "icon::text" format
 - **Files Modified**:

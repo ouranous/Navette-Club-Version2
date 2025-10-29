@@ -2,6 +2,7 @@ import { Bell, Menu, MapPin, Car, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { Link } from "wouter";
 
 export default function Header() {
   const [notificationCount, setNotificationCount] = useState(3); //todo: remove mock functionality
@@ -17,12 +18,12 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 hover-elevate transition-all" data-testid="link-home-logo">
             <div className="flex items-center space-x-2">
               <Car className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold text-foreground">NavetteClub</span>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">

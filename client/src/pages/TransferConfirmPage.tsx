@@ -13,6 +13,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import { MapPin, Calendar, Users, Car, CreditCard, ArrowLeft, Check } from "lucide-react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 interface Vehicle {
   id: string;
@@ -145,8 +147,9 @@ export default function TransferConfirmPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto px-4 pt-24 pb-8">
         <Button
           data-testid="button-back"
           variant="ghost"
@@ -458,6 +461,7 @@ export default function TransferConfirmPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

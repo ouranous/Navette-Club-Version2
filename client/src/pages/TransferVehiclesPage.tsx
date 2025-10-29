@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Users, Luggage, MapPin, Calendar, Clock, Car } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 interface PriceBreakdown {
   basePrice: number;
@@ -172,7 +174,8 @@ export default function TransferVehiclesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <Header />
+      <div className="container mx-auto px-4 pt-24 pb-8">
         <div className="grid lg:grid-cols-12 gap-6">
           {/* COLONNE GAUCHE - Récapitulatif de la réservation */}
           <div className="lg:col-span-4">
@@ -414,6 +417,7 @@ export default function TransferVehiclesPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
