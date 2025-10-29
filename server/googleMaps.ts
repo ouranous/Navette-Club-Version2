@@ -63,6 +63,7 @@ export async function calculateDistance(
 
     if (data.status !== "OK") {
       console.error("Erreur Google Maps API status:", data.status);
+      console.error("Google Maps response data:", JSON.stringify(data));
       return null;
     }
 
