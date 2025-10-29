@@ -3,6 +3,22 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes
 
+## October 29, 2025 - Google Places Autocomplete Fix
+
+### Transfer Booking Form Enhancement
+- **Problem**: Google Places autocomplete was not working on the transfer booking form
+- **Solution**: Integrated GooglePlacesInput component for origin and destination fields
+- **Changes**:
+  - Replaced standard Input components with GooglePlacesInput in TransferSearchPage
+  - GooglePlacesInput provides autocomplete suggestions restricted to Tunisia
+  - Users can now select from Google Places suggestions or type manually
+- **User Experience**:
+  - Type in origin/destination fields to see autocomplete suggestions
+  - Suggestions include airports, hotels, cities, and addresses in Tunisia
+  - Selecting a suggestion fills the field with the complete address
+- **Files Modified**:
+  - `client/src/pages/TransferSearchPage.tsx`: Integrated GooglePlacesInput component
+
 ## October 29, 2025 - Vehicle Type Selection Flow Implementation
 
 ### Vehicle Type Pre-Selection from Homepage
