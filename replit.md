@@ -4,7 +4,45 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes
 
-## October 29, 2025 - Automatic Transfer Pricing & Booking Flow
+## October 29, 2025 - UI Redesign: Industry-Standard 2-Column Layout
+
+### Completed Features
+- **Industry-Standard Vehicle Selection UI** (`/book/transfer/vehicles`)
+  - **2-column layout** matching Carthage Transfer and AirportTransfer.com standards:
+    - **Left column** (sticky): Booking recap with origin, destination, date, passengers, distance, duration
+    - **Right column**: Clean vehicle list with horizontal cards
+  - **Simplified pricing display**: Only total price shown (no detailed breakdown)
+  - **Professional vehicle cards**: Image, brand/model, capacity, luggage, and total price in TND
+  - **Round-trip pricing**: Automatically doubles price for aller-retour bookings
+  - **Responsive design**: Collapses to single column on mobile devices
+
+- **Unified Homepage Booking Form** (`client/src/components/TransferBooking.tsx`)
+  - Direct navigation to `/book/transfer/vehicles` from homepage
+  - Full form validation before navigation
+  - Consistent UX between homepage and dedicated booking page
+  - Passes all search criteria via URL query parameters
+
+### Technical Implementation
+- **Files Modified**:
+  - `client/src/pages/TransferVehiclesPage.tsx`: Complete UI redesign with 2-column grid layout
+  - `client/src/components/TransferBooking.tsx`: Made functional with navigation and validation
+  
+### UI Design Decisions
+- **Sticky recap card** (z-index: 50): Always visible while scrolling vehicle list
+- **Simple pricing**: "À partir de XXX.XX TND" format (no "base + per km" breakdown shown)
+- **Clean vehicle cards**: Horizontal layout with image left, info center, price/button right
+- **Professional spacing**: Proper padding and gaps throughout for premium feel
+
+### Testing
+- **End-to-End Playwright Test**: Full booking flow validated
+  - Homepage form → Vehicle selection → Confirmation
+  - 2-column layout verified on desktop
+  - Simple pricing display confirmed
+  - All navigation flows working correctly
+
+---
+
+## October 29, 2025 - Automatic Transfer Pricing & Booking Flow (Initial Implementation)
 
 ### Completed Features
 - **Google Maps Distance Matrix API Integration** (`server/googleMaps.ts`)
@@ -21,20 +59,9 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
   - Graceful fallback when Google Maps unavailable
 
 - **3-Step Transfer Booking Flow**
-  - **Step 1** (`/book/transfer`): Search form with origin, destination, date, time, passengers
-    - Toggle aller-simple / aller-retour
-    - Popular routes section for quick selection
-    - Full form validation
-  - **Step 2** (`/book/transfer/vehicles`): Vehicle selection with auto-calculated prices
-    - Displays distance, duration, and passenger count
-    - Shows vehicles filtered by capacity
-    - Price breakdown (base + per km)
-    - Handles round-trip pricing (price × 2)
+  - **Step 1**: Homepage or `/book/transfer` search form
+  - **Step 2** (`/book/transfer/vehicles`): Vehicle selection with 2-column layout
   - **Step 3** (`/book/transfer/confirm`): Customer details and payment
-    - React Hook Form with Zod validation
-    - Booking summary sidebar with all trip details
-    - Price breakdown and total
-    - Placeholder KONNECT payment integration
 
 ### Technical Implementation
 - **Files Created**:
