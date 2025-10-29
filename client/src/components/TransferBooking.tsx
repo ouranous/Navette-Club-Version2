@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Calendar, Users } from "lucide-react";
+import { MapPin, Calendar, Users, Clock } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ export default function TransferBooking() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
+  const [serviceType, setServiceType] = useState("transfer");
   const [tripType, setTripType] = useState("oneway");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -23,6 +24,16 @@ export default function TransferBooking() {
   const [passengers, setPassengers] = useState("2");
 
   const handleSearch = () => {
+    // Vérifier le type de service
+    if (serviceType === "disposal") {
+      toast({
+        title: "Bientôt disponible",
+        description: "Le service de mise à disposition sera bientôt disponible avec un système de tarification dédié.",
+        variant: "default",
+      });
+      return;
+    }
+
     // Validation
     if (!origin || !destination || !date || !time) {
       toast({
@@ -80,6 +91,23 @@ export default function TransferBooking() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Service Type Selector */}
+            <div className="space-y-2">
+              <Label htmlFor="service-type" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Type de service
+              </Label>
+              <Select value={serviceType} onValueChange={setServiceType}>
+                <SelectTrigger data-testid="select-service-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="transfer">Transfert</SelectItem>
+                  <SelectItem value="disposal">Mise à disposition (Bientôt disponible)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Trip Type Tabs */}
             <Tabs value={tripType} onValueChange={setTripType} className="w-full">
               <TabsList className="grid w-full grid-cols-2">

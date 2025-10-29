@@ -273,7 +273,7 @@ export default function TransferConfirmPage() {
                       size="lg"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Traitement en cours..." : `Confirmer et Payer ${totalPrice.toFixed(2)} TND`}
+                      {isSubmitting ? "Traitement en cours..." : `Confirmer et Payer ${totalPrice.toFixed(2)} €`}
                     </Button>
                   </form>
                 </Form>
@@ -395,20 +395,20 @@ export default function TransferConfirmPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Prix aller simple</span>
-                    <span>{price.toFixed(2)} TND</span>
+                    <span>{price.toFixed(2)} €</span>
                   </div>
                   {tripType === "return" && (
                     <>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Prix retour</span>
-                        <span>{price.toFixed(2)} TND</span>
+                        <span>{price.toFixed(2)} €</span>
                       </div>
                       <Separator />
                     </>
                   )}
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-primary">{totalPrice.toFixed(2)} TND</span>
+                    <span className="text-primary">{totalPrice.toFixed(2)} €</span>
                   </div>
                 </div>
               </CardContent>

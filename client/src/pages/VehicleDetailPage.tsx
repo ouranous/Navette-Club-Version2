@@ -392,7 +392,7 @@ export default function VehicleDetailPage() {
                       <div className="flex justify-between items-center pt-2 border-t">
                         <span className="text-lg font-semibold">Prix total:</span>
                         <span className="text-2xl font-bold text-primary" data-testid="text-transfer-price">
-                          {transferPrice.totalPrice.toFixed(2)} TND
+                          {transferPrice.totalPrice.toFixed(2)} €
                         </span>
                       </div>
                       <Button
@@ -476,7 +476,7 @@ export default function VehicleDetailPage() {
                       <div className="flex justify-between items-center pt-2 border-t">
                         <span className="text-lg font-semibold">Prix total:</span>
                         <span className="text-2xl font-bold text-primary" data-testid="text-disposal-price">
-                          {disposalPrice.totalPrice.toFixed(2)} TND
+                          {disposalPrice.totalPrice.toFixed(2)} €
                         </span>
                       </div>
                       <Button

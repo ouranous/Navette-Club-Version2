@@ -367,7 +367,7 @@ export default function TransferVehiclesPage() {
                             <div className="text-right">
                               <p className="text-sm text-muted-foreground mb-1">À partir de</p>
                               <p className="text-3xl font-bold text-primary">
-                                {finalPrice.toFixed(2)} <span className="text-lg">TND</span>
+                                {finalPrice.toFixed(2)} <span className="text-lg">€</span>
                               </p>
                               {tripType === "return" && (
                                 <p className="text-xs text-muted-foreground mt-1">
