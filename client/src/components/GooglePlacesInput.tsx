@@ -47,10 +47,27 @@ export default function GooglePlacesInput({
     // Écouter la sélection d'une place
     const listener = autocompleteRef.current.addListener("place_changed", () => {
       const place = autocompleteRef.current?.getPlace();
-      if (place && place.formatted_address) {
-        const selectedAddress = place.formatted_address;
-        setInputValue(selectedAddress);
-        onChange(selectedAddress);
+      if (place) {
+        // Combiner le nom et l'adresse pour un affichage complet
+        let selectedAddress = "";
+        
+        if (place.name && place.formatted_address) {
+          // Si le nom n'est pas déjà dans l'adresse, le préfixer
+          if (!place.formatted_address.includes(place.name)) {
+            selectedAddress = `${place.name}, ${place.formatted_address}`;
+          } else {
+            selectedAddress = place.formatted_address;
+          }
+        } else if (place.name) {
+          selectedAddress = place.name;
+        } else if (place.formatted_address) {
+          selectedAddress = place.formatted_address;
+        }
+        
+        if (selectedAddress) {
+          setInputValue(selectedAddress);
+          onChange(selectedAddress);
+        }
       }
     });
 

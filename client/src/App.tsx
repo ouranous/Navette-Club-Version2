@@ -15,9 +15,6 @@ import NotFound from "@/pages/not-found";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 
-console.log("Google Maps API Key loaded:", GOOGLE_MAPS_API_KEY ? "✓ YES" : "✗ NO");
-console.log("API Key preview:", GOOGLE_MAPS_API_KEY?.substring(0, 20) + "...");
-
 function Router() {
   return (
     <Switch>
