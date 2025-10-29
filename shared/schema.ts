@@ -63,6 +63,7 @@ export const vehicles = pgTable("vehicles", {
   basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(), // Prix de base par défaut
   pricePerKm: decimal("price_per_km", { precision: 10, scale: 2 }), // Prix par km par défaut
   isAvailable: boolean("is_available").notNull().default(true),
+  showOnHomepage: boolean("show_on_homepage").notNull().default(false), // Afficher sur la page d'accueil
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
