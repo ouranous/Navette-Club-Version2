@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Car, Users, Briefcase, Upload, Image as ImageIcon, Calendar, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -134,6 +135,7 @@ export default function VehiclesManagement() {
       basePrice: "0",
       pricePerKm: undefined,
       isAvailable: true,
+      showOnHomepage: false,
       providerId: undefined,
     },
   });
@@ -198,6 +200,7 @@ export default function VehiclesManagement() {
       basePrice: vehicle.basePrice || "0",
       pricePerKm: vehicle.pricePerKm ?? undefined,
       isAvailable: vehicle.isAvailable,
+      showOnHomepage: vehicle.showOnHomepage ?? false,
       providerId: vehicle.providerId ?? undefined,
     });
     
@@ -704,6 +707,30 @@ export default function VehiclesManagement() {
                         </div>
                       </div>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="showOnHomepage"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Afficher sur la page d'accueil
+                        </FormLabel>
+                        <div className="text-sm text-muted-foreground">
+                          Ce véhicule apparaîtra dans la section "Nos Types de Véhicules"
+                        </div>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="switch-show-on-homepage"
+                        />
+                      </FormControl>
                     </FormItem>
                   )}
                 />

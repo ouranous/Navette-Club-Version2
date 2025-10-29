@@ -98,10 +98,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========== VEHICLES ==========
   app.get("/api/vehicles", async (req, res) => {
     try {
-      const { available, providerId } = req.query;
+      const { available, providerId, homepage } = req.query;
       
       let vehicles;
-      if (available === "true") {
+      if (homepage === "true") {
+        vehicles = await storage.getHomepageVehicles();
+      } else if (available === "true") {
         vehicles = await storage.getAvailableVehicles();
       } else if (providerId) {
         vehicles = await storage.getVehiclesByProvider(providerId as string);

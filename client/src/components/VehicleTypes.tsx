@@ -34,7 +34,7 @@ const getVehicleTypeSlug = (name: string): string => {
 export default function VehicleTypes() {
   const [, setLocation] = useLocation();
   const { data: vehicles = [], isLoading } = useQuery<Vehicle[]>({
-    queryKey: ["/api/vehicles?available=true"],
+    queryKey: ["/api/vehicles?homepage=true"],
   });
 
   // Fallback mock data if database is empty

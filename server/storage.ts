@@ -204,6 +204,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(vehicles.basePrice);
   }
 
+  async getHomepageVehicles(): Promise<Vehicle[]> {
+    return await db
+      .select()
+      .from(vehicles)
+      .where(eq(vehicles.showOnHomepage, true))
+      .orderBy(vehicles.basePrice);
+  }
+
   async getVehicle(id: string): Promise<Vehicle | undefined> {
     const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
     return vehicle || undefined;
