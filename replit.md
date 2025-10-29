@@ -3,6 +3,27 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes
 
+## October 29, 2025 - Vehicle Type Selection Flow Implementation
+
+### Vehicle Type Pre-Selection from Homepage
+- **Objective**: Allow users to select a vehicle type from the homepage and have it pre-filled in the booking form
+- **Implementation**:
+  - Created `VEHICLE_TYPE_LABELS` constant for consistent slug-to-label mapping
+  - Modified VehicleTypes component to redirect to `/book/transfer?vehicleType={slug}`
+  - Enhanced TransferSearchPage to read and display selected vehicle type from URL params
+  - Updated TransferVehiclesPage to filter vehicles by type from URL params
+- **Vehicle Type Slugs**: economy, comfort, business, premium, vip, suv, van, minibus
+- **User Experience**:
+  - Clicking "Choisir ce véhicule" on homepage redirects to booking form with type pre-selected
+  - Selected type is highlighted on booking form with option to change
+  - Vehicle results page filters by selected type
+  - All labels are localized (French) while internal values use standardized slugs
+- **Files Modified**:
+  - `client/src/components/VehicleTypes.tsx`: Added VEHICLE_TYPE_LABELS, getVehicleTypeSlug helper, updated redirect logic
+  - `client/src/pages/TransferSearchPage.tsx`: Added vehicle type display and URL param reading
+  - `client/src/pages/TransferVehiclesPage.tsx`: Added type filtering logic
+- **Data Correction**: Fixed vehicle type for "Berline Confort uOdo" (was economy, now comfort)
+
 ## October 29, 2025 - City Tours Dedicated Page + UI Improvements
 
 ### New City Tours Page
@@ -67,9 +88,6 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 # User Preferences
 Preferred communication style: Simple, everyday language.
 
-# Recent Fixes
-- Fixed vehicle type data inconsistency: Vehicle "Berline Confort uOdo" had wrong type (economy instead of comfort)
-
 # System Architecture
 
 ## Frontend
@@ -80,10 +98,11 @@ The backend is an Express.js application with TypeScript, featuring an API-first
 
 ## Core Features & Design Decisions
 - **Admin Interface**: Comprehensive management for providers (including geographic service zones), vehicles (8 types, seasonal/hourly pricing), city tours (3-step creation, live preview, visual selectors), and homepage content.
-- **Geographic Zone-Based Vehicle Filtering**: Maps Tunisian cities/regions to 7 zones. Automatically detects zones from addresses, filters vehicles based on provider service zones, and scores/ranks providers by relevance (serving both origin/destination zones). Sorting prioritizes relevance then price.
+- **Geographic Zone-Based Vehicle Filtering**: Maps Tunisian cities/regions to 7 zones. Automatically detects zones from addresses, filters vehicles based on provider service zones, and scores/rank providers by relevance (serving both origin/destination zones). Sorting prioritizes relevance then price.
+- **Vehicle Type Selection Flow**: Users can select a vehicle type from the homepage, which pre-fills the booking form. Vehicle types use standardized slugs internally (economy, comfort, business, premium, vip, suv, van, minibus) with localized labels for display via VEHICLE_TYPE_LABELS constant. The selection persists through the booking flow and filters available vehicles.
 - **UI/UX**: Industry-standard 2-column layout for vehicle selection, with a sticky booking recap and horizontal vehicle cards. Simplified pricing display and responsive design. Professional design system with a blue-based color palette and Inter/Poppins fonts.
 - **Automatic Transfer Pricing**: Integrates Google Maps Distance Matrix API for automatic distance/duration calculation. An API calculates prices (`basePrice + pricePerKm × distance`) and filters vehicles by capacity, sorting by price. Includes a fallback mechanism if Google Maps is unavailable.
-- **Booking Flow**: A 3-step process: search form, vehicle selection, and customer details/payment.
+- **Booking Flow**: A 3-step process: search form (with optional vehicle type pre-selection), vehicle selection (filtered by type if selected), and customer details/payment.
 - **Database Schema**: PostgreSQL schema includes tables for Users (Replit Auth), Sessions, Providers (with `serviceZones`), Vehicles (with `Seasonal Prices` and `Hourly Prices` tables), City Tours, Home Page Content, Transfer Bookings (with `flightNumber` and `nameOnPlacard`), Disposal Bookings, Tour Bookings, Payment Intents, and Customers. Drizzle-zod is used for type-safe schema definitions.
 
 # External Dependencies
