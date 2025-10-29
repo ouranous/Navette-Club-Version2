@@ -7,6 +7,8 @@ import HomePage from "@/pages/HomePage";
 import TourDetailPage from "@/pages/TourDetailPage";
 import VehiclesPage from "@/pages/VehiclesPage";
 import VehicleDetailPage from "@/pages/VehicleDetailPage";
+import TransferSearchPage from "@/pages/TransferSearchPage";
+import TransferVehiclesPage from "@/pages/TransferVehiclesPage";
 import AdminPage from "@/pages/AdminPage";
 import NotFound from "@/pages/not-found";
 
@@ -17,6 +19,8 @@ function Router() {
       <Route path="/tours/:slug" component={TourDetailPage} />
       <Route path="/vehicles" component={VehiclesPage} />
       <Route path="/vehicles/:id" component={VehicleDetailPage} />
+      <Route path="/book/transfer" component={TransferSearchPage} />
+      <Route path="/book/transfer/vehicles" component={TransferVehiclesPage} />
       <Route path="/admin" component={AdminPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />

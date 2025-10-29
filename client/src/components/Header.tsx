@@ -26,9 +26,13 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="/vehicles" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-transfers">
+            <a href="/book/transfer" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-transfers">
               <Car className="h-4 w-4" />
-              <span>Transferts</span>
+              <span>Réserver un Transfer</span>
+            </a>
+            <a href="/vehicles" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-fleet">
+              <Car className="h-4 w-4" />
+              <span>Notre Flotte</span>
             </a>
             <a href="#city-tours" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-city-tours">
               <Globe className="h-4 w-4" />
@@ -87,8 +91,11 @@ export default function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t bg-background">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <a href="/vehicles" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-transfers">
-                Transferts
+              <a href="/book/transfer" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-transfers">
+                Réserver un Transfer
+              </a>
+              <a href="/vehicles" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-fleet">
+                Notre Flotte
               </a>
               <a href="#city-tours" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-city-tours">
                 City Tours
