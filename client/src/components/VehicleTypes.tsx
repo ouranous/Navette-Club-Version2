@@ -137,33 +137,33 @@ export default function VehicleTypes() {
             >
               <div className="relative">
                 <img 
-                  src={vehicle.imageUrl || vehicle.image || "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80"} 
-                  alt={vehicle.name}
+                  src={vehicle.imageUrl || (vehicle as any).image || "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80"} 
+                  alt={vehicle.name || "Véhicule"}
                   className="w-full h-48 object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 <div className="absolute bottom-4 left-4 text-white">
-                  <h3 className="text-xl font-bold">{vehicle.name}</h3>
+                  <h3 className="text-xl font-bold">{vehicle.name || "Véhicule"}</h3>
                   <p className="text-sm opacity-90">
-                    À partir de {vehicle.basePrice || vehicle.priceFrom || "0"}€
+                    À partir de {vehicle.basePrice || (vehicle as any).priceFrom || "0"}€
                   </p>
                 </div>
               </div>
 
               <CardHeader className="pb-3">
-                <CardTitle className="sr-only">{vehicle.name}</CardTitle>
-                <p className="text-sm text-muted-foreground">{vehicle.description}</p>
+                <CardTitle className="sr-only">{vehicle.name || "Véhicule"}</CardTitle>
+                <p className="text-sm text-muted-foreground">{vehicle.description || ""}</p>
               </CardHeader>
 
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{vehicle.capacity || vehicle.passengers} passagers</span>
+                    <span className="text-sm">{vehicle.capacity || (vehicle as any).passengers || 0} passagers</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Luggage className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{vehicle.luggage} bagages</span>
+                    <span className="text-sm">{(vehicle as any).luggage || 0} bagages</span>
                   </div>
                 </div>
 
@@ -187,7 +187,7 @@ export default function VehicleTypes() {
 
                 <Button 
                   className="w-full"
-                  onClick={() => handleSelectVehicle(vehicle.type || vehicle.name)}
+                  onClick={() => handleSelectVehicle(vehicle.type || vehicle.name || "")}
                   data-testid={`button-select-${vehicle.id}`}
                 >
                   Choisir ce véhicule

@@ -78,6 +78,7 @@ export default function TransferVehiclesPage() {
   const tripType = searchParams?.get("tripType") || "oneway";
   const returnDate = searchParams?.get("returnDate") || "";
   const returnTime = searchParams?.get("returnTime") || "";
+  const selectedVehicleType = searchParams?.get("vehicleType") || "";
 
   const { data: searchResponse, isLoading, error } = useQuery<SearchResponse>({
     queryKey: ["/api/pricing/auto-transfer", origin, destination, passengers],
@@ -168,9 +169,15 @@ export default function TransferVehiclesPage() {
     });
   }
 
+  // Filtrer les véhicules selon le type sélectionné (si spécifié)
+  const filteredVehicles = searchResponse?.vehicles.filter(vehicle => {
+    if (!selectedVehicleType || selectedVehicleType === "all") return true;
+    return vehicle.type.toLowerCase() === selectedVehicleType.toLowerCase();
+  }) || [];
+
   const totalPrice = tripType === "return" 
-    ? (searchResponse?.vehicles[0]?.calculatedPrice || 0) * 2
-    : (searchResponse?.vehicles[0]?.calculatedPrice || 0);
+    ? (filteredVehicles[0]?.calculatedPrice || 0) * 2
+    : (filteredVehicles[0]?.calculatedPrice || 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -283,7 +290,7 @@ export default function TransferVehiclesPage() {
             <div className="mb-6">
               <h1 className="text-3xl font-bold mb-2">Véhicules Disponibles</h1>
               <p className="text-muted-foreground">
-                {searchResponse ? `${searchResponse.vehicles.length} véhicule(s) trouvé(s)` : "Recherche en cours..."}
+                {searchResponse ? `${filteredVehicles.length} véhicule(s) trouvé(s)${selectedVehicleType ? ` (type: ${selectedVehicleType})` : ""}` : "Recherche en cours..."}
               </p>
             </div>
 
@@ -309,7 +316,7 @@ export default function TransferVehiclesPage() {
             )}
 
             {/* No Results */}
-            {searchResponse && searchResponse.vehicles.length === 0 && (
+            {searchResponse && filteredVehicles.length === 0 && (
               <Card>
                 <CardContent className="p-12 text-center">
                   <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -325,9 +332,9 @@ export default function TransferVehiclesPage() {
             )}
 
             {/* Vehicle List */}
-            {searchResponse && searchResponse.vehicles.length > 0 && (
+            {searchResponse && filteredVehicles.length > 0 && (
               <div className="space-y-4">
-                {searchResponse.vehicles.map((vehicle) => {
+                {filteredVehicles.map((vehicle) => {
                   const finalPrice = tripType === "return" 
                     ? vehicle.calculatedPrice * 2 
                     : vehicle.calculatedPrice;
