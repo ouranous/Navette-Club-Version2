@@ -1,6 +1,30 @@
 # Overview
 NavetteClub is a premium transportation platform offering high-end transfer services and city tour experiences. It features a sophisticated booking interface for transfers and guided city tours, aiming to provide a reliable and premium service. The platform includes a geographic zone-based vehicle filtering system for transfers, a redesigned 2-column UI for vehicle selection, and an initial automatic transfer pricing and booking flow.
 
+# Recent Changes
+
+## October 29, 2025 - City Tours Improvements
+
+### Duration Field Enhancement
+- **Admin Interface**: Replaced free-text input with dropdown select for tour duration
+  - Predefined options: Demi journée, 1-7 jours
+  - Duration stored in hours (4h for half-day, 24h for 1 day, etc.)
+  
+- **Smart Duration Formatting**: Added `formatDuration()` helper function
+  - Displays "Demi journée" for 4h
+  - Displays "X jour(s)" for multiples of 24h
+  - Displays "Xh" for other durations
+  - Applied across: Admin preview, Homepage featured tours, City tours listing
+
+### Highlights Display Fix
+- **Problem**: Highlights were displaying "sparkles:" prefix instead of clean text
+- **Solution**: Added `parseHighlight()` function to extract clean text from "icon::text" format
+- **Files Modified**:
+  - `client/src/components/admin/ToursManagement.tsx`: Duration dropdown
+  - `client/src/components/admin/TourVisualSelectors.tsx`: formatDuration() for preview
+  - `client/src/components/TunisiaHighlights.tsx`: formatDuration() and parseHighlight()
+  - `client/src/components/CityTours.tsx`: formatDuration() and parseHighlight()
+
 # User Preferences
 Preferred communication style: Simple, everyday language.
 

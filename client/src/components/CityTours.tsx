@@ -66,6 +66,23 @@ export default function CityTours() {
     }
   };
 
+  const formatDuration = (hours: number) => {
+    if (hours === 4) return "Demi journée";
+    if (hours >= 24 && hours % 24 === 0) {
+      const days = hours / 24;
+      return `${days} jour${days > 1 ? 's' : ''}`;
+    }
+    return `${hours}h`;
+  };
+
+  const parseHighlight = (highlight: string) => {
+    if (highlight.includes("::")) {
+      const [, text] = highlight.split("::");
+      return text;
+    }
+    return highlight;
+  };
+
   if (isLoading) {
     return (
       <section id="city-tours" className="py-16 bg-background">
@@ -172,7 +189,7 @@ export default function CityTours() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>{tour.duration}h</span>
+                      <span>{formatDuration(tour.duration)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
@@ -180,18 +197,18 @@ export default function CityTours() {
                     </div>
                   </div>
 
-                  {tour.included && tour.included.length > 0 && (
+                  {tour.highlights && tour.highlights.length > 0 && (
                     <div className="space-y-2">
-                      <div className="text-sm font-medium">Inclus</div>
+                      <div className="text-sm font-medium">Points forts</div>
                       <div className="flex flex-wrap gap-1">
-                        {tour.included.slice(0, 3).map((item, index) => (
+                        {tour.highlights.slice(0, 3).map((item, index) => (
                           <Badge 
                             key={index} 
                             variant="secondary" 
                             className="text-xs"
-                            data-testid={`badge-included-${tour.id}-${index}`}
+                            data-testid={`badge-highlight-${tour.id}-${index}`}
                           >
-                            {item}
+                            {parseHighlight(item)}
                           </Badge>
                         ))}
                       </div>

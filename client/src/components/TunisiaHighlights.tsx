@@ -24,6 +24,23 @@ const getDifficultyLabel = (difficulty: string) => {
   }
 };
 
+const formatDuration = (hours: number) => {
+  if (hours === 4) return "Demi journée";
+  if (hours >= 24 && hours % 24 === 0) {
+    const days = hours / 24;
+    return `${days} jour${days > 1 ? 's' : ''}`;
+  }
+  return `${hours}h`;
+};
+
+const parseHighlight = (highlight: string) => {
+  if (highlight.includes("::")) {
+    const [, text] = highlight.split("::");
+    return text;
+  }
+  return highlight;
+};
+
 export default function TunisiaHighlights() {
   const [, navigate] = useLocation();
 
@@ -102,7 +119,7 @@ export default function TunisiaHighlights() {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    <span>{tour.duration}h</span>
+                    <span>{formatDuration(tour.duration)}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="h-4 w-4" />
@@ -127,7 +144,7 @@ export default function TunisiaHighlights() {
                             variant="secondary" 
                             className="text-xs"
                           >
-                            {item}
+                            {parseHighlight(item)}
                           </Badge>
                         ))}
                       </div>
