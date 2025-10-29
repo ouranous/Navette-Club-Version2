@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { VEHICLE_TYPE_LABELS } from "@/components/VehicleTypes";
+import GooglePlacesInput from "@/components/GooglePlacesInput";
 
 export default function TransferSearchPage() {
   const [, setLocation] = useLocation();
@@ -180,22 +181,22 @@ export default function TransferSearchPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="origin">Point de départ *</Label>
-                  <Input
+                  <GooglePlacesInput
                     id="origin"
                     data-testid="input-origin"
                     placeholder="Ex: Aéroport Tunis-Carthage"
                     value={formData.origin}
-                    onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
+                    onChange={(value) => setFormData({ ...formData, origin: value })}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="destination">Destination *</Label>
-                  <Input
+                  <GooglePlacesInput
                     id="destination"
                     data-testid="input-destination"
                     placeholder="Ex: Hôtel Gammarth"
                     value={formData.destination}
-                    onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                    onChange={(value) => setFormData({ ...formData, destination: value })}
                   />
                 </div>
               </div>
