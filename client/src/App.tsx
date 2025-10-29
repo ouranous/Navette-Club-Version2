@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import HomePage from "@/pages/HomePage";
+import CityToursPage from "@/pages/CityToursPage";
 import TourDetailPage from "@/pages/TourDetailPage";
 import VehicleDetailPage from "@/pages/VehicleDetailPage";
 import TransferSearchPage from "@/pages/TransferSearchPage";
@@ -19,6 +20,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
+      <Route path="/city-tours" component={CityToursPage} />
       <Route path="/tours/:slug" component={TourDetailPage} />
       <Route path="/vehicles/:id" component={VehicleDetailPage} />
       <Route path="/book/transfer" component={TransferSearchPage} />

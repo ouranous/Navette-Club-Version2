@@ -31,7 +31,7 @@ export default function Header() {
               <Car className="h-4 w-4" />
               <span>Réserver un Transfer</span>
             </a>
-            <a href="#city-tours" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-city-tours">
+            <a href="/city-tours" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-city-tours">
               <Globe className="h-4 w-4" />
               <span>City Tours</span>
             </a>
@@ -91,7 +91,7 @@ export default function Header() {
               <a href="/book/transfer" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-transfers">
                 Réserver un Transfer
               </a>
-              <a href="#city-tours" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-city-tours">
+              <a href="/city-tours" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-city-tours">
                 City Tours
               </a>
               <a href="#about" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-about">
