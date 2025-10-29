@@ -4,6 +4,80 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes
 
+## October 29, 2025 - Geographic Zone-Based Vehicle Filtering System
+
+### Completed Features
+- **Geographic Zones Service** (`server/geographicZones.ts`)
+  - Comprehensive mapping of Tunisian cities/regions to 7 geographic zones:
+    - Tunis et Nord (Tunis, Carthage, Bizerte, Nabeul, Hammamet)
+    - Sousse et Sahel (Sousse, Port El Kantaoui, Enfidha)
+    - Monastir et Mahdia
+    - Sfax
+    - Kairouan
+    - Djerba et Sud (Djerba, Zarzis, Gabès, Médenine, Tataouine)
+    - Tozeur et Désert (Tozeur, Nefta, Douz, Kebili, Gafsa)
+  - Smart zone detection from Google Places addresses
+  - Provider relevance scoring: 2 points if serves both origin/destination, 1 point if serves one
+
+- **Database Schema Updates**
+  - `providers.serviceZones`: Array of geographic zones each provider serves
+  - `transferBookings.flightNumber`: Optional flight number for airport transfers
+  - `transferBookings.nameOnPlacard`: Optional name to display on driver's placard
+
+- **Admin Interface Enhancement** (`client/src/components/admin/ProvidersManagement.tsx`)
+  - Multi-select dropdown for configuring provider service zones
+  - Visual display of selected zones with badges
+  - Intuitive zone management in provider creation/editing
+
+- **Booking Form Enhancement** (`client/src/pages/TransferConfirmPage.tsx`)
+  - "Numéro de Vol" (Flight Number) field - optional
+  - "Nom sur la Pancarte" (Name on Placard) field - optional
+  - Helpful placeholders for airport transfer scenarios
+
+- **Smart Vehicle Filtering API** (`GET /api/pricing/auto-transfer`)
+  - Automatically detects geographic zones from origin/destination addresses
+  - Filters vehicles based on provider service zones
+  - Scores and ranks providers: best match (serves both zones) first
+  - Then sorts by price within relevance groups
+  - Example: Djerba Airport → Tozeur shows Djerba/Desert zone providers first
+  - Providers without zone restrictions serve all routes (default behavior)
+  - Returns zone information in response for transparency
+
+### Technical Implementation
+- **Files Created**:
+  - `server/geographicZones.ts`: Zone mapping, detection, filtering logic
+
+- **Files Modified**:
+  - `shared/schema.ts`: Added serviceZones to providers, flightNumber/nameOnPlacard to transferBookings
+  - `server/routes.ts`: Enhanced `/api/pricing/auto-transfer` with zone filtering
+  - `client/src/components/admin/ProvidersManagement.tsx`: Zone management UI
+  - `client/src/pages/TransferConfirmPage.tsx`: Added flight/placard fields
+
+### Business Logic
+- **Provider Relevance Scoring**:
+  - Score 2: Provider serves both origin AND destination zones (ideal match)
+  - Score 1: Provider serves either origin OR destination zone (acceptable)
+  - Score 0: Provider serves neither zone (excluded from results)
+  - Providers without configured zones default to Score 1 (serve all)
+
+- **Vehicle Sorting Priority**:
+  1. Relevance score (descending) - best geographic match first
+  2. Price (ascending) - cheapest within each relevance tier
+
+- **Example Scenarios**:
+  - Tunis Airport → Hammamet: Shows "Tunis et Nord" providers
+  - Djerba → Tozeur: Shows "Djerba et Sud" + "Tozeur et Désert" providers, prioritizing those serving both
+  - Enfidha → Sousse: Shows "Sousse et Sahel" providers
+  - Monastir → Kairouan: Shows "Monastir et Mahdia" + "Kairouan" providers
+
+### Architectural Decisions
+- **Normalized Address Matching**: Accent-insensitive, case-insensitive zone detection
+- **Keyword-Based Fallback**: Multi-layered detection strategy (city names → keywords → airport patterns)
+- **Graceful Degradation**: Unknown zones don't break functionality; provider shows if no zone restrictions
+- **Server-Side Only**: Zone logic stays on backend for consistency and easy updates
+
+---
+
 ## October 29, 2025 - UI Redesign: Industry-Standard 2-Column Layout
 
 ### Completed Features
@@ -141,11 +215,11 @@ A professional design system is implemented with:
 A PostgreSQL schema includes tables for:
 - **Users**: Replit Auth integration with id, email, firstName, lastName, profileImageUrl, role (user/admin). OAuth login via OpenID Connect.
 - **Sessions**: Passport session storage for authenticated users.
-- **Providers**: Transport providers.
+- **Providers**: Transport providers with `serviceZones` array field for geographic zone filtering.
 - **Vehicles**: Fleet management with capacity, features, and availability, supporting 8 types. Includes `Vehicle Seasonal Prices` and `Vehicle Hourly Prices` tables for flexible pricing.
 - **City Tours**: Detailed tour programs with descriptions, itineraries, pricing, categories, difficulty levels, and a `Highlights` field for key selling points.
 - **Home Page Content**: Manages hero banner images and service badges.
-- **Transfer Bookings**: Point-to-point transfers with customer, vehicle, locations, pricing, and payment intent linkage.
+- **Transfer Bookings**: Point-to-point transfers with customer, vehicle, locations, pricing, payment intent linkage, `flightNumber`, and `nameOnPlacard` fields.
 - **Disposal Bookings**: Hourly vehicle rentals (mise à disposition) with duration-based pricing.
 - **Tour Bookings**: City tour reservations with participants and payment tracking.
 - **Payment Intents**: KONNECT payment tracking with booking linkage, status, and metadata.
