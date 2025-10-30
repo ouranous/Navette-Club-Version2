@@ -96,30 +96,109 @@ export default function TransferConfirmPage() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Implémenter la création de la réservation et l'intégration KONNECT
       toast({
-        title: "Réservation en cours",
-        description: "Redirection vers la page de paiement...",
+        title: "Création de la réservation...",
+        description: "Veuillez patienter",
       });
 
-      // Simuler un délai pour la démo
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Step 1: Create or get customer
+      let customerId: string;
+      try {
+        const customerResponse = await fetch("/api/customers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+          }),
+        });
 
+        if (!customerResponse.ok) {
+          throw new Error("Failed to create customer");
+        }
+
+        const customer = await customerResponse.json();
+        customerId = customer.id;
+      } catch (error) {
+        throw new Error("Erreur lors de la création du client");
+      }
+
+      // Step 2: Create booking
+      let bookingId: string;
+      try {
+        const bookingResponse = await fetch("/api/transfer-bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customerId,
+            vehicleId,
+            transferType: tripType === "return" ? "round-trip" : "one-way",
+            pickupLocation: origin,
+            dropoffLocation: destination,
+            pickupDate: new Date(date).toISOString(),
+            pickupTime: time,
+            returnDate: tripType === "return" && returnDate ? new Date(returnDate).toISOString() : null,
+            returnTime: tripType === "return" ? returnTime : null,
+            passengers: parseInt(passengers),
+            luggage: parseInt(passengers),
+            flightNumber: data.flightNumber || null,
+            nameOnPlacard: data.nameOnPlacard || null,
+            totalPrice: totalPrice.toString(),
+          }),
+        });
+
+        if (!bookingResponse.ok) {
+          throw new Error("Failed to create booking");
+        }
+
+        const booking = await bookingResponse.json();
+        bookingId = booking.id;
+      } catch (error) {
+        throw new Error("Erreur lors de la création de la réservation");
+      }
+
+      // Step 3: Initialize payment
       toast({
-        title: "Succès !",
-        description: "Votre réservation a été confirmée.",
+        title: "Initialisation du paiement...",
+        description: "Redirection vers Konnect...",
       });
 
-      // Rediriger vers une page de confirmation
-      setLocation("/");
-    } catch (error) {
+      try {
+        const paymentResponse = await fetch("/api/payments/init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingType: "transfer",
+            bookingId,
+            amount: totalPrice,
+            customerEmail: data.email,
+            customerFirstName: data.firstName,
+            customerLastName: data.lastName,
+            customerPhone: data.phone,
+            description: `Transfert ${origin} → ${destination}`,
+          }),
+        });
+
+        if (!paymentResponse.ok) {
+          throw new Error("Failed to initialize payment");
+        }
+
+        const paymentData = await paymentResponse.json();
+        
+        // Redirect to Konnect payment page
+        window.location.href = paymentData.payUrl;
+      } catch (error) {
+        throw new Error("Erreur lors de l'initialisation du paiement");
+      }
+    } catch (error: any) {
       console.error("Error submitting booking:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de la réservation",
+        description: error.message || "Une erreur s'est produite lors de la réservation",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
