@@ -12,6 +12,13 @@ import TransferSearchPage from "@/pages/TransferSearchPage";
 import TransferVehiclesPage from "@/pages/TransferVehiclesPage";
 import TransferConfirmPage from "@/pages/TransferConfirmPage";
 import AdminPage from "@/pages/AdminPage";
+import AboutPage from "@/pages/AboutPage";
+import ContactPage from "@/pages/ContactPage";
+import FAQPage from "@/pages/FAQPage";
+import HelpPage from "@/pages/HelpPage";
+import TermsPage from "@/pages/TermsPage";
+import PrivacyPage from "@/pages/PrivacyPage";
+import CancellationPage from "@/pages/CancellationPage";
 import NotFound from "@/pages/not-found";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -27,6 +34,13 @@ function Router() {
       <Route path="/book/transfer/vehicles" component={TransferVehiclesPage} />
       <Route path="/book/transfer/confirm" component={TransferConfirmPage} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/about" component={AboutPage} />
+      <Route path="/contact" component={ContactPage} />
+      <Route path="/faq" component={FAQPage} />
+      <Route path="/help" component={HelpPage} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/cancellation" component={CancellationPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

@@ -12,12 +12,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Car, MapIcon, Route, List, Home } from "lucide-react";
+import { Building2, Car, MapIcon, Route, List, Home, Phone, Share2 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import ProvidersManagement from "@/components/admin/ProvidersManagement";
 import VehiclesManagement from "@/components/admin/VehiclesManagement";
 import ToursManagement from "@/components/admin/ToursManagement";
 import HomePageManagement from "@/components/admin/HomePageManagement";
+import ContactInfoManagement from "@/components/admin/ContactInfoManagement";
+import SocialMediaManagement from "@/components/admin/SocialMediaManagement";
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("homepage");
@@ -79,6 +81,28 @@ export default function AdminPage() {
                       <span>City Tours</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => setActiveTab("contact")}
+                      isActive={activeTab === "contact"}
+                      data-testid="button-nav-contact"
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span>Contact</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => setActiveTab("social")}
+                      isActive={activeTab === "social"}
+                      data-testid="button-nav-social"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>Réseaux Sociaux</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -112,6 +136,14 @@ export default function AdminPage() {
 
               <TabsContent value="tours" className="mt-0">
                 <ToursManagement />
+              </TabsContent>
+
+              <TabsContent value="contact" className="mt-0">
+                <ContactInfoManagement />
+              </TabsContent>
+
+              <TabsContent value="social" className="mt-0">
+                <SocialMediaManagement />
               </TabsContent>
             </Tabs>
           </main>

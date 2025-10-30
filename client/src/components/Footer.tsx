@@ -1,15 +1,40 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Car, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import type { ContactInfo, SocialMediaLink } from "@shared/schema";
 
 export default function Footer() {
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Newsletter subscription submitted');
-    // todo: remove mock functionality
   };
 
+  const { data: contactInfo } = useQuery<ContactInfo>({
+    queryKey: ["/api/contact-info"],
+  });
+
+  const { data: socialLinks } = useQuery<SocialMediaLink[]>({
+    queryKey: ["/api/social-media-links"],
+  });
+
   const currentYear = new Date().getFullYear();
+
+  const getSocialIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'facebook':
+        return Facebook;
+      case 'twitter':
+        return Twitter;
+      case 'instagram':
+        return Instagram;
+      case 'linkedin':
+        return Linkedin;
+      default:
+        return Facebook;
+    }
+  };
 
   return (
     <footer className="bg-background border-t">
@@ -27,49 +52,47 @@ export default function Footer() {
               Transferts et city tours d'exception depuis 2015.
             </p>
             <div className="flex space-x-3">
-              <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="social-facebook">
-                <Facebook className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="social-twitter">
-                <Twitter className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="social-instagram">
-                <Instagram className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="social-linkedin">
-                <Linkedin className="h-4 w-4" />
-              </Button>
+              {socialLinks?.filter(link => link.isActive).map((link) => {
+                const Icon = getSocialIcon(link.platform);
+                return (
+                  <a 
+                    key={link.id} 
+                    href={link.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`social-${link.platform}`}>
+                      <Icon className="h-4 w-4" />
+                    </Button>
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          {/* Services */}
+          {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">Nos Services</h3>
+            <h3 className="font-semibold text-foreground">Liens Rapides</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#transfers" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-transfers">
+                <Link href="/book/transfer" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-transfers">
                   Transferts Aéroport
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#city-tours" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-city-tours">
+                <Link href="/city-tours" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-city-tours">
                   City Tours
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#business" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-business">
-                  Transport Business
-                </a>
+                <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-about">
+                  À Propos
+                </Link>
               </li>
               <li>
-                <a href="#events" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-events">
-                  Événements
-                </a>
-              </li>
-              <li>
-                <a href="#long-distance" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-long-distance">
-                  Longue Distance
-                </a>
+                <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-contact">
+                  Contact
+                </Link>
               </li>
             </ul>
           </div>
@@ -79,29 +102,29 @@ export default function Footer() {
             <h3 className="font-semibold text-foreground">Support</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#help" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-help">
+                <Link href="/help" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-help">
                   Centre d'Aide
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-faq">
+                <Link href="/faq" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-faq">
                   FAQ
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#terms" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-terms">
+                <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-terms">
                   Conditions d'Utilisation
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#privacy" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-privacy">
+                <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-privacy">
                   Politique de Confidentialité
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#cancellation" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-cancellation">
+                <Link href="/cancellation" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-cancellation">
                   Annulation
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -110,18 +133,22 @@ export default function Footer() {
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">Contact</h3>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center space-x-2 text-muted-foreground">
-                <Phone className="h-4 w-4" />
-                <span>+33 1 42 86 15 20</span>
-              </div>
-              <div className="flex items-center space-x-2 text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                <span>contact@navetteclub.com</span>
-              </div>
-              <div className="flex items-start space-x-2 text-muted-foreground">
-                <MapPin className="h-4 w-4 mt-0.5" />
-                <span>12 Rue de Rivoli<br />75001 Paris, France</span>
-              </div>
+              {contactInfo && (
+                <>
+                  <a href={`tel:${contactInfo.phone1}`} className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
+                    <Phone className="h-4 w-4" />
+                    <span>{contactInfo.phone1}</span>
+                  </a>
+                  <a href={`mailto:${contactInfo.email}`} className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
+                    <Mail className="h-4 w-4" />
+                    <span>{contactInfo.email}</span>
+                  </a>
+                  <div className="flex items-start space-x-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4 mt-0.5" />
+                    <span>{contactInfo.address}<br />{contactInfo.postalCode} {contactInfo.city}, {contactInfo.country}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Newsletter */}
