@@ -13,6 +13,8 @@ import {
   tourBookings,
   paymentIntents,
   homePageContent,
+  contactInfo,
+  socialMediaLinks,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -40,6 +42,10 @@ import {
   type InsertPaymentIntent,
   type HomePageContent,
   type InsertHomePageContent,
+  type ContactInfo,
+  type InsertContactInfo,
+  type SocialMediaLink,
+  type InsertSocialMediaLink,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -138,6 +144,19 @@ export interface IStorage {
   createHomePageContent(content: InsertHomePageContent): Promise<HomePageContent>;
   updateHomePageContent(id: string, content: Partial<InsertHomePageContent>): Promise<HomePageContent | undefined>;
   deleteHomePageContent(id: string): Promise<boolean>;
+  
+  // Contact Info
+  getContactInfo(): Promise<ContactInfo | undefined>;
+  createContactInfo(info: InsertContactInfo): Promise<ContactInfo>;
+  updateContactInfo(id: string, info: Partial<InsertContactInfo>): Promise<ContactInfo | undefined>;
+  
+  // Social Media Links
+  getAllSocialMediaLinks(): Promise<SocialMediaLink[]>;
+  getActiveSocialMediaLinks(): Promise<SocialMediaLink[]>;
+  getSocialMediaLink(id: string): Promise<SocialMediaLink | undefined>;
+  createSocialMediaLink(link: InsertSocialMediaLink): Promise<SocialMediaLink>;
+  updateSocialMediaLink(id: string, link: Partial<InsertSocialMediaLink>): Promise<SocialMediaLink | undefined>;
+  deleteSocialMediaLink(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -587,6 +606,63 @@ export class DatabaseStorage implements IStorage {
 
   async deleteHomePageContent(id: string): Promise<boolean> {
     const result = await db.delete(homePageContent).where(eq(homePageContent.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Contact Info
+  async getContactInfo(): Promise<ContactInfo | undefined> {
+    const [info] = await db.select().from(contactInfo).limit(1);
+    return info || undefined;
+  }
+
+  async createContactInfo(info: InsertContactInfo): Promise<ContactInfo> {
+    const [newInfo] = await db.insert(contactInfo).values(info).returning();
+    return newInfo;
+  }
+
+  async updateContactInfo(id: string, info: Partial<InsertContactInfo>): Promise<ContactInfo | undefined> {
+    const [updated] = await db
+      .update(contactInfo)
+      .set({ ...info, updatedAt: new Date() })
+      .where(eq(contactInfo.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Social Media Links
+  async getAllSocialMediaLinks(): Promise<SocialMediaLink[]> {
+    return await db.select().from(socialMediaLinks).orderBy(socialMediaLinks.order);
+  }
+
+  async getActiveSocialMediaLinks(): Promise<SocialMediaLink[]> {
+    return await db
+      .select()
+      .from(socialMediaLinks)
+      .where(eq(socialMediaLinks.isActive, true))
+      .orderBy(socialMediaLinks.order);
+  }
+
+  async getSocialMediaLink(id: string): Promise<SocialMediaLink | undefined> {
+    const [link] = await db.select().from(socialMediaLinks).where(eq(socialMediaLinks.id, id));
+    return link || undefined;
+  }
+
+  async createSocialMediaLink(link: InsertSocialMediaLink): Promise<SocialMediaLink> {
+    const [newLink] = await db.insert(socialMediaLinks).values(link).returning();
+    return newLink;
+  }
+
+  async updateSocialMediaLink(id: string, link: Partial<InsertSocialMediaLink>): Promise<SocialMediaLink | undefined> {
+    const [updated] = await db
+      .update(socialMediaLinks)
+      .set({ ...link, updatedAt: new Date() })
+      .where(eq(socialMediaLinks.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteSocialMediaLink(id: string): Promise<boolean> {
+    const result = await db.delete(socialMediaLinks).where(eq(socialMediaLinks.id, id));
     return result.rowCount !== null && result.rowCount > 0;
   }
 }

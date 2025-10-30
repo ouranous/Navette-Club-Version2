@@ -14,6 +14,8 @@ import {
   insertTourBookingSchema,
   insertPaymentIntentSchema,
   insertHomePageContentSchema,
+  insertContactInfoSchema,
+  insertSocialMediaLinkSchema,
 } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -887,6 +889,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete content" });
+    }
+  });
+
+  // ========== CONTACT INFO ==========
+  
+  app.get("/api/contact-info", async (req, res) => {
+    try {
+      const info = await storage.getContactInfo();
+      res.json(info || null);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contact info" });
+    }
+  });
+
+  app.post("/api/contact-info", async (req, res) => {
+    try {
+      const validated = insertContactInfoSchema.parse(req.body);
+      const info = await storage.createContactInfo(validated);
+      res.json(info);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid contact info data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create contact info" });
+    }
+  });
+
+  app.patch("/api/contact-info/:id", async (req, res) => {
+    try {
+      const info = await storage.updateContactInfo(req.params.id, req.body);
+      if (!info) {
+        return res.status(404).json({ error: "Contact info not found" });
+      }
+      res.json(info);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update contact info" });
+    }
+  });
+
+  // ========== SOCIAL MEDIA LINKS ==========
+  
+  app.get("/api/social-media", async (req, res) => {
+    try {
+      const links = await storage.getAllSocialMediaLinks();
+      res.json(links);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch social media links" });
+    }
+  });
+
+  app.get("/api/social-media/active", async (req, res) => {
+    try {
+      const links = await storage.getActiveSocialMediaLinks();
+      res.json(links);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch active social media links" });
+    }
+  });
+
+  app.post("/api/social-media", async (req, res) => {
+    try {
+      const validated = insertSocialMediaLinkSchema.parse(req.body);
+      const link = await storage.createSocialMediaLink(validated);
+      res.json(link);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid social media link data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create social media link" });
+    }
+  });
+
+  app.patch("/api/social-media/:id", async (req, res) => {
+    try {
+      const link = await storage.updateSocialMediaLink(req.params.id, req.body);
+      if (!link) {
+        return res.status(404).json({ error: "Social media link not found" });
+      }
+      res.json(link);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update social media link" });
+    }
+  });
+
+  app.delete("/api/social-media/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteSocialMediaLink(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Social media link not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete social media link" });
     }
   });
 
