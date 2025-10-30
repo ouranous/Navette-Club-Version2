@@ -23,6 +23,8 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { calculateTransferCost, calculateDisposalCost } from "./pricing";
 import { calculateDistance, calculateTransferPrice } from "./googleMaps";
 import { getGeographicZone, filterAndSortVehiclesByZones } from "./geographicZones";
+import { initKonnectPayment, getKonnectPaymentDetails } from "./konnect";
+import { sendWelcomeEmail, sendVoucherEmail, sendMissionOrderEmail } from "./email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
@@ -1304,6 +1306,254 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching provider requests:", error);
       res.status(500).json({ error: "Failed to fetch requests" });
+    }
+  });
+
+  // ========== KONNECT PAYMENT INTEGRATION ==========
+  
+  // Initialize payment
+  app.post("/api/payments/init", async (req, res) => {
+    try {
+      const { bookingType, bookingId, amount, customerEmail, customerFirstName, customerLastName, customerPhone, description } = req.body;
+
+      if (!bookingType || !bookingId || !amount || !customerEmail) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Create payment intent in database
+      const paymentIntent = await storage.createPaymentIntent({
+        bookingType,
+        bookingId,
+        amount: amount.toString(),
+        currency: "TND",
+        status: "pending",
+      });
+
+      // Initialize Konnect payment
+      const konnectResponse = await initKonnectPayment({
+        amount: parseFloat(amount),
+        orderId: paymentIntent.id,
+        bookingType,
+        customerEmail,
+        customerFirstName,
+        customerLastName,
+        customerPhone,
+        description,
+      });
+
+      // Update payment intent with Konnect reference and URL
+      await storage.updatePaymentIntent(paymentIntent.id, {
+        konnectPaymentRef: konnectResponse.paymentRef,
+        konnectPayUrl: konnectResponse.payUrl,
+      });
+
+      res.json({
+        paymentIntentId: paymentIntent.id,
+        payUrl: konnectResponse.payUrl,
+        paymentRef: konnectResponse.paymentRef,
+      });
+    } catch (error: any) {
+      console.error("Error initializing payment:", error);
+      res.status(500).json({ error: "Failed to initialize payment", details: error.message });
+    }
+  });
+
+  // Konnect webhook - called by Konnect when payment status changes
+  app.get("/api/konnect/webhook", async (req, res) => {
+    try {
+      const { payment_ref } = req.query;
+
+      if (!payment_ref || typeof payment_ref !== 'string') {
+        return res.status(400).json({ error: "Missing payment_ref" });
+      }
+
+      // Get payment details from Konnect
+      const paymentDetails = await getKonnectPaymentDetails(payment_ref);
+
+      // Find the payment intent
+      const paymentIntent = await storage.getPaymentIntentByReference(payment_ref);
+      
+      if (!paymentIntent) {
+        console.error(`Payment intent not found for ref: ${payment_ref}`);
+        return res.status(404).json({ error: "Payment intent not found" });
+      }
+
+      // Update payment intent status
+      await storage.updatePaymentIntent(paymentIntent.id, {
+        status: paymentDetails.status,
+      });
+
+      // If payment is completed, update booking and send emails
+      if (paymentDetails.status === 'completed') {
+        const { bookingType, bookingId } = paymentIntent;
+
+        // Update booking payment status
+        if (bookingType === 'transfer') {
+          const booking = await storage.getTransferBooking(bookingId);
+          if (booking) {
+            await storage.updateTransferBooking(bookingId, {
+              paymentStatus: 'paid',
+              status: 'confirmed',
+            });
+
+            // Get customer and vehicle info for emails
+            const customer = await storage.getCustomer(booking.customerId);
+            const vehicle = booking.vehicleId ? await storage.getVehicle(booking.vehicleId) : null;
+
+            if (customer) {
+              // Send voucher to customer
+              await sendVoucherEmail({
+                email: customer.email,
+                firstName: customer.firstName,
+                lastName: customer.lastName,
+                bookingId: booking.id,
+                bookingType: 'transfer',
+                bookingDetails: {
+                  date: new Date(booking.pickupDate).toLocaleDateString('fr-FR'),
+                  time: booking.pickupTime,
+                  origin: booking.origin,
+                  destination: booking.destination,
+                  vehicleName: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Véhicule',
+                  passengers: booking.passengers,
+                  totalPrice: parseFloat(booking.totalPrice),
+                },
+              });
+
+              // Send mission order to provider if vehicle is assigned
+              if (vehicle && vehicle.providerId) {
+                const provider = await storage.getProvider(vehicle.providerId);
+                if (provider) {
+                  await sendMissionOrderEmail({
+                    providerEmail: provider.email || '',
+                    providerName: provider.name,
+                    bookingId: booking.id,
+                    bookingType: 'transfer',
+                    customerName: `${customer.firstName} ${customer.lastName}`,
+                    bookingDetails: {
+                      date: new Date(booking.pickupDate).toLocaleDateString('fr-FR'),
+                      time: booking.pickupTime,
+                      origin: booking.origin,
+                      destination: booking.destination,
+                      passengers: booking.passengers,
+                      luggage: booking.luggage,
+                      vehicleName: `${vehicle.brand} ${vehicle.model}`,
+                      specialRequests: booking.specialRequests || undefined,
+                      flightNumber: booking.flightNumber || undefined,
+                      nameOnPlacard: booking.nameOnPlacard || undefined,
+                    },
+                  });
+                }
+              }
+            }
+          }
+        } else if (bookingType === 'disposal') {
+          const booking = await storage.getDisposalBooking(bookingId);
+          if (booking) {
+            await storage.updateDisposalBooking(bookingId, {
+              paymentStatus: 'paid',
+              status: 'confirmed',
+            });
+
+            // Get customer and vehicle info
+            const customer = await storage.getCustomer(booking.customerId);
+            const vehicle = await storage.getVehicle(booking.vehicleId);
+
+            if (customer && vehicle) {
+              // Send voucher to customer
+              await sendVoucherEmail({
+                email: customer.email,
+                firstName: customer.firstName,
+                lastName: customer.lastName,
+                bookingId: booking.id,
+                bookingType: 'disposal',
+                bookingDetails: {
+                  date: new Date(booking.pickupDate).toLocaleDateString('fr-FR'),
+                  time: booking.pickupTime,
+                  origin: booking.pickupLocation,
+                  vehicleName: `${vehicle.brand} ${vehicle.model}`,
+                  passengers: booking.passengers,
+                  totalPrice: parseFloat(booking.totalPrice),
+                },
+              });
+
+              // Send mission order to provider
+              if (vehicle.providerId) {
+                const provider = await storage.getProvider(vehicle.providerId);
+                if (provider) {
+                  await sendMissionOrderEmail({
+                    providerEmail: provider.email || '',
+                    providerName: provider.name,
+                    bookingId: booking.id,
+                    bookingType: 'disposal',
+                    customerName: `${customer.firstName} ${customer.lastName}`,
+                    bookingDetails: {
+                      date: new Date(booking.pickupDate).toLocaleDateString('fr-FR'),
+                      time: booking.pickupTime,
+                      origin: booking.pickupLocation,
+                      passengers: booking.passengers,
+                      vehicleName: `${vehicle.brand} ${vehicle.model}`,
+                      specialRequests: booking.specialRequests || undefined,
+                    },
+                  });
+                }
+              }
+            }
+          }
+        } else if (bookingType === 'tour') {
+          const booking = await storage.getTourBooking(bookingId);
+          if (booking) {
+            await storage.updateTourBooking(bookingId, {
+              paymentStatus: 'paid',
+              status: 'confirmed',
+            });
+
+            // Get customer and tour info
+            const customer = await storage.getCustomer(booking.customerId);
+            const tour = await storage.getTour(booking.tourId);
+
+            if (customer && tour) {
+              // Send voucher to customer
+              await sendVoucherEmail({
+                email: customer.email,
+                firstName: customer.firstName,
+                lastName: customer.lastName,
+                bookingId: booking.id,
+                bookingType: 'tour',
+                bookingDetails: {
+                  date: new Date(booking.tourDate).toLocaleDateString('fr-FR'),
+                  tourName: tour.name,
+                  passengers: booking.adults + (booking.children || 0),
+                  totalPrice: parseFloat(booking.totalPrice),
+                },
+              });
+            }
+          }
+        }
+      }
+
+      res.json({ status: 'success' });
+    } catch (error: any) {
+      console.error("Error processing webhook:", error);
+      res.status(500).json({ error: "Failed to process webhook" });
+    }
+  });
+
+  // Get payment status
+  app.get("/api/payments/:paymentRef/status", async (req, res) => {
+    try {
+      const { paymentRef } = req.params;
+
+      const paymentDetails = await getKonnectPaymentDetails(paymentRef);
+      const paymentIntent = await storage.getPaymentIntentByReference(paymentRef);
+
+      res.json({
+        status: paymentDetails.status,
+        amount: paymentDetails.amount,
+        paymentIntent,
+      });
+    } catch (error: any) {
+      console.error("Error fetching payment status:", error);
+      res.status(500).json({ error: "Failed to fetch payment status" });
     }
   });
 
