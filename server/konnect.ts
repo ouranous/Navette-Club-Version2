@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getAppDomain } from './replitAuth';
 
 if (!process.env.KONNECT_API_KEY) {
   throw new Error("KONNECT_API_KEY environment variable is required");
@@ -50,7 +51,7 @@ export async function initKonnectPayment(
   paymentRequest: KonnectPaymentRequest
 ): Promise<KonnectPaymentResponse> {
   try {
-    const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
+    const baseUrl = getAppDomain();
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
     const fullBaseUrl = `${protocol}://${baseUrl}`;
 

@@ -8,8 +8,21 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+// Get application domain - works on Replit and other hosting platforms
+export function getAppDomain(): string {
+  // For Replit
+  if (process.env.REPLIT_DOMAINS) {
+    return process.env.REPLIT_DOMAINS.split(',')[0];
+  }
+  
+  // For custom deployments (Plesk, VPS, etc.)
+  // Set APP_DOMAIN in environment variables (e.g., "navetteclub.com" or "www.navetteclub.com")
+  if (process.env.APP_DOMAIN) {
+    return process.env.APP_DOMAIN;
+  }
+  
+  // Fallback for local development
+  return 'localhost:5000';
 }
 
 const getOidcConfig = memoize(

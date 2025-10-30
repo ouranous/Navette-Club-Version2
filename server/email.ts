@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import { getAppDomain } from './replitAuth';
 
 if (!process.env.SENDGRID_API_KEY) {
   throw new Error("SENDGRID_API_KEY environment variable is required");
@@ -105,7 +106,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
               <p>Votre compte est maintenant actif et vous pouvez commencer à réserver dès maintenant.</p>
               
               <p style="text-align: center;">
-                <a href="${process.env.NODE_ENV === 'production' ? 'https://' : 'http://'}${process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000'}" class="button">
+                <a href="${process.env.NODE_ENV === 'production' ? 'https://' : 'http://'}${getAppDomain()}" class="button">
                   Commencer à réserver
                 </a>
               </p>
