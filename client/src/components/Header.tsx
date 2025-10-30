@@ -27,20 +27,20 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="/book/transfer" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-transfers">
+            <Link href="/book/transfer" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-transfers">
               <Car className="h-4 w-4" />
               <span>Réserver un Transfer</span>
-            </a>
-            <a href="/city-tours" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-city-tours">
+            </Link>
+            <Link href="/city-tours" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-colors" data-testid="link-city-tours">
               <Globe className="h-4 w-4" />
               <span>City Tours</span>
-            </a>
-            <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-about">
+            </Link>
+            <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-about">
               À propos
-            </a>
-            <a href="#contact" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-contact">
+            </Link>
+            <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-contact">
               Contact
-            </a>
+            </Link>
           </nav>
 
           {/* Actions */}
@@ -88,18 +88,18 @@ export default function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t bg-background">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <a href="/book/transfer" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-transfers">
+              <Link href="/book/transfer" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-transfers">
                 Réserver un Transfer
-              </a>
-              <a href="/city-tours" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-city-tours">
+              </Link>
+              <Link href="/city-tours" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-city-tours">
                 City Tours
-              </a>
-              <a href="#about" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-about">
+              </Link>
+              <Link href="/about" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-about">
                 À propos
-              </a>
-              <a href="#contact" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-contact">
+              </Link>
+              <Link href="/contact" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-contact">
                 Contact
-              </a>
+              </Link>
               <div className="flex space-x-2 px-3 py-2">
                 <Button variant="ghost" size="sm" className="flex-1" data-testid="mobile-button-login">
                   Se connecter

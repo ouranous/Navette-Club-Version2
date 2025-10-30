@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { z } from "zod";
 import { storage } from "./storage";
 import {
   insertProviderSchema,
@@ -930,7 +931,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== SOCIAL MEDIA LINKS ==========
   
-  app.get("/api/social-media", async (req, res) => {
+  app.get("/api/social-media-links", async (req, res) => {
     try {
       const links = await storage.getAllSocialMediaLinks();
       res.json(links);
@@ -939,7 +940,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/social-media/active", async (req, res) => {
+  app.get("/api/social-media-links/active", async (req, res) => {
     try {
       const links = await storage.getActiveSocialMediaLinks();
       res.json(links);
@@ -948,7 +949,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/social-media", async (req, res) => {
+  app.post("/api/social-media-links", async (req, res) => {
     try {
       const validated = insertSocialMediaLinkSchema.parse(req.body);
       const link = await storage.createSocialMediaLink(validated);
@@ -961,7 +962,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/social-media/:id", async (req, res) => {
+  app.patch("/api/social-media-links/:id", async (req, res) => {
     try {
       const link = await storage.updateSocialMediaLink(req.params.id, req.body);
       if (!link) {
@@ -973,7 +974,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/social-media/:id", async (req, res) => {
+  app.delete("/api/social-media-links/:id", async (req, res) => {
     try {
       const success = await storage.deleteSocialMediaLink(req.params.id);
       if (!success) {
