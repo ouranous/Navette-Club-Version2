@@ -100,6 +100,12 @@ async function upsertUser(
 }
 
 export async function setupAuth(app: Express) {
+  // Skip authentication setup if REPL_ID is not available (non-Replit environments)
+  if (!process.env.REPL_ID) {
+    console.log("⚠️  Replit Auth disabled: REPL_ID not found (running on external hosting)");
+    return;
+  }
+
   app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
@@ -171,6 +177,12 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // Skip authentication check if REPL_ID is not available (non-Replit environments)
+  if (!process.env.REPL_ID) {
+    console.log("⚠️  Auth check skipped: running without authentication");
+    return next();
+  }
+
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {
