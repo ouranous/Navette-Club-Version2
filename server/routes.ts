@@ -1411,8 +1411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 bookingDetails: {
                   date: new Date(booking.pickupDate).toLocaleDateString('fr-FR'),
                   time: booking.pickupTime,
-                  origin: booking.origin,
-                  destination: booking.destination,
+                  origin: booking.pickupLocation,
+                  destination: booking.dropoffLocation,
                   vehicleName: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Véhicule',
                   passengers: booking.passengers,
                   totalPrice: parseFloat(booking.totalPrice),
@@ -1432,8 +1432,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     bookingDetails: {
                       date: new Date(booking.pickupDate).toLocaleDateString('fr-FR'),
                       time: booking.pickupTime,
-                      origin: booking.origin,
-                      destination: booking.destination,
+                      origin: booking.pickupLocation,
+                      destination: booking.dropoffLocation,
                       passengers: booking.passengers,
                       luggage: booking.luggage,
                       vehicleName: `${vehicle.brand} ${vehicle.model}`,

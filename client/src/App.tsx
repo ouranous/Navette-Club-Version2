@@ -24,6 +24,8 @@ import ProviderDashboardPage from "@/pages/ProviderDashboardPage";
 import ProviderRegisterPage from "@/pages/ProviderRegisterPage";
 import ProviderVehiclesPage from "@/pages/ProviderVehiclesPage";
 import ProviderRequestsPage from "@/pages/ProviderRequestsPage";
+import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
+import PaymentFailurePage from "@/pages/PaymentFailurePage";
 import NotFound from "@/pages/not-found";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -44,6 +46,8 @@ function Router() {
       <Route path="/provider/register" component={ProviderRegisterPage} />
       <Route path="/provider/vehicles" component={ProviderVehiclesPage} />
       <Route path="/provider/requests" component={ProviderRequestsPage} />
+      <Route path="/payment/success" component={PaymentSuccessPage} />
+      <Route path="/payment/failure" component={PaymentFailurePage} />
       <Route path="/about" component={AboutPage} />
       <Route path="/contact" component={ContactPage} />
       <Route path="/faq" component={FAQPage} />
