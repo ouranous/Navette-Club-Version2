@@ -237,6 +237,34 @@ export const paymentIntents = pgTable("payment_intents", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Contact Information - Informations de contact modifiables
+export const contactInfo = pgTable("contact_info", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyName: text("company_name").notNull().default("NavetteClub"),
+  address: text("address").notNull(),
+  city: text("city").notNull(),
+  postalCode: text("postal_code").notNull(),
+  country: text("country").notNull(),
+  phone1: text("phone1").notNull(),
+  phone2: text("phone2"),
+  email: text("email").notNull(),
+  description: text("description"), // Description courte pour la page contact
+  aboutText: text("about_text"), // Texte pour la page à propos
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Social Media Links - Liens des réseaux sociaux modifiables
+export const socialMediaLinks = pgTable("social_media_links", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  platform: text("platform").notNull(), // "facebook", "twitter", "instagram", "linkedin"
+  url: text("url").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  order: integer("order").notNull().default(0), // ordre d'affichage
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Relations
 export const providersRelations = relations(providers, ({ many }) => ({
   vehicles: many(vehicles),
@@ -421,6 +449,20 @@ export const insertPaymentIntentSchema = createInsertSchema(paymentIntents).omit
   status: z.enum(["pending", "completed", "failed", "expired"]).default("pending"),
 });
 
+export const insertContactInfoSchema = createInsertSchema(contactInfo).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSocialMediaLinkSchema = createInsertSchema(socialMediaLinks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  platform: z.enum(["facebook", "twitter", "instagram", "linkedin"]),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -461,3 +503,9 @@ export type InsertDisposalBooking = z.infer<typeof insertDisposalBookingSchema>;
 
 export type PaymentIntent = typeof paymentIntents.$inferSelect;
 export type InsertPaymentIntent = z.infer<typeof insertPaymentIntentSchema>;
+
+export type ContactInfo = typeof contactInfo.$inferSelect;
+export type InsertContactInfo = z.infer<typeof insertContactInfoSchema>;
+
+export type SocialMediaLink = typeof socialMediaLinks.$inferSelect;
+export type InsertSocialMediaLink = z.infer<typeof insertSocialMediaLinkSchema>;
