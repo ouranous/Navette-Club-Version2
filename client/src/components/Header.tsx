@@ -63,10 +63,19 @@ export default function Header() {
 
             {/* Auth Buttons */}
             <div className="hidden sm:flex items-center space-x-2">
-              <Button variant="ghost" size="sm" data-testid="button-login">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.location.href = '/api/login'}
+                data-testid="button-login"
+              >
                 Se connecter
               </Button>
-              <Button size="sm" data-testid="button-register">
+              <Button 
+                size="sm" 
+                onClick={() => window.location.href = '/api/login'}
+                data-testid="button-register"
+              >
                 S'inscrire
               </Button>
             </div>
@@ -101,10 +110,21 @@ export default function Header() {
                 Contact
               </Link>
               <div className="flex space-x-2 px-3 py-2">
-                <Button variant="ghost" size="sm" className="flex-1" data-testid="mobile-button-login">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="flex-1" 
+                  onClick={() => window.location.href = '/api/login'}
+                  data-testid="mobile-button-login"
+                >
                   Se connecter
                 </Button>
-                <Button size="sm" className="flex-1" data-testid="mobile-button-register">
+                <Button 
+                  size="sm" 
+                  className="flex-1" 
+                  onClick={() => window.location.href = '/api/login'}
+                  data-testid="mobile-button-register"
+                >
                   S'inscrire
                 </Button>
               </div>
