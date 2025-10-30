@@ -22,7 +22,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: text("role").notNull().default("user"), // "user", "admin"
+  role: text("role").notNull().default("user"), // "user", "admin", "provider"
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -30,6 +30,7 @@ export const users = pgTable("users", {
 // Providers - Fournisseurs (sociétés de location, agences de voyage)
 export const providers = pgTable("providers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id), // Lien avec le compte utilisateur du transporteur
   name: text("name").notNull(),
   type: text("type").notNull(), // "car_rental", "travel_agency", "transport_company"
   contactName: text("contact_name"),
@@ -153,6 +154,7 @@ export const homePageContent = pgTable("home_page_content", {
 // Customers - Informations clients
 export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id), // Lien optionnel avec le compte utilisateur
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email").notNull(),
@@ -166,6 +168,7 @@ export const transferBookings = pgTable("transfer_bookings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   customerId: varchar("customer_id").notNull().references(() => customers.id),
   vehicleId: varchar("vehicle_id").notNull().references(() => vehicles.id),
+  providerId: varchar("provider_id").references(() => providers.id), // Transporteur assigné (modifiable par admin)
   transferType: text("transfer_type").notNull(), // "one-way", "round-trip"
   pickupLocation: text("pickup_location").notNull(),
   dropoffLocation: text("drop_off_location").notNull(),
@@ -266,9 +269,25 @@ export const socialMediaLinks = pgTable("social_media_links", {
 });
 
 // Relations
-export const providersRelations = relations(providers, ({ many }) => ({
+export const usersRelations = relations(users, ({ one }) => ({
+  provider: one(providers, {
+    fields: [users.id],
+    references: [providers.userId],
+  }),
+  customer: one(customers, {
+    fields: [users.id],
+    references: [customers.userId],
+  }),
+}));
+
+export const providersRelations = relations(providers, ({ one, many }) => ({
+  user: one(users, {
+    fields: [providers.userId],
+    references: [users.id],
+  }),
   vehicles: many(vehicles),
   cityTours: many(cityTours),
+  transferBookings: many(transferBookings),
 }));
 
 export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
@@ -312,7 +331,11 @@ export const tourStopsRelations = relations(tourStops, ({ one }) => ({
   }),
 }));
 
-export const customersRelations = relations(customers, ({ many }) => ({
+export const customersRelations = relations(customers, ({ one, many }) => ({
+  user: one(users, {
+    fields: [customers.userId],
+    references: [users.id],
+  }),
   transferBookings: many(transferBookings),
   tourBookings: many(tourBookings),
   disposalBookings: many(disposalBookings),
@@ -326,6 +349,10 @@ export const transferBookingsRelations = relations(transferBookings, ({ one }) =
   vehicle: one(vehicles, {
     fields: [transferBookings.vehicleId],
     references: [vehicles.id],
+  }),
+  provider: one(providers, {
+    fields: [transferBookings.providerId],
+    references: [providers.id],
   }),
   paymentIntent: one(paymentIntents, {
     fields: [transferBookings.paymentIntentId],
@@ -375,6 +402,7 @@ export const upsertUserSchema = insertUserSchema.pick({
   firstName: true,
   lastName: true,
   profileImageUrl: true,
+  role: true,
 });
 
 export const insertProviderSchema = createInsertSchema(providers).omit({

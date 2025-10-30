@@ -12,7 +12,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Car, MapIcon, Route, List, Home, Phone, Share2 } from "lucide-react";
+import { Building2, Car, MapIcon, Route, List, Home, Phone, Share2, Navigation } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import ProvidersManagement from "@/components/admin/ProvidersManagement";
 import VehiclesManagement from "@/components/admin/VehiclesManagement";
@@ -20,6 +20,7 @@ import ToursManagement from "@/components/admin/ToursManagement";
 import HomePageManagement from "@/components/admin/HomePageManagement";
 import ContactInfoManagement from "@/components/admin/ContactInfoManagement";
 import SocialMediaManagement from "@/components/admin/SocialMediaManagement";
+import TransferBookingsManagement from "@/components/admin/TransferBookingsManagement";
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("homepage");
@@ -84,6 +85,17 @@ export default function AdminPage() {
 
                   <SidebarMenuItem>
                     <SidebarMenuButton
+                      onClick={() => setActiveTab("transfers")}
+                      isActive={activeTab === "transfers"}
+                      data-testid="button-nav-transfers"
+                    >
+                      <Navigation className="w-4 h-4" />
+                      <span>Transferts</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
                       onClick={() => setActiveTab("contact")}
                       isActive={activeTab === "contact"}
                       data-testid="button-nav-contact"
@@ -136,6 +148,10 @@ export default function AdminPage() {
 
               <TabsContent value="tours" className="mt-0">
                 <ToursManagement />
+              </TabsContent>
+
+              <TabsContent value="transfers" className="mt-0">
+                <TransferBookingsManagement />
               </TabsContent>
 
               <TabsContent value="contact" className="mt-0">

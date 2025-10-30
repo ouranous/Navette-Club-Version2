@@ -1173,6 +1173,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== CLIENT ROUTES ==========
+  // Get all bookings for the logged-in client
+  app.get("/api/my-bookings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get customer linked to this user
+      const customer = await storage.getCustomerByUserId(userId);
+      if (!customer) {
+        return res.json({ transfers: [], tours: [], disposals: [] });
+      }
+
+      const transfers = await storage.getTransferBookingsByCustomer(customer.id);
+      const tours = await storage.getTourBookingsByCustomer(customer.id);
+      const disposals = await storage.getDisposalBookingsByCustomer(customer.id);
+
+      res.json({ transfers, tours, disposals });
+    } catch (error) {
+      console.error("Error fetching client bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
+    }
+  });
+
+  // ========== PROVIDER ROUTES ==========
+  // Register as a provider
+  app.post("/api/provider-register", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Check if user already has a provider account
+      const existing = await storage.getProviderByUserId(userId);
+      if (existing) {
+        return res.status(400).json({ error: "Provider account already exists" });
+      }
+
+      const validatedData = insertProviderSchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      const provider = await storage.createProvider(validatedData);
+      
+      // Update user role to provider
+      await storage.upsertUser({
+        id: userId,
+        email: req.user.claims.email,
+        firstName: req.user.claims.first_name,
+        lastName: req.user.claims.last_name,
+        profileImageUrl: req.user.claims.profile_image_url,
+        role: "provider",
+      });
+
+      res.status(201).json(provider);
+    } catch (error) {
+      console.error("Error registering provider:", error);
+      res.status(400).json({ error: "Invalid provider data", details: error });
+    }
+  });
+
+  // Get provider info for logged-in user
+  app.get("/api/my-provider", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const provider = await storage.getProviderByUserId(userId);
+      
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+
+      res.json(provider);
+    } catch (error) {
+      console.error("Error fetching provider:", error);
+      res.status(500).json({ error: "Failed to fetch provider" });
+    }
+  });
+
+  // Update provider info
+  app.patch("/api/my-provider", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const provider = await storage.getProviderByUserId(userId);
+      
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+
+      const validatedData = insertProviderSchema.partial().parse(req.body);
+      const updated = await storage.updateProvider(provider.id, validatedData);
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating provider:", error);
+      res.status(400).json({ error: "Invalid provider data", details: error });
+    }
+  });
+
+  // Get vehicles for logged-in provider
+  app.get("/api/my-vehicles", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const provider = await storage.getProviderByUserId(userId);
+      
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+
+      const vehicles = await storage.getVehiclesByProvider(provider.id);
+      res.json(vehicles);
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+      res.status(500).json({ error: "Failed to fetch vehicles" });
+    }
+  });
+
+  // Get requests (bookings) for logged-in provider
+  app.get("/api/my-requests", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const provider = await storage.getProviderByUserId(userId);
+      
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+
+      const transfers = await storage.getTransferBookingsByProvider(provider.id);
+      const disposals = await storage.getDisposalBookingsByProvider(provider.id);
+
+      res.json({ transfers, disposals });
+    } catch (error) {
+      console.error("Error fetching provider requests:", error);
+      res.status(500).json({ error: "Failed to fetch requests" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

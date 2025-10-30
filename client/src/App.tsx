@@ -19,6 +19,11 @@ import HelpPage from "@/pages/HelpPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import CancellationPage from "@/pages/CancellationPage";
+import ClientDashboardPage from "@/pages/ClientDashboardPage";
+import ProviderDashboardPage from "@/pages/ProviderDashboardPage";
+import ProviderRegisterPage from "@/pages/ProviderRegisterPage";
+import ProviderVehiclesPage from "@/pages/ProviderVehiclesPage";
+import ProviderRequestsPage from "@/pages/ProviderRequestsPage";
 import NotFound from "@/pages/not-found";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -34,6 +39,11 @@ function Router() {
       <Route path="/book/transfer/vehicles" component={TransferVehiclesPage} />
       <Route path="/book/transfer/confirm" component={TransferConfirmPage} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/client/dashboard" component={ClientDashboardPage} />
+      <Route path="/provider/dashboard" component={ProviderDashboardPage} />
+      <Route path="/provider/register" component={ProviderRegisterPage} />
+      <Route path="/provider/vehicles" component={ProviderVehiclesPage} />
+      <Route path="/provider/requests" component={ProviderRequestsPage} />
       <Route path="/about" component={AboutPage} />
       <Route path="/contact" component={ContactPage} />
       <Route path="/faq" component={FAQPage} />

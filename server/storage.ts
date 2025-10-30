@@ -58,6 +58,7 @@ export interface IStorage {
   // Providers
   getAllProviders(): Promise<Provider[]>;
   getProvider(id: string): Promise<Provider | undefined>;
+  getProviderByUserId(userId: string): Promise<Provider | undefined>;
   createProvider(provider: InsertProvider): Promise<Provider>;
   updateProvider(id: string, provider: Partial<InsertProvider>): Promise<Provider | undefined>;
   deleteProvider(id: string): Promise<boolean>;
@@ -107,12 +108,14 @@ export interface IStorage {
   getAllCustomers(): Promise<Customer[]>;
   getCustomer(id: string): Promise<Customer | undefined>;
   getCustomerByEmail(email: string): Promise<Customer | undefined>;
+  getCustomerByUserId(userId: string): Promise<Customer | undefined>;
   createCustomer(customer: InsertCustomer): Promise<Customer>;
   
   // Transfer Bookings
   getAllTransferBookings(): Promise<TransferBooking[]>;
   getTransferBooking(id: string): Promise<TransferBooking | undefined>;
   getTransferBookingsByCustomer(customerId: string): Promise<TransferBooking[]>;
+  getTransferBookingsByProvider(providerId: string): Promise<TransferBooking[]>;
   createTransferBooking(booking: InsertTransferBooking): Promise<TransferBooking>;
   updateTransferBooking(id: string, booking: Partial<InsertTransferBooking>): Promise<TransferBooking | undefined>;
   
@@ -120,6 +123,7 @@ export interface IStorage {
   getAllDisposalBookings(): Promise<DisposalBooking[]>;
   getDisposalBooking(id: string): Promise<DisposalBooking | undefined>;
   getDisposalBookingsByCustomer(customerId: string): Promise<DisposalBooking[]>;
+  getDisposalBookingsByProvider(providerId: string): Promise<DisposalBooking[]>;
   createDisposalBooking(booking: InsertDisposalBooking): Promise<DisposalBooking>;
   updateDisposalBooking(id: string, booking: Partial<InsertDisposalBooking>): Promise<DisposalBooking | undefined>;
   
@@ -188,6 +192,11 @@ export class DatabaseStorage implements IStorage {
 
   async getProvider(id: string): Promise<Provider | undefined> {
     const [provider] = await db.select().from(providers).where(eq(providers.id, id));
+    return provider || undefined;
+  }
+
+  async getProviderByUserId(userId: string): Promise<Provider | undefined> {
+    const [provider] = await db.select().from(providers).where(eq(providers.userId, userId));
     return provider || undefined;
   }
 
@@ -442,6 +451,11 @@ export class DatabaseStorage implements IStorage {
     return customer || undefined;
   }
 
+  async getCustomerByUserId(userId: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.userId, userId));
+    return customer || undefined;
+  }
+
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
     const [created] = await db.insert(customers).values(customer).returning();
     return created;
@@ -462,6 +476,14 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(transferBookings)
       .where(eq(transferBookings.customerId, customerId))
+      .orderBy(desc(transferBookings.createdAt));
+  }
+
+  async getTransferBookingsByProvider(providerId: string): Promise<TransferBooking[]> {
+    return await db
+      .select()
+      .from(transferBookings)
+      .where(eq(transferBookings.providerId, providerId))
       .orderBy(desc(transferBookings.createdAt));
   }
 
@@ -537,6 +559,30 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(disposalBookings.createdAt));
   }
 
+  async getDisposalBookingsByProvider(providerId: string): Promise<DisposalBooking[]> {
+    // Get all vehicle IDs for this provider first
+    const providerVehicles = await db
+      .select({ id: vehicles.id })
+      .from(vehicles)
+      .where(eq(vehicles.providerId, providerId));
+    
+    const vehicleIds = providerVehicles.map(v => v.id);
+    
+    if (vehicleIds.length === 0) {
+      return [];
+    }
+
+    // Then get all disposal bookings for those vehicles
+    const bookings = await db
+      .select()
+      .from(disposalBookings)
+      .where(eq(disposalBookings.vehicleId, vehicleIds[0]))
+      .orderBy(desc(disposalBookings.createdAt));
+    
+    // Filter for all vehicle IDs
+    return bookings.filter(b => vehicleIds.includes(b.vehicleId));
+  }
+
   async createDisposalBooking(booking: InsertDisposalBooking): Promise<DisposalBooking> {
     const [created] = await db.insert(disposalBookings).values(booking).returning();
     return created;
@@ -562,7 +608,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPaymentIntentByReference(paymentRef: string): Promise<PaymentIntent | undefined> {
-    const [intent] = await db.select().from(paymentIntents).where(eq(paymentIntents.paymentRef, paymentRef));
+    const [intent] = await db.select().from(paymentIntents).where(eq(paymentIntents.konnectPaymentRef, paymentRef));
     return intent || undefined;
   }
 
