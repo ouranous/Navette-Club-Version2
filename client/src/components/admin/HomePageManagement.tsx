@@ -153,9 +153,17 @@ export default function HomePageManagement() {
     mutationFn: async (data: HeroFormData) => {
       if (heroImage) {
         const res = await apiRequest("PATCH", `/api/homepage-content/${heroImage.id}`, data);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || errorData.message || "Erreur lors de la mise à jour");
+        }
         return await res.json();
       } else {
         const res = await apiRequest("POST", "/api/homepage-content", data);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || errorData.message || "Erreur lors de la création");
+        }
         return await res.json();
       }
     },
@@ -164,10 +172,11 @@ export default function HomePageManagement() {
       toast({ title: "Bannière mise à jour avec succès" });
       setIsHeroDialogOpen(false);
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error("Hero update error:", error);
       toast({ 
         title: "Erreur", 
-        description: "Impossible de mettre à jour la bannière",
+        description: error.message || "Impossible de mettre à jour la bannière",
         variant: "destructive" 
       });
     },

@@ -1018,7 +1018,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const content = await storage.createHomePageContent(validatedData);
       res.status(201).json(content);
     } catch (error) {
-      res.status(400).json({ error: "Invalid content data", details: error });
+      console.error("Homepage content creation error:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ error: error.message, details: error });
+      } else {
+        res.status(400).json({ error: "Invalid content data", details: error });
+      }
     }
   });
 
@@ -1031,7 +1036,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(content);
     } catch (error) {
-      res.status(400).json({ error: "Invalid content data", details: error });
+      console.error("Homepage content update error:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ error: error.message, details: error });
+      } else {
+        res.status(400).json({ error: "Invalid content data", details: error });
+      }
     }
   });
 
