@@ -50,20 +50,30 @@ export function setupAdminAuth(app: Express) {
 }
 
 export const requireAdminPassword: RequestHandler = async (req: any, res, next) => {
-  // On Replit: Check Replit Auth + admin role
+  // Import storage to check user role
+  const { storage } = await import("./storage");
+  
+  // On Replit: Check both Replit Auth AND email/password session
   if (process.env.REPL_ID) {
-    // Import storage to check user role
-    const { storage } = await import("./storage");
-    
-    // Check if user is authenticated
-    const user = req.user as any;
-    if (!req.isAuthenticated() || !user?.claims?.sub) {
+    let userId: string | null = null;
+
+    // Option 1: Replit Auth (Google OAuth)
+    if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
+      userId = req.user.claims.sub;
+    }
+    // Option 2: Email/password session
+    else if (req.session?.userId && req.session?.isAuthenticated) {
+      userId = req.session.userId;
+    }
+
+    // No authentication found
+    if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     // Check if user has admin role
     try {
-      const dbUser = await storage.getUser(user.claims.sub);
+      const dbUser = await storage.getUser(userId);
       if (!dbUser || dbUser.role !== "admin") {
         return res.status(403).json({ message: "Admin access required" });
       }

@@ -21,13 +21,28 @@ import {
   insertSocialMediaLinkSchema,
 } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, requireAuth } from "./replitAuth";
 import { setupAdminAuth, requireAdminPassword, registerAdminAuthRoutes } from "./adminAuth";
 import { calculateTransferCost, calculateDisposalCost } from "./pricing";
 import { calculateDistance, calculateTransferPrice } from "./googleMaps";
 import { getGeographicZone, filterAndSortVehiclesByZones } from "./geographicZones";
 import { initKonnectPayment, getKonnectPaymentDetails } from "./konnect";
 import { sendWelcomeEmail, sendVoucherEmail, sendMissionOrderEmail } from "./email";
+
+// Helper function to get userId from either Replit Auth or email/password session
+function getUserId(req: any): string | null {
+  // Option 1: Email/password session
+  if (req.session?.userId && req.session?.isAuthenticated) {
+    return req.session.userId;
+  }
+  
+  // Option 2: Replit Auth
+  if (req.user?.claims?.sub) {
+    return req.user.claims.sub;
+  }
+  
+  return null;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication (Replit Auth or Admin Password)
@@ -1314,9 +1329,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== CLIENT ROUTES ==========
   // Get all bookings for the logged-in client
-  app.get("/api/my-bookings", isAuthenticated, async (req: any, res) => {
+  app.get("/api/my-bookings", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found" });
+      }
       
       // Get customer linked to this user
       const customer = await storage.getCustomerByUserId(userId);
@@ -1415,9 +1433,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get provider info for logged-in user
-  app.get("/api/my-provider", isAuthenticated, async (req: any, res) => {
+  app.get("/api/my-provider", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found" });
+      }
+
       const provider = await storage.getProviderByUserId(userId);
       
       if (!provider) {
@@ -1432,9 +1454,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update provider info
-  app.patch("/api/my-provider", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/my-provider", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found" });
+      }
+
       const provider = await storage.getProviderByUserId(userId);
       
       if (!provider) {
@@ -1452,9 +1478,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get vehicles for logged-in provider
-  app.get("/api/my-vehicles", isAuthenticated, async (req: any, res) => {
+  app.get("/api/my-vehicles", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found" });
+      }
+
       const provider = await storage.getProviderByUserId(userId);
       
       if (!provider) {
@@ -1470,9 +1500,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get requests (bookings) for logged-in provider
-  app.get("/api/my-requests", isAuthenticated, async (req: any, res) => {
+  app.get("/api/my-requests", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found" });
+      }
+
       const provider = await storage.getProviderByUserId(userId);
       
       if (!provider) {

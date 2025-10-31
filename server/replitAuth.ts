@@ -210,3 +210,44 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return;
   }
 };
+
+// Universal authentication middleware that supports both Replit Auth and email/password sessions
+export const requireAuth: RequestHandler = async (req: any, res, next) => {
+  // Skip authentication check if REPL_ID is not available (non-Replit environments)
+  if (!process.env.REPL_ID) {
+    console.log("⚠️  Auth check skipped: running without authentication");
+    return next();
+  }
+
+  // Option 1: Check email/password session
+  if (req.session?.userId && req.session?.isAuthenticated) {
+    return next();
+  }
+
+  // Option 2: Check Replit Auth
+  const user = req.user as any;
+  if (req.isAuthenticated() && user?.expires_at) {
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Token is still valid
+    if (now <= user.expires_at) {
+      return next();
+    }
+
+    // Try to refresh the token
+    const refreshToken = user.refresh_token;
+    if (refreshToken) {
+      try {
+        const config = await getOidcConfig();
+        const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+        updateUserSession(user, tokenResponse);
+        return next();
+      } catch (error) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+  }
+
+  // No valid authentication found
+  return res.status(401).json({ message: "Authentication required" });
+};
