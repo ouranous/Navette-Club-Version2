@@ -50,12 +50,31 @@ export function setupAdminAuth(app: Express) {
 }
 
 export const requireAdminPassword: RequestHandler = async (req: any, res, next) => {
-  // Skip on Replit (uses Replit Auth)
+  // On Replit: Check Replit Auth + admin role
   if (process.env.REPL_ID) {
-    return next();
+    // Import storage to check user role
+    const { storage } = await import("./storage");
+    
+    // Check if user is authenticated
+    const user = req.user as any;
+    if (!req.isAuthenticated() || !user?.claims?.sub) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    // Check if user has admin role
+    try {
+      const dbUser = await storage.getUser(user.claims.sub);
+      if (!dbUser || dbUser.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      return next();
+    } catch (error) {
+      console.error("Error checking admin role:", error);
+      return res.status(500).json({ message: "Error verifying admin access" });
+    }
   }
 
-  // Check if admin is logged in
+  // On Plesk: Check password-based session
   if (req.session?.isAdmin) {
     return next();
   }

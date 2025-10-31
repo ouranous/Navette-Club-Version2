@@ -259,23 +259,37 @@ async function signObjectURL({
     method,
     expires_at: new Date(Date.now() + ttlSec * 1000).toISOString(),
   };
-  const response = await fetch(
-    `${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(request),
-    }
-  );
-  if (!response.ok) {
-    throw new Error(
-      `Failed to sign object URL, errorcode: ${response.status}, ` +
-        `make sure you're running on Replit`
+  
+  try {
+    const response = await fetch(
+      `${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+      }
     );
-  }
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Sidecar error response:", errorText);
+      throw new Error(
+        `Failed to sign object URL, status: ${response.status}, ` +
+          `error: ${errorText}. Make sure you're running on Replit and Object Storage is properly configured.`
+      );
+    }
 
-  const { signed_url: signedURL } = await response.json();
-  return signedURL;
+    const { signed_url: signedURL } = await response.json();
+    return signedURL;
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes("fetch failed")) {
+      throw new Error(
+        "Cannot connect to Replit Object Storage sidecar. " +
+          "Make sure you're running on Replit and the Object Storage integration is enabled."
+      );
+    }
+    throw error;
+  }
 }
