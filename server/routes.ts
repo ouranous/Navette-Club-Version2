@@ -1451,10 +1451,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize payment
   app.post("/api/payments/init", async (req, res) => {
     try {
+      console.log("Payment init request body:", req.body);
       const { bookingType, bookingId, amount, customerEmail, customerFirstName, customerLastName, customerPhone, description } = req.body;
 
-      if (!bookingType || !bookingId || !amount || !customerEmail) {
-        return res.status(400).json({ error: "Missing required fields" });
+      console.log("Extracted fields:", { bookingType, bookingId, amount, customerEmail, customerFirstName, customerLastName, customerPhone, description });
+
+      if (!bookingType || !bookingId || amount === undefined || amount === null || !customerEmail) {
+        console.error("Missing required fields. Current values:", { bookingType, bookingId, amount, customerEmail });
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          received: { bookingType, bookingId, amount, customerEmail }
+        });
       }
 
       // Create payment intent in database

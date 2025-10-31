@@ -23,16 +23,21 @@ export function useAdminAuth() {
   });
 
   const isAdmin = user?.role === "admin" || adminStatus?.isAdmin || false;
+  
+  // Check if we've finished loading and confirmed user is NOT admin
+  const isLoading = user === undefined && adminStatus === undefined;
+  const hasLoaded = user !== undefined || adminStatus !== undefined;
 
   useEffect(() => {
-    // Only redirect if we know we're not admin and queries have loaded
-    if (user === null && adminStatus?.isAdmin === false) {
+    // Redirect if both queries have loaded and neither shows admin access
+    if (hasLoaded && !isAdmin) {
+      console.log("Not admin, redirecting to login", { user, adminStatus });
       setLocation("/admin/login");
     }
-  }, [user, adminStatus, setLocation]);
+  }, [hasLoaded, isAdmin, user, adminStatus, setLocation]);
 
   return {
     isAdmin,
-    isLoading: user === undefined && adminStatus === undefined,
+    isLoading,
   };
 }

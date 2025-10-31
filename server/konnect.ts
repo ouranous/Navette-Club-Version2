@@ -9,9 +9,7 @@ if (!process.env.KONNECT_RECEIVER_WALLET) {
   throw new Error("KONNECT_RECEIVER_WALLET environment variable is required");
 }
 
-const KONNECT_API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://api.konnect.network/api/v2'
-  : 'https://api.dev.konnect.network/api/v2';
+const KONNECT_API_BASE_URL = 'https://api.konnect.network/api/v2';
 
 const KONNECT_API_KEY = process.env.KONNECT_API_KEY;
 const RECEIVER_WALLET_ID = process.env.KONNECT_RECEIVER_WALLET;
