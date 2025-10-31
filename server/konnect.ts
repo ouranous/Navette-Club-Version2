@@ -16,14 +16,20 @@ const KONNECT_API_BASE_URL = KONNECT_ENV === 'production'
   ? 'https://api.konnect.network/api/v2'
   : 'https://api.preprod.konnect.network/api/v2';
 
+// EUR to TND exchange rate (configurable via environment variable)
+// Default: 1 EUR = 3.5 TND
+const EUR_TO_TND_RATE = parseFloat(process.env.EUR_TO_TND_RATE || '3.5');
+
 console.log(`🌍 Konnect Environment: ${KONNECT_ENV.toUpperCase()}`);
 console.log(`🔗 Konnect API URL: ${KONNECT_API_BASE_URL}`);
+console.log(`💱 EUR to TND Rate: 1 EUR = ${EUR_TO_TND_RATE} TND`);
 
 const KONNECT_API_KEY = process.env.KONNECT_API_KEY;
 const RECEIVER_WALLET_ID = process.env.KONNECT_RECEIVER_WALLET;
 
 export interface KonnectPaymentRequest {
-  amount: number; // Amount in TND (will be converted to millimes)
+  amount: number; // Amount in EUR or TND (will be converted to TND if EUR, then to millimes)
+  currency?: 'EUR' | 'TND'; // Currency of the amount (default: EUR)
   orderId: string;
   bookingType: 'transfer' | 'disposal' | 'tour';
   customerEmail: string;
@@ -66,8 +72,17 @@ export async function initKonnectPayment(
     console.log('🔑 API Key length:', KONNECT_API_KEY ? KONNECT_API_KEY.length : 0);
     console.log('💰 Receiver Wallet ID:', RECEIVER_WALLET_ID);
 
+    // Convert EUR to TND if needed (default currency is EUR for backward compatibility)
+    const currency = paymentRequest.currency || 'EUR';
+    const amountInTND = currency === 'EUR' 
+      ? paymentRequest.amount * EUR_TO_TND_RATE 
+      : paymentRequest.amount;
+
+    console.log(`💶 Amount received: ${paymentRequest.amount} ${currency}`);
+    console.log(`💵 Amount in TND: ${amountInTND.toFixed(3)} TND`);
+
     // Convert amount to millimes (1 TND = 1000 millimes)
-    const amountInMillimes = Math.round(paymentRequest.amount * 1000);
+    const amountInMillimes = Math.round(amountInTND * 1000);
 
     const payload = {
       receiverWalletId: RECEIVER_WALLET_ID,
