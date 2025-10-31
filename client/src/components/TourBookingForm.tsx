@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +16,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Users, Euro, CheckCircle } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Calendar, Users, Euro } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import type { CityTour } from "@shared/schema";
 
 interface TourBookingFormProps {
@@ -41,7 +40,6 @@ type BookingFormValues = z.infer<typeof bookingFormSchema>;
 
 export default function TourBookingForm({ tour }: TourBookingFormProps) {
   const { toast } = useToast();
-  const [bookingComplete, setBookingComplete] = useState(false);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
@@ -89,15 +87,37 @@ export default function TourBookingForm({ tour }: TourBookingFormProps) {
       });
       const booking = await bookingRes.json();
 
-      return booking;
-    },
-    onSuccess: () => {
-      setBookingComplete(true);
-      queryClient.invalidateQueries({ queryKey: ["/api/tour-bookings"] });
+      // Initialize Konnect payment
       toast({
-        title: "Réservation confirmée !",
-        description: "Nous vous enverrons un email de confirmation sous peu.",
+        title: "Initialisation du paiement...",
+        description: "Redirection vers Konnect...",
       });
+
+      const paymentResponse = await fetch("/api/payments/init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingType: "tour",
+          bookingId: booking.id,
+          amount: totalPrice,
+          customerEmail: data.email,
+          customerFirstName: data.firstName,
+          customerLastName: data.lastName,
+          customerPhone: data.phone,
+          description: `City Tour: ${tour.name}`,
+        }),
+      });
+
+      if (!paymentResponse.ok) {
+        throw new Error("Erreur lors de l'initialisation du paiement");
+      }
+
+      const paymentData = await paymentResponse.json();
+      
+      // Redirect to Konnect payment page
+      window.location.href = paymentData.payUrl;
+      
+      return booking;
     },
     onError: (error: Error) => {
       toast({
@@ -117,32 +137,6 @@ export default function TourBookingForm({ tour }: TourBookingFormProps) {
   const totalPrice = 
     parseFloat(tour.price || "0") * (adults || 0) + 
     (tour.priceChild ? parseFloat(tour.priceChild) * (children || 0) : 0);
-
-  if (bookingComplete) {
-    return (
-      <Card data-testid="card-booking-success">
-        <CardContent className="pt-6 text-center space-y-4">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-500" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg mb-2">Réservation confirmée !</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Un email de confirmation vous a été envoyé.
-            </p>
-          </div>
-          <Button 
-            onClick={() => setBookingComplete(false)}
-            variant="outline"
-            className="w-full"
-            data-testid="button-new-booking"
-          >
-            Nouvelle réservation
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card data-testid="card-booking-form">
