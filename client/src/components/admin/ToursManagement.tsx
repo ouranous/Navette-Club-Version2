@@ -278,8 +278,8 @@ export default function ToursManagement() {
               Nouveau tour
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden p-0">
-            <div className="flex h-full max-h-[75vh]">
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden p-0">
+            <div className="flex h-full max-h-[80vh]">
               {/* Left Panel - Live Preview */}
               <div className="hidden lg:block w-2/5 bg-muted/30 p-6 overflow-y-auto border-r">
                 <div className="sticky top-0">
