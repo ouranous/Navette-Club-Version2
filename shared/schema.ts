@@ -440,6 +440,18 @@ export const insertTransferBookingSchema = createInsertSchema(transferBookings).
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  pickupDate: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
+  returnDate: z.union([z.string(), z.date(), z.null()]).transform(val => val === null ? null : (typeof val === 'string' ? new Date(val) : val)).nullable().optional(),
+  totalPrice: z.union([z.string(), z.number()]).transform(val => String(val)),
+  specialRequests: z.string().optional().nullable(),
+  flightNumber: z.string().optional().nullable(),
+  nameOnPlacard: z.string().optional().nullable(),
+  returnTime: z.string().optional().nullable(),
+  providerId: z.string().optional().nullable(),
+  paymentIntentId: z.string().optional().nullable(),
+  status: z.string().optional().default("pending"),
+  paymentStatus: z.string().optional().default("pending"),
 });
 
 export const insertTourBookingSchema = createInsertSchema(tourBookings).omit({

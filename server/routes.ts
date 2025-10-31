@@ -608,11 +608,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/transfer-bookings", async (req, res) => {
     try {
+      console.log("Creating transfer booking with data:", req.body);
       const validatedData = insertTransferBookingSchema.parse(req.body);
+      console.log("Validated data:", validatedData);
       const booking = await storage.createTransferBooking(validatedData);
+      console.log("Booking created:", booking.id);
       res.status(201).json(booking);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid booking data", details: error });
+    } catch (error: any) {
+      console.error("Transfer booking creation error:", error);
+      console.error("Error details:", error.issues || error.message);
+      res.status(400).json({ 
+        error: "Invalid booking data", 
+        details: error.issues || error.message 
+      });
     }
   });
 
