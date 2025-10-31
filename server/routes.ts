@@ -1336,38 +1336,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========== PROVIDER ROUTES ==========
-  // Register as a provider
-  app.post("/api/provider-register", isAuthenticated, async (req: any, res) => {
+  // Register as a provider with email/password
+  const providerRegisterSchema = z.object({
+    email: z.string().email("Email invalide"),
+    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+    firstName: z.string().min(1, "Le prénom est requis"),
+    lastName: z.string().min(1, "Le nom est requis"),
+    // Provider fields
+    name: z.string().min(1, "Le nom de la société est requis"),
+    type: z.string(),
+    contactName: z.string().optional(),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    country: z.string().optional(),
+    serviceZones: z.array(z.string()).min(1, "Au moins une zone de service est requise"),
+    notes: z.string().optional(),
+  });
+
+  app.post("/api/provider-register", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      
-      // Check if user already has a provider account
-      const existing = await storage.getProviderByUserId(userId);
-      if (existing) {
-        return res.status(400).json({ error: "Provider account already exists" });
+      // Validate request body
+      const validationResult = providerRegisterSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: validationResult.error.errors[0].message 
+        });
       }
 
-      const validatedData = insertProviderSchema.parse({
-        ...req.body,
-        userId,
-      });
-      
-      const provider = await storage.createProvider(validatedData);
-      
-      // Update user role to provider
-      await storage.upsertUser({
-        id: userId,
-        email: req.user.claims.email,
-        firstName: req.user.claims.first_name,
-        lastName: req.user.claims.last_name,
-        profileImageUrl: req.user.claims.profile_image_url,
+      const { email, password, firstName, lastName, ...providerData } = validationResult.data;
+
+      // Check if email already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Un compte existe déjà avec cet email" });
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Create user account with provider role
+      const user = await storage.upsertUser({
+        email,
+        passwordHash,
+        firstName,
+        lastName,
         role: "provider",
       });
 
-      res.status(201).json(provider);
-    } catch (error) {
+      // Create provider profile
+      const provider = await storage.createProvider({
+        ...providerData,
+        userId: user.id,
+        isActive: true,
+      });
+
+      // Create session for auto-login
+      req.session.userId = user.id;
+      req.session.isAuthenticated = true;
+
+      // Send welcome email
+      try {
+        await sendWelcomeEmail({ email, firstName, lastName });
+      } catch (error) {
+        console.error("Failed to send welcome email:", error);
+      }
+
+      res.status(201).json({ 
+        success: true, 
+        userId: user.id,
+        providerId: provider.id,
+        message: "Inscription réussie" 
+      });
+    } catch (error: any) {
       console.error("Error registering provider:", error);
-      res.status(400).json({ error: "Invalid provider data", details: error });
+      res.status(500).json({ message: "Erreur lors de l'inscription" });
     }
   });
 
