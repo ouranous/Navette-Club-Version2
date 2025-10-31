@@ -21,9 +21,14 @@ The backend is an Express.js application with TypeScript, using an API-first app
   * Vehicle management page to add/edit/delete vehicles with photos and pricing
   * Request tracking page showing all assigned transfer and disposal bookings with status filters
 -   **Authentication & Authorization**: 
-  * **On Replit**: Replit Auth (OpenID Connect) with role-based access control (admin, client, provider) + email/password authentication
+  * **On Replit**: Dual authentication system supporting both Replit Auth (OpenID Connect with Google) AND email/password authentication simultaneously
+    - Universal middleware (`requireAuth`, `requireAdminPassword`) supports both authentication methods
+    - User ID extraction works from either `req.session.userId` (email/password) or `req.user.claims.sub` (Replit Auth)
   * **On Plesk/External Hosting**: Email/password authentication for all users (registration at `/register`, login at `/login`), password-based admin authentication (ADMIN_PASSWORD env var), Replit Auth disabled
-  * **User Authentication Features:**
+  * **Unified Registration System:**
+    - Single registration page at `/register` with user type selection (Client or Transporteur)
+    - Client registration: simple form (email, password, firstName, lastName) → creates user with role="user"
+    - Provider registration: complete form (account info + company details + service zones) → creates user with role="provider" + provider profile
     - User registration with email/password (minimum 8 characters)
     - Passwords hashed with bcrypt (cost=10)
     - Session-based authentication stored in PostgreSQL
@@ -31,6 +36,7 @@ The backend is an Express.js application with TypeScript, using an API-first app
     - Welcome email sent upon successful registration
     - Role-based access (user, provider, admin)
   * All admin routes (POST/PATCH/DELETE for providers, vehicles, tours, content) are protected by authentication
+  * Provider routes (`/api/my-provider`, `/api/my-vehicles`, `/api/my-requests`) use universal authentication
   * Public routes (GET) remain accessible for booking and browsing
 -   **Payment Integration**: Konnect payment gateway for Tunisia with webhook verification, success/failure pages, and automatic booking status updates. Amounts in millimes (×1000).
 -   **Geographic Zone-Based Vehicle Filtering**: Maps Tunisian cities/regions to 7 zones. Automatically detects zones, filters vehicles by provider service zones, and scores/ranks providers by relevance (serving both origin/destination zones), then by price.
