@@ -20,6 +20,7 @@ import {
 } from "@shared/schema";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAdminAuth, requireAdminPassword, registerAdminAuthRoutes } from "./adminAuth";
 import { calculateTransferCost, calculateDisposalCost } from "./pricing";
 import { calculateDistance, calculateTransferPrice } from "./googleMaps";
 import { getGeographicZone, filterAndSortVehiclesByZones } from "./geographicZones";
@@ -27,8 +28,10 @@ import { initKonnectPayment, getKonnectPaymentDetails } from "./konnect";
 import { sendWelcomeEmail, sendVoucherEmail, sendMissionOrderEmail } from "./email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Auth
+  // Setup authentication (Replit Auth or Admin Password)
+  setupAdminAuth(app);
   await setupAuth(app);
+  registerAdminAuthRoutes(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -70,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/providers", async (req, res) => {
+  app.post("/api/providers", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertProviderSchema.parse(req.body);
       const provider = await storage.createProvider(validatedData);
@@ -80,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/providers/:id", async (req, res) => {
+  app.patch("/api/providers/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertProviderSchema.partial().parse(req.body);
       const provider = await storage.updateProvider(req.params.id, validatedData);
@@ -93,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/providers/:id", async (req, res) => {
+  app.delete("/api/providers/:id", requireAdminPassword, async (req, res) => {
     try {
       const success = await storage.deleteProvider(req.params.id);
       if (!success) {
@@ -139,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vehicles", async (req, res) => {
+  app.post("/api/vehicles", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertVehicleSchema.parse(req.body);
       // Generate name from brand and model if not provided
@@ -154,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/vehicles/:id", async (req, res) => {
+  app.patch("/api/vehicles/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertVehicleSchema.partial().parse(req.body);
       // Generate name from brand and model if both are provided
@@ -177,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/vehicles/:id", async (req, res) => {
+  app.delete("/api/vehicles/:id", requireAdminPassword, async (req, res) => {
     try {
       const success = await storage.deleteVehicle(req.params.id);
       if (!success) {
@@ -199,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vehicles/:vehicleId/seasonal-prices", async (req, res) => {
+  app.post("/api/vehicles/:vehicleId/seasonal-prices", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertVehicleSeasonalPriceSchema.parse({
         ...req.body,
@@ -212,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/vehicles/seasonal-prices/:id", async (req, res) => {
+  app.patch("/api/vehicles/seasonal-prices/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertVehicleSeasonalPriceSchema.partial().parse(req.body);
       const price = await storage.updateVehicleSeasonalPrice(req.params.id, validatedData);
@@ -225,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/vehicles/seasonal-prices/:id", async (req, res) => {
+  app.delete("/api/vehicles/seasonal-prices/:id", requireAdminPassword, async (req, res) => {
     try {
       const success = await storage.deleteVehicleSeasonalPrice(req.params.id);
       if (!success) {
@@ -247,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vehicles/:vehicleId/hourly-prices", async (req, res) => {
+  app.post("/api/vehicles/:vehicleId/hourly-prices", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertVehicleHourlyPriceSchema.parse({
         ...req.body,
@@ -260,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/vehicles/hourly-prices/:id", async (req, res) => {
+  app.patch("/api/vehicles/hourly-prices/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertVehicleHourlyPriceSchema.partial().parse(req.body);
       const price = await storage.updateVehicleHourlyPrice(req.params.id, validatedData);
@@ -273,7 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/vehicles/hourly-prices/:id", async (req, res) => {
+  app.delete("/api/vehicles/hourly-prices/:id", requireAdminPassword, async (req, res) => {
     try {
       const success = await storage.deleteVehicleHourlyPrice(req.params.id);
       if (!success) {
@@ -337,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tours", async (req, res) => {
+  app.post("/api/tours", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertCityTourSchema.parse(req.body);
       const tour = await storage.createTour(validatedData);
@@ -347,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/tours/:id", async (req, res) => {
+  app.patch("/api/tours/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertCityTourSchema.partial().parse(req.body);
       const tour = await storage.updateTour(req.params.id, validatedData);
@@ -360,7 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/tours/:id", async (req, res) => {
+  app.delete("/api/tours/:id", requireAdminPassword, async (req, res) => {
     try {
       const success = await storage.deleteTour(req.params.id);
       if (!success) {
@@ -382,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tours/:tourId/stops", async (req, res) => {
+  app.post("/api/tours/:tourId/stops", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertTourStopSchema.parse({
         ...req.body,
@@ -569,11 +572,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== OBJECT STORAGE (Photo Upload) ==========
   // Reference: blueprint:javascript_object_storage
-  // SECURITY NOTE: These routes are currently unprotected, consistent with the rest of the API.
-  // TODO: Add authentication middleware when implementing user authentication system.
+  // NOTE: Object storage only works on Replit (requires Replit sidecar)
   
   // Endpoint to get upload URL for images
-  app.post("/api/objects/upload", async (req, res) => {
+  app.post("/api/objects/upload", requireAdminPassword, async (req, res) => {
+    // Object storage only works on Replit
+    if (!process.env.REPL_ID) {
+      return res.status(501).json({ 
+        error: "Upload désactivé sur cet environnement",
+        message: "L'upload de fichiers nécessite Replit. Utilisez des URLs externes d'images hébergées ailleurs."
+      });
+    }
+
     try {
       const objectStorageService = new ObjectStorageService();
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
@@ -865,7 +875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/homepage-content", async (req, res) => {
+  app.post("/api/homepage-content", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertHomePageContentSchema.parse(req.body);
       const content = await storage.createHomePageContent(validatedData);
@@ -875,7 +885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/homepage-content/:id", async (req, res) => {
+  app.patch("/api/homepage-content/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertHomePageContentSchema.partial().parse(req.body);
       const content = await storage.updateHomePageContent(req.params.id, validatedData);
@@ -888,7 +898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/homepage-content/:id", async (req, res) => {
+  app.delete("/api/homepage-content/:id", requireAdminPassword, async (req, res) => {
     try {
       const success = await storage.deleteHomePageContent(req.params.id);
       if (!success) {
@@ -911,7 +921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/contact-info", async (req, res) => {
+  app.post("/api/contact-info", requireAdminPassword, async (req, res) => {
     try {
       const validated = insertContactInfoSchema.parse(req.body);
       const info = await storage.createContactInfo(validated);
@@ -924,7 +934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/contact-info/:id", async (req, res) => {
+  app.patch("/api/contact-info/:id", requireAdminPassword, async (req, res) => {
     try {
       const info = await storage.updateContactInfo(req.params.id, req.body);
       if (!info) {
@@ -956,7 +966,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/social-media-links", async (req, res) => {
+  app.post("/api/social-media-links", requireAdminPassword, async (req, res) => {
     try {
       const validated = insertSocialMediaLinkSchema.parse(req.body);
       const link = await storage.createSocialMediaLink(validated);
@@ -969,7 +979,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/social-media-links/:id", async (req, res) => {
+  app.patch("/api/social-media-links/:id", requireAdminPassword, async (req, res) => {
     try {
       const link = await storage.updateSocialMediaLink(req.params.id, req.body);
       if (!link) {
@@ -981,7 +991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/social-media-links/:id", async (req, res) => {
+  app.delete("/api/social-media-links/:id", requireAdminPassword, async (req, res) => {
     try {
       const success = await storage.deleteSocialMediaLink(req.params.id);
       if (!success) {

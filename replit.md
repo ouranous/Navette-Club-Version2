@@ -1,5 +1,5 @@
 # Overview
-NavetteClub is a premium transportation platform offering high-end transfer services and city tour experiences. It features a sophisticated booking interface for transfers and guided city tours. The platform includes a geographic zone-based vehicle filtering system, a redesigned 2-column UI for vehicle selection, automatic transfer pricing and booking flow, and comprehensive, admin-editable website pages. The platform now includes dedicated client and provider (transporteur) interfaces with authentication-based access, booking management, vehicle registration, and request tracking systems. The business vision is to provide a reliable and premium service in the transportation sector.
+NavetteClub is a premium transportation platform offering high-end transfer services and city tour experiences. It features a sophisticated booking interface for transfers and guided city tours. The platform includes a geographic zone-based vehicle filtering system, a redesigned 2-column UI for vehicle selection, automatic transfer pricing and booking flow, comprehensive admin-editable website pages, Konnect payment integration (Tunisia's payment gateway), and SendGrid email automation. The platform is deployable on both Replit and external hosting (Plesk/VPS). The business vision is to provide a reliable and premium service in the transportation sector.
 
 # User Preferences
 Preferred communication style: Simple, everyday language.
@@ -10,7 +10,7 @@ Preferred communication style: Simple, everyday language.
 The frontend is a React 18 single-page application built with TypeScript and Vite. It uses Wouter for routing, Radix UI & shadcn/ui for components, React Query for server state management, and Tailwind CSS for responsive styling. Form handling is managed with React Hook Form and Zod for validation. Replit Auth provides user authentication.
 
 ## Backend
-The backend is an Express.js application with TypeScript, using an API-first approach. It integrates Drizzle ORM for PostgreSQL and Replit Auth for OpenID Connect authentication and session management. Replit Object Storage (via Google Cloud Storage) handles photo uploads. RESTful APIs manage providers, vehicles, city tours, bookings, and homepage content, with Zod for validation.
+The backend is an Express.js application with TypeScript, using an API-first approach. It integrates Drizzle ORM for PostgreSQL with dual authentication systems: Replit Auth (OpenID Connect) on Replit, and password-based admin authentication for external hosting (Plesk/VPS). Photo uploads use Replit Object Storage on Replit (disabled on external hosting - use external image URLs instead). RESTful APIs manage providers, vehicles, city tours, bookings, homepage content, and payments, with Zod for validation.
 
 ## Core Features & Design Decisions
 -   **Admin Interface**: Provides comprehensive management for providers (including geographic service zones), vehicles (8 types, seasonal/hourly pricing, homepage visibility control), city tours (3-step creation, live preview, visual selectors, duration management), transfer bookings (with provider reassignment capability), and dynamic content for professional website pages (About, Contact, FAQ, Help, Terms, Privacy, Cancellation).
@@ -20,7 +20,12 @@ The backend is an Express.js application with TypeScript, using an API-first app
   * Dashboard with overview cards for requests, vehicles, drivers, messages, profile, and password management
   * Vehicle management page to add/edit/delete vehicles with photos and pricing
   * Request tracking page showing all assigned transfer and disposal bookings with status filters
--   **Authentication & Authorization**: Role-based access control with three user types (admin, client, provider). Users table links to providers and customers via userId. Providers can self-register and gain provider role after approval.
+-   **Authentication & Authorization**: 
+  * **On Replit**: Replit Auth (OpenID Connect) with role-based access control (admin, client, provider)
+  * **On Plesk/External Hosting**: Password-based admin authentication (ADMIN_PASSWORD env var), Replit Auth disabled
+  * All admin routes (POST/PATCH/DELETE for providers, vehicles, tours, content) are protected by authentication
+  * Public routes (GET) remain accessible for booking and browsing
+-   **Payment Integration**: Konnect payment gateway for Tunisia with webhook verification, success/failure pages, and automatic booking status updates. Amounts in millimes (×1000).
 -   **Geographic Zone-Based Vehicle Filtering**: Maps Tunisian cities/regions to 7 zones. Automatically detects zones, filters vehicles by provider service zones, and scores/ranks providers by relevance (serving both origin/destination zones), then by price.
 -   **Vehicle Type Selection Flow**: Users can select a vehicle type from the homepage, which pre-fills the booking form and filters available vehicles throughout the booking process. Internal vehicle types use standardized slugs (economy, comfort, business, premium, vip, suv, van, minibus) with localized labels for display.
 -   **UI/UX**: Features an industry-standard 2-column layout for vehicle selection with a sticky booking recap and horizontal vehicle cards. Includes a professional design system with a blue-based color palette and Inter/Poppins fonts, ensuring responsive design across devices. Google Places autocomplete is integrated for origin and destination fields in transfer booking.
@@ -28,7 +33,16 @@ The backend is an Express.js application with TypeScript, using an API-first app
 -   **Booking Flow**: A 3-step process: search form (with optional vehicle type pre-selection), vehicle selection (filtered by type if selected), and customer details/payment.
 -   **City Tours Page**: A dedicated page with interactive category and difficulty filters, an embedded Google Map showing tour locations, and professional tour cards.
 -   **Dynamic Content Management**: Website pages like Contact, About, FAQ, etc., and the site's footer content (contact info, social media links) are dynamically managed via the admin panel, with changes reflecting in real-time.
+-   **Email Automation**: SendGrid integration with automated emails:
+  * Welcome email on new user registration
+  * Client voucher after successful payment (with booking details)
+  * Provider mission order when assigned to transfer/disposal booking
 -   **Database Schema**: PostgreSQL schema includes tables for Users (with roles), Sessions, Providers (linked to Users via userId), Vehicles (with Seasonal/Hourly Prices), City Tours, Home Page Content, Transfer Bookings (with providerId for admin assignment), Disposal Bookings, Tour Bookings, Payment Intents, and Customers (linked to Users via userId). Drizzle-zod ensures type-safe schema definitions.
+-   **Deployment Compatibility**:
+  * **Replit**: Full feature support including Replit Auth and Object Storage
+  * **Plesk/External Hosting**: Password-based admin auth, object storage disabled (use external image URLs), requires app.cjs wrapper for Phusion Passenger
+  * Environment detection via REPL_ID presence
+  * Domain detection via REPLIT_DOMAINS (Replit) or APP_DOMAIN (external hosting)
 
 # External Dependencies
 
@@ -37,9 +51,13 @@ The backend is an Express.js application with TypeScript, using an API-first app
 -   `drizzle-orm`
 -   `@tanstack/react-query`
 
-## File Upload
--   `@google-cloud/storage`
--   `@uppy/core`, `@uppy/react`, `@uppy/aws-s3`, `@uppy/dashboard`
+## File Upload (Replit Only)
+-   `@google-cloud/storage` (requires Replit sidecar)
+-   Note: Upload functionality disabled on external hosting - use external image URLs
+
+## Payment & Communication
+-   Konnect API (Tunisia payment gateway)
+-   `@sendgrid/mail` (email automation)
 
 ## UI & Styling
 -   `@radix-ui/*`

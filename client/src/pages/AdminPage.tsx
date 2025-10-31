@@ -21,9 +21,23 @@ import HomePageManagement from "@/components/admin/HomePageManagement";
 import ContactInfoManagement from "@/components/admin/ContactInfoManagement";
 import SocialMediaManagement from "@/components/admin/SocialMediaManagement";
 import TransferBookingsManagement from "@/components/admin/TransferBookingsManagement";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function AdminPage() {
+  const { isAdmin, isLoading } = useAdminAuth();
   const [activeTab, setActiveTab] = useState("homepage");
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Chargement...</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null; // Will redirect to /admin/login
+  }
 
   const sidebarStyle = {
     "--sidebar-width": "16rem",

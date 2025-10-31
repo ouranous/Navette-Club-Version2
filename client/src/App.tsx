@@ -12,6 +12,7 @@ import TransferSearchPage from "@/pages/TransferSearchPage";
 import TransferVehiclesPage from "@/pages/TransferVehiclesPage";
 import TransferConfirmPage from "@/pages/TransferConfirmPage";
 import AdminPage from "@/pages/AdminPage";
+import AdminLoginPage from "@/pages/AdminLoginPage";
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
 import FAQPage from "@/pages/FAQPage";
@@ -40,6 +41,7 @@ function Router() {
       <Route path="/book/transfer" component={TransferSearchPage} />
       <Route path="/book/transfer/vehicles" component={TransferVehiclesPage} />
       <Route path="/book/transfer/confirm" component={TransferConfirmPage} />
+      <Route path="/admin/login" component={AdminLoginPage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/client/dashboard" component={ClientDashboardPage} />
       <Route path="/provider/dashboard" component={ProviderDashboardPage} />
