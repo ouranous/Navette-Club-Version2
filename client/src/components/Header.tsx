@@ -1,16 +1,35 @@
-import { Bell, Menu, MapPin, Car, Globe } from "lucide-react";
+import { Bell, Menu, MapPin, Car, Globe, LogOut, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
   const [notificationCount, setNotificationCount] = useState(3); //todo: remove mock functionality
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
   const handleNotificationClick = () => {
     console.log('Notifications opened');
     setNotificationCount(0);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -61,25 +80,77 @@ export default function Header() {
               )}
             </Button>
 
-            {/* Auth Buttons */}
+            {/* Auth Buttons / User Menu */}
             <div className="hidden sm:flex items-center space-x-2">
-              <Link href="/login">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  data-testid="button-login"
-                >
-                  Se connecter
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button 
-                  size="sm" 
-                  data-testid="button-register"
-                >
-                  S'inscrire
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      data-testid="button-user-menu"
+                    >
+                      <UserIcon className="h-4 w-4 mr-2" />
+                      {user?.firstName || user?.email}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>
+                      {user?.firstName} {user?.lastName}
+                    </DropdownMenuLabel>
+                    <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+                      {user?.email}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {user?.role === "admin" && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" data-testid="menu-admin">
+                          <span>Administration</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {user?.role === "provider" && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/provider/dashboard" data-testid="menu-provider">
+                          <span>Espace Transporteur</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {user?.role === "user" && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/client/dashboard" data-testid="menu-client">
+                          <span>Mes Réservations</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} data-testid="menu-logout">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      <span>Déconnexion</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      data-testid="button-login"
+                    >
+                      Se connecter
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button 
+                      size="sm" 
+                      data-testid="button-register"
+                    >
+                      S'inscrire
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -111,27 +182,67 @@ export default function Header() {
               <Link href="/contact" className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-testid="mobile-link-contact">
                 Contact
               </Link>
-              <div className="flex space-x-2 px-3 py-2">
-                <Link href="/login" className="flex-1">
+              {isAuthenticated ? (
+                <div className="px-3 py-2 border-t">
+                  <div className="mb-2">
+                    <p className="font-medium text-sm">{user?.firstName} {user?.lastName}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  </div>
+                  {user?.role === "admin" && (
+                    <Link href="/admin">
+                      <Button variant="ghost" size="sm" className="w-full justify-start mb-1" data-testid="mobile-menu-admin">
+                        Administration
+                      </Button>
+                    </Link>
+                  )}
+                  {user?.role === "provider" && (
+                    <Link href="/provider/dashboard">
+                      <Button variant="ghost" size="sm" className="w-full justify-start mb-1" data-testid="mobile-menu-provider">
+                        Espace Transporteur
+                      </Button>
+                    </Link>
+                  )}
+                  {user?.role === "user" && (
+                    <Link href="/client/dashboard">
+                      <Button variant="ghost" size="sm" className="w-full justify-start mb-1" data-testid="mobile-menu-client">
+                        Mes Réservations
+                      </Button>
+                    </Link>
+                  )}
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm" 
                     className="w-full" 
-                    data-testid="mobile-button-login"
+                    onClick={handleLogout}
+                    data-testid="mobile-button-logout"
                   >
-                    Se connecter
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Déconnexion
                   </Button>
-                </Link>
-                <Link href="/register" className="flex-1">
-                  <Button 
-                    size="sm" 
-                    className="w-full" 
-                    data-testid="mobile-button-register"
-                  >
-                    S'inscrire
-                  </Button>
-                </Link>
-              </div>
+                </div>
+              ) : (
+                <div className="flex space-x-2 px-3 py-2">
+                  <Link href="/login" className="flex-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full" 
+                      data-testid="mobile-button-login"
+                    >
+                      Se connecter
+                    </Button>
+                  </Link>
+                  <Link href="/register" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      className="w-full" 
+                      data-testid="mobile-button-register"
+                    >
+                      S'inscrire
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}
