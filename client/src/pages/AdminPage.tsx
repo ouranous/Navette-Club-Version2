@@ -12,7 +12,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Car, MapIcon, Route, List, Home, Phone, Share2, Navigation } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, Car, MapIcon, Route, List, Home, Phone, Share2, Navigation, LogOut } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import ProvidersManagement from "@/components/admin/ProvidersManagement";
 import VehiclesManagement from "@/components/admin/VehiclesManagement";
@@ -143,7 +144,21 @@ export default function AdminPage() {
                 Administration NavetteClub
               </h1>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  window.location.href = '/';
+                }}
+                data-testid="button-admin-logout"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Déconnexion
+              </Button>
+            </div>
           </header>
 
           <main className="flex-1 overflow-auto p-6">
