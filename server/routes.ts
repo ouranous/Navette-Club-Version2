@@ -1499,6 +1499,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create vehicle for logged-in provider
+  app.post("/api/my-vehicles", requireAuth, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "User ID not found" });
+      }
+
+      const provider = await storage.getProviderByUserId(userId);
+      
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+
+      const validatedData = insertVehicleSchema.parse({
+        ...req.body,
+        providerId: provider.id,
+      });
+
+      // Generate name from brand and model if not provided
+      const vehicleData = {
+        ...validatedData,
+        name: validatedData.name || `${validatedData.brand} ${validatedData.model}`,
+      };
+
+      const vehicle = await storage.createVehicle(vehicleData);
+      res.status(201).json(vehicle);
+    } catch (error) {
+      console.error("Error creating vehicle:", error);
+      res.status(400).json({ error: "Invalid vehicle data", details: error });
+    }
+  });
+
   // Get requests (bookings) for logged-in provider
   app.get("/api/my-requests", requireAuth, async (req: any, res) => {
     try {

@@ -35,7 +35,7 @@ export default function ProviderVehiclesPage() {
               Vos véhicules: {vehicles?.length || 0}
             </p>
           </div>
-          <Link href="/admin">
+          <Link href="/provider/vehicles/add">
             <Button data-testid="button-add-vehicle">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un véhicule
@@ -52,7 +52,7 @@ export default function ProviderVehiclesPage() {
               <p className="text-muted-foreground mb-4">
                 Vous n'avez pas encore de véhicules enregistrés
               </p>
-              <Link href="/admin">
+              <Link href="/provider/vehicles/add">
                 <Button data-testid="button-add-first">
                   <Plus className="h-4 w-4 mr-2" />
                   Ajouter votre premier véhicule

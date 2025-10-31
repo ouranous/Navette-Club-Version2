@@ -26,6 +26,7 @@ import ClientDashboardPage from "@/pages/ClientDashboardPage";
 import ProviderDashboardPage from "@/pages/ProviderDashboardPage";
 import ProviderRegisterPage from "@/pages/ProviderRegisterPage";
 import ProviderVehiclesPage from "@/pages/ProviderVehiclesPage";
+import ProviderAddVehiclePage from "@/pages/ProviderAddVehiclePage";
 import ProviderRequestsPage from "@/pages/ProviderRequestsPage";
 import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import PaymentFailurePage from "@/pages/PaymentFailurePage";
@@ -51,6 +52,7 @@ function Router() {
       <Route path="/provider/dashboard" component={ProviderDashboardPage} />
       <Route path="/provider/register" component={ProviderRegisterPage} />
       <Route path="/provider/vehicles" component={ProviderVehiclesPage} />
+      <Route path="/provider/vehicles/add" component={ProviderAddVehiclePage} />
       <Route path="/provider/requests" component={ProviderRequestsPage} />
       <Route path="/payment/success" component={PaymentSuccessPage} />
       <Route path="/payment/failure" component={PaymentFailurePage} />

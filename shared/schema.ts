@@ -419,6 +419,8 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   updatedAt: true,
 }).extend({
   type: z.enum(["economy", "comfort", "business", "premium", "vip", "suv", "van", "minibus"]),
+  basePrice: z.union([z.string(), z.number()]).transform((val) => String(val)),
+  pricePerKm: z.union([z.string(), z.number()]).transform((val) => String(val)).optional().nullable(),
 });
 
 export const insertCityTourSchema = createInsertSchema(cityTours).omit({
