@@ -34,6 +34,7 @@ export function setupAdminAuth(app: Express) {
     tableName: "sessions",
   });
 
+  app.set("trust proxy", 1);
   app.use(
     session({
       secret: process.env.SESSION_SECRET,
@@ -43,6 +44,7 @@ export function setupAdminAuth(app: Express) {
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: sessionTtl,
       },
     })

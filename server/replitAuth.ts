@@ -213,12 +213,16 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
 // Universal authentication middleware that supports both Replit Auth and email/password sessions
 export const requireAuth: RequestHandler = async (req: any, res, next) => {
-  // Skip authentication check if REPL_ID is not available (non-Replit environments)
+  // On external hosting (Plesk): Check email/password session
   if (!process.env.REPL_ID) {
-    console.log("⚠️  Auth check skipped: running without authentication");
-    return next();
+    if (req.session?.userId && req.session?.isAuthenticated) {
+      return next();
+    }
+    return res.status(401).json({ message: "Authentication required" });
   }
 
+  // On Replit: Check both email/password session AND Replit Auth
+  
   // Option 1: Check email/password session
   if (req.session?.userId && req.session?.isAuthenticated) {
     return next();

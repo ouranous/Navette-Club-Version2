@@ -304,6 +304,27 @@ export default function ProviderAddVehiclePage() {
 
                 <FormField
                   control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL de l'image du véhicule</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://exemple.com/image-vehicule.jpg" 
+                          {...field} 
+                          data-testid="input-imageUrl" 
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Entrez l'URL d'une image hébergée sur un service externe (Cloudinary, ImageKit, etc.)
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="isAvailable"
                   render={({ field }) => (
                     <FormItem className="flex items-center space-x-2 space-y-0">
