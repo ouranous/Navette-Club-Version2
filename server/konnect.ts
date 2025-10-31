@@ -53,7 +53,9 @@ export async function initKonnectPayment(
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
     const fullBaseUrl = `${protocol}://${baseUrl}`;
 
-    console.log('🔑 Konnect API Key loaded:', KONNECT_API_KEY ? `${KONNECT_API_KEY.substring(0, 10)}...` : 'NOT SET');
+    console.log('🔑 Konnect API Key loaded:', KONNECT_API_KEY ? `${KONNECT_API_KEY.substring(0, 30)}...` : 'NOT SET');
+    console.log('🔑 API Key has colon?', KONNECT_API_KEY ? (KONNECT_API_KEY.includes(':') ? '✅ YES' : '❌ NO') : 'N/A');
+    console.log('🔑 API Key length:', KONNECT_API_KEY ? KONNECT_API_KEY.length : 0);
     console.log('💰 Receiver Wallet ID:', RECEIVER_WALLET_ID);
 
     // Convert amount to millimes (1 TND = 1000 millimes)
