@@ -282,19 +282,56 @@ export default function ToursManagement() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-full max-h-full h-screen w-screen p-0 gap-0">
-            <div className="flex flex-col h-full">
-              {/* Sticky Header */}
-              <DialogHeader className="px-6 pt-6 pb-4 border-b bg-background shrink-0">
-                <div className="flex items-center justify-between mb-4">
-                  <DialogTitle className="text-2xl">
-                    {editingTour ? "Modifier" : "Créer"} un city tour
+            <div className="flex h-full">
+              {/* Vertical Sidebar - Stepper */}
+              <div className="w-64 border-r bg-muted/30 shrink-0 flex flex-col">
+                <DialogHeader className="px-4 pt-6 pb-4 border-b">
+                  <DialogTitle className="text-xl">
+                    {editingTour ? "Modifier" : "Créer"} un tour
                   </DialogTitle>
+                </DialogHeader>
+                
+                <div className="flex-1 p-4 space-y-2">
+                  {STEPS.map((step) => (
+                    <button
+                      key={step.id}
+                      type="button"
+                      onClick={() => setCurrentStep(step.id)}
+                      className={cn(
+                        "w-full flex items-start gap-3 p-3 rounded-lg transition-all hover-elevate text-left",
+                        currentStep === step.id 
+                          ? "bg-primary text-primary-foreground" 
+                          : currentStep > step.id
+                            ? "bg-primary/10 text-primary"
+                            : "bg-background text-muted-foreground"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold shrink-0 mt-0.5",
+                        currentStep === step.id 
+                          ? "bg-white text-primary" 
+                          : currentStep > step.id
+                            ? "bg-primary text-white"
+                            : "bg-muted"
+                      )}>
+                        {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm">{step.title}</div>
+                        <div className="text-xs opacity-80 mt-0.5">{step.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="p-4 border-t">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => setShowPreview(!showPreview)}
                     data-testid="button-toggle-preview"
+                    className="w-full"
                   >
                     {showPreview ? (
                       <>
@@ -309,55 +346,14 @@ export default function ToursManagement() {
                     )}
                   </Button>
                 </div>
-                
-                {/* Stepper */}
-                <div className="flex items-center gap-2">
-                  {STEPS.map((step, idx) => (
-                    <div key={step.id} className="flex items-center flex-1">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(step.id)}
-                        className={cn(
-                          "flex items-center gap-3 flex-1 p-3 rounded-lg transition-all hover-elevate",
-                          currentStep === step.id 
-                            ? "bg-primary text-primary-foreground" 
-                            : currentStep > step.id
-                              ? "bg-primary/10 text-primary"
-                              : "bg-muted text-muted-foreground"
-                        )}
-                      >
-                        <div className={cn(
-                          "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold",
-                          currentStep === step.id 
-                            ? "bg-white text-primary" 
-                            : currentStep > step.id
-                              ? "bg-primary text-white"
-                              : "bg-background"
-                        )}>
-                          {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
-                        </div>
-                        <div className="text-left">
-                          <div className="font-semibold text-sm">{step.title}</div>
-                          <div className="text-xs opacity-80">{step.description}</div>
-                        </div>
-                      </button>
-                      {idx < STEPS.length - 1 && (
-                        <ChevronRight className="w-4 h-4 mx-2 text-muted-foreground flex-shrink-0" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </DialogHeader>
+              </div>
 
               {/* Main Content Area */}
               <div className="flex flex-1 overflow-hidden">
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
                     {/* Form Content - Scrollable */}
-                    <div className={cn(
-                      "flex-1 overflow-y-auto px-6 py-6",
-                      showPreview ? "w-3/5" : "w-full"
-                    )}>
+                    <div className="flex-1 overflow-y-auto px-8 py-6">
                       {/* Step 1: Concept */}
                       {currentStep === 1 && (
                         <div className="space-y-6 max-w-2xl">
@@ -814,7 +810,7 @@ export default function ToursManagement() {
                     </div>
 
                     {/* Sticky Footer */}
-                    <DialogFooter className="px-6 py-4 border-t bg-background shrink-0 gap-3">
+                    <DialogFooter className="px-8 py-4 border-t bg-background shrink-0 gap-3">
                       {currentStep > 1 && (
                         <Button
                           type="button"
@@ -853,7 +849,7 @@ export default function ToursManagement() {
 
                 {/* Preview Panel - Collapsible */}
                 {showPreview && (
-                  <div className="w-2/5 bg-muted/30 border-l overflow-y-auto">
+                  <div className="w-96 bg-muted/30 border-l overflow-y-auto shrink-0">
                     <div className="p-6">
                       <div className="flex items-center gap-2 mb-4">
                         <Sparkles className="w-5 h-5 text-primary" />
