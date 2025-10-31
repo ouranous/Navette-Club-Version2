@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
+import DOMPurify from 'dompurify';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -164,10 +165,16 @@ export default function TourDetailPage() {
                   <CardTitle>Description</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-muted-foreground leading-relaxed">{tour.description}</p>
+                  <div 
+                    className="text-muted-foreground leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(tour.description) }}
+                  />
                   {tour.fullDescription && (
                     <div className="pt-4 border-t">
-                      <p className="leading-relaxed whitespace-pre-line">{tour.fullDescription}</p>
+                      <div 
+                        className="leading-relaxed prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(tour.fullDescription) }}
+                      />
                     </div>
                   )}
                 </CardContent>

@@ -335,7 +335,7 @@ export default function CityToursPage() {
                       </CardTitle>
                       
                       <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
-                        {tour.description}
+                        {tour.description.replace(/<[^>]*>/g, '')}
                       </p>
 
                       {/* Tour Info */}

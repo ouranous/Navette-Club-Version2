@@ -182,7 +182,7 @@ export default function CityTours() {
                       {getCategoryLabel(tour.category)}
                     </Badge>
                   </div>
-                  <p className="text-muted-foreground text-sm">{tour.description}</p>
+                  <p className="text-muted-foreground text-sm">{tour.description.replace(/<[^>]*>/g, '')}</p>
                 </CardHeader>
 
                 <CardContent className="space-y-4">
