@@ -304,57 +304,20 @@ export default function ProviderAddVehiclePage() {
 
                 <FormField
                   control={form.control}
-                  name="imageUrl"
+                  name="isAvailable"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL de l'image</FormLabel>
+                    <FormItem className="flex items-center space-x-2 space-y-0">
                       <FormControl>
-                        <Input
-                          placeholder="https://exemple.com/image.jpg"
-                          {...field}
-                          data-testid="input-imageUrl"
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="checkbox-isAvailable"
                         />
                       </FormControl>
-                      <FormMessage />
+                      <FormLabel className="cursor-pointer">Véhicule disponible</FormLabel>
                     </FormItem>
                   )}
                 />
-
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="isAvailable"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            data-testid="checkbox-isAvailable"
-                          />
-                        </FormControl>
-                        <FormLabel className="cursor-pointer">Véhicule disponible</FormLabel>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="showOnHomePage"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            data-testid="checkbox-showOnHomePage"
-                          />
-                        </FormControl>
-                        <FormLabel className="cursor-pointer">Afficher sur la page d'accueil</FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
                 <Button
                   type="submit"
