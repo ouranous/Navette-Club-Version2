@@ -63,21 +63,23 @@ export default function Header() {
 
             {/* Auth Buttons */}
             <div className="hidden sm:flex items-center space-x-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => window.location.href = '/api/login'}
-                data-testid="button-login"
-              >
-                Se connecter
-              </Button>
-              <Button 
-                size="sm" 
-                onClick={() => window.location.href = '/api/login'}
-                data-testid="button-register"
-              >
-                S'inscrire
-              </Button>
+              <Link href="/login">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  data-testid="button-login"
+                >
+                  Se connecter
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button 
+                  size="sm" 
+                  data-testid="button-register"
+                >
+                  S'inscrire
+                </Button>
+              </Link>
             </div>
 
             {/* Mobile menu button */}
@@ -110,23 +112,25 @@ export default function Header() {
                 Contact
               </Link>
               <div className="flex space-x-2 px-3 py-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="flex-1" 
-                  onClick={() => window.location.href = '/api/login'}
-                  data-testid="mobile-button-login"
-                >
-                  Se connecter
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="flex-1" 
-                  onClick={() => window.location.href = '/api/login'}
-                  data-testid="mobile-button-register"
-                >
-                  S'inscrire
-                </Button>
+                <Link href="/login" className="flex-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full" 
+                    data-testid="mobile-button-login"
+                  >
+                    Se connecter
+                  </Button>
+                </Link>
+                <Link href="/register" className="flex-1">
+                  <Button 
+                    size="sm" 
+                    className="w-full" 
+                    data-testid="mobile-button-register"
+                  >
+                    S'inscrire
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

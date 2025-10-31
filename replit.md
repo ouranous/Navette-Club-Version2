@@ -21,8 +21,15 @@ The backend is an Express.js application with TypeScript, using an API-first app
   * Vehicle management page to add/edit/delete vehicles with photos and pricing
   * Request tracking page showing all assigned transfer and disposal bookings with status filters
 -   **Authentication & Authorization**: 
-  * **On Replit**: Replit Auth (OpenID Connect) with role-based access control (admin, client, provider)
-  * **On Plesk/External Hosting**: Password-based admin authentication (ADMIN_PASSWORD env var), Replit Auth disabled
+  * **On Replit**: Replit Auth (OpenID Connect) with role-based access control (admin, client, provider) + email/password authentication
+  * **On Plesk/External Hosting**: Email/password authentication for all users (registration at `/register`, login at `/login`), password-based admin authentication (ADMIN_PASSWORD env var), Replit Auth disabled
+  * **User Authentication Features:**
+    - User registration with email/password (minimum 8 characters)
+    - Passwords hashed with bcrypt (cost=10)
+    - Session-based authentication stored in PostgreSQL
+    - Zod validation for email format and password strength
+    - Welcome email sent upon successful registration
+    - Role-based access (user, provider, admin)
   * All admin routes (POST/PATCH/DELETE for providers, vehicles, tours, content) are protected by authentication
   * Public routes (GET) remain accessible for booking and browsing
 -   **Payment Integration**: Konnect payment gateway for Tunisia with webhook verification, success/failure pages, and automatic booking status updates. Amounts in millimes (×1000).

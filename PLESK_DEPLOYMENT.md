@@ -87,9 +87,24 @@ APP_DOMAIN=navetteclub.com
   - AWS S3
   - Tout autre service d'hébergement d'images
 
-### Authentification Simplifiée
-- Sur Plesk : authentification admin par mot de passe uniquement
-- Sur Replit : authentification complète Replit Auth (OpenID Connect)
+### Système d'Authentification
+
+**Sur Replit:**
+- Replit Auth (OpenID Connect) - Authentification automatique
+- Sessions gérées automatiquement
+- Pas de gestion manuelle de mots de passe
+
+**Sur Plesk/Hébergement Externe:**
+- Authentification Email/Mot de passe pour les utilisateurs
+- Mots de passe hachés avec bcrypt (coût=10)
+- Sessions stockées dans PostgreSQL
+- **Pages d'authentification:**
+  - `/register` - Inscription des nouveaux utilisateurs
+  - `/login` - Connexion des utilisateurs existants
+- **Validation:**
+  - Email valide requis
+  - Mot de passe minimum 8 caractères
+  - Tous les champs obligatoires (prénom, nom, email, mot de passe)
 
 ## 🔒 Sécurité
 

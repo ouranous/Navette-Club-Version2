@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage";
+import { db } from "./db";
+import bcrypt from "bcryptjs";
 import {
   insertProviderSchema,
   insertVehicleSchema,
@@ -33,17 +35,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   registerAdminAuthRoutes(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Auth routes - Email/Password authentication
+  const registerSchema = z.object({
+    email: z.string().email("Email invalide"),
+    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+    firstName: z.string().min(1, "Le prénom est requis"),
+    lastName: z.string().min(1, "Le nom est requis"),
+  });
+
+  app.post('/api/auth/register', async (req: any, res) => {
     try {
-      // If no REPL_ID, return null (no authentication available)
-      if (!process.env.REPL_ID) {
-        return res.json(null);
+      // Validate request body
+      const validationResult = registerSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: validationResult.error.errors[0].message 
+        });
       }
       
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const { email, password, firstName, lastName } = validationResult.data;
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Un compte existe déjà avec cet email" });
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Create user
+      const user = await storage.upsertUser({
+        email,
+        passwordHash,
+        firstName,
+        lastName,
+        role: "user",
+      });
+
+      // Send welcome email
+      try {
+        await sendWelcomeEmail({ email, firstName, lastName });
+      } catch (error) {
+        console.error("Failed to send welcome email:", error);
+      }
+
+      res.json({ success: true, userId: user.id });
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Erreur lors de la création du compte" });
+    }
+  });
+
+  const loginSchema = z.object({
+    email: z.string().email("Email invalide"),
+    password: z.string().min(1, "Le mot de passe est requis"),
+  });
+
+  app.post('/api/auth/login', async (req: any, res) => {
+    try {
+      // Validate request body
+      const validationResult = loginSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: validationResult.error.errors[0].message 
+        });
+      }
+      
+      const { email, password } = validationResult.data;
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user || !user.passwordHash) {
+        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+      }
+
+      // Verify password
+      const isValid = await bcrypt.compare(password, user.passwordHash);
+      
+      if (!isValid) {
+        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+      }
+
+      // Create session
+      req.session.userId = user.id;
+      req.session.isAuthenticated = true;
+
+      res.json({ 
+        success: true, 
+        userId: user.id,
+        role: user.role,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Erreur lors de la connexion" });
+    }
+  });
+
+  app.post('/api/auth/logout', async (req: any, res) => {
+    req.session.destroy(() => {
+      res.json({ success: true });
+    });
+  });
+
+  app.get('/api/auth/user', async (req: any, res) => {
+    try {
+      // Email/password auth (session-based)
+      if (req.session?.userId) {
+        const user = await storage.getUser(req.session.userId);
+        return res.json(user);
+      }
+
+      // Replit Auth (if available)
+      if (process.env.REPL_ID && req.isAuthenticated && req.isAuthenticated()) {
+        const userId = req.user.claims.sub;
+        const user = await storage.getUser(userId);
+        return res.json(user);
+      }
+      
+      return res.json(null);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
