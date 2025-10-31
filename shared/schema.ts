@@ -460,6 +460,14 @@ export const insertTourBookingSchema = createInsertSchema(tourBookings).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  tourDate: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
+  totalPrice: z.union([z.string(), z.number()]).transform(val => String(val)),
+  specialRequests: z.string().optional().nullable(),
+  children: z.number().optional().nullable().default(0),
+  paymentIntentId: z.string().optional().nullable(),
+  status: z.string().optional().default("pending"),
+  paymentStatus: z.string().optional().default("pending"),
 });
 
 export const insertHomePageContentSchema = createInsertSchema(homePageContent).omit({
