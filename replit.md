@@ -3,6 +3,7 @@ NavetteClub is a premium transportation platform offering high-end transfer serv
 
 # Recent Changes (Oct 31, 2025)
 - **Rich Text Editor Integration**: Integrated Tiptap WYSIWYG editor (MIT license) for City Tours description and fullDescription fields with complete formatting toolbar (bold, italic, underline, headings, lists, text alignment, links, images, highlighting, undo/redo). Fixed content synchronization to properly populate editor when editing existing tours.
+- **HTML Rendering & Security**: Implemented DOMPurify sanitization for tour descriptions on detail pages to safely render rich HTML content while preventing XSS attacks. Tour cards strip HTML tags for clean previews with proper line-clamp functionality.
 - **City Tours Dialog UI Fix**: Reduced dialog width from max-w-7xl to max-w-5xl and height to 85vh to eliminate 20% zoom requirement. Preview panel now hidden on smaller screens (< lg) for better mobile/tablet experience.
 - **CRITICAL FIX - Admin Auth on Plesk**: `requireAdminPassword` middleware now properly recognizes admin users logged in via email/password (not just old password-only system). Admin can now use `/login` with admin@navetteclub.tn OR `/admin-login` with ADMIN_PASSWORD
 - **Error Messages Improvement**: Homepage banner update errors now display specific backend messages (auth errors, validation errors) instead of generic "Impossible de mettre à jour la bannière"
