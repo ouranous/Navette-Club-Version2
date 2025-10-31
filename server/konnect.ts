@@ -9,7 +9,15 @@ if (!process.env.KONNECT_RECEIVER_WALLET) {
   throw new Error("KONNECT_RECEIVER_WALLET environment variable is required");
 }
 
-const KONNECT_API_BASE_URL = 'https://api.konnect.network/api/v2';
+// Use Sandbox URL for testing, Production URL for live payments
+// KONNECT_ENV can be 'sandbox' or 'production' (defaults to sandbox for safety)
+const KONNECT_ENV = process.env.KONNECT_ENV || 'sandbox';
+const KONNECT_API_BASE_URL = KONNECT_ENV === 'production' 
+  ? 'https://api.konnect.network/api/v2'
+  : 'https://api.preprod.konnect.network/api/v2';
+
+console.log(`🌍 Konnect Environment: ${KONNECT_ENV.toUpperCase()}`);
+console.log(`🔗 Konnect API URL: ${KONNECT_API_BASE_URL}`);
 
 const KONNECT_API_KEY = process.env.KONNECT_API_KEY;
 const RECEIVER_WALLET_ID = process.env.KONNECT_RECEIVER_WALLET;
