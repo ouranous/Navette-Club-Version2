@@ -17,8 +17,26 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertProviderSchema } from "@shared/schema";
 
-const providerFormSchema = insertProviderSchema.omit({ userId: true }).extend({
+const providerFormSchema = z.object({
+  // User account fields
+  email: z.string().email("Email invalide"),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  confirmPassword: z.string(),
+  firstName: z.string().min(1, "Le prénom est requis"),
+  lastName: z.string().min(1, "Le nom est requis"),
+  // Provider fields
+  name: z.string().min(1, "Le nom de la société est requis"),
+  type: z.string(),
+  contactName: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
   serviceZones: z.array(z.string()).min(1, "Sélectionnez au moins une zone"),
+  notes: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Les mots de passe ne correspondent pas",
+  path: ["confirmPassword"],
 });
 
 type ProviderFormData = z.infer<typeof providerFormSchema>;
@@ -41,17 +59,20 @@ export default function ProviderRegisterPage() {
   const form = useForm<ProviderFormData>({
     resolver: zodResolver(providerFormSchema),
     defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+      firstName: "",
+      lastName: "",
       name: "",
       type: "transport_company",
       contactName: "",
-      email: "",
       phone: "",
       address: "",
       city: "",
       country: "Tunisie",
       serviceZones: [],
       notes: "",
-      isActive: true,
     },
   });
 
@@ -111,19 +132,101 @@ export default function ProviderRegisterPage() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom de la société *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Transport Elite" {...field} data-testid="input-name" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                  <h3 className="font-semibold">Informations du compte</h3>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prénom *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ahmed" {...field} data-testid="input-firstname" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ben Ali" {...field} data-testid="input-lastname" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="contact@transport.tn" {...field} data-testid="input-user-email" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mot de passe *</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} data-testid="input-password" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirmer le mot de passe *</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} data-testid="input-confirm-password" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Informations de la société</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nom de la société *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Transport Elite" {...field} data-testid="input-name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
@@ -168,7 +271,7 @@ export default function ProviderRegisterPage() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Téléphone</FormLabel>
+                        <FormLabel>Téléphone de la société</FormLabel>
                         <FormControl>
                           <Input placeholder="+216 12 345 678" {...field} value={field.value || ""} data-testid="input-phone" />
                         </FormControl>
@@ -177,20 +280,6 @@ export default function ProviderRegisterPage() {
                     )}
                   />
                 </div>
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="contact@transport.tn" {...field} value={field.value || ""} data-testid="input-email" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <FormField
                   control={form.control}
