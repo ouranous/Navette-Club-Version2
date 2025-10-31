@@ -289,7 +289,7 @@ export default function ToursManagement() {
                   <TourPreviewCard
                     name={watchedValues.name}
                     description={watchedValues.description}
-                    imageUrl={watchedValues.imageUrl}
+                    imageUrl={watchedValues.imageUrl || undefined}
                     category={watchedValues.category}
                     difficulty={watchedValues.difficulty}
                     duration={watchedValues.duration}
@@ -586,6 +586,7 @@ export default function ToursManagement() {
                                   <FormControl>
                                     <Textarea
                                       {...field}
+                                      value={field.value || ""}
                                       rows={6}
                                       placeholder="Racontez l'histoire de ce tour, ce qui le rend unique..."
                                       data-testid="input-full-description"
@@ -682,6 +683,7 @@ export default function ToursManagement() {
                                         type="number"
                                         min="1"
                                         {...field}
+                                        value={field.value ?? 0}
                                         onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                         data-testid="input-min-participants"
                                       />
@@ -725,6 +727,7 @@ export default function ToursManagement() {
                                         step="0.01"
                                         min="0"
                                         {...field}
+                                        value={field.value || ""}
                                         data-testid="input-price-child"
                                       />
                                     </FormControl>
@@ -760,7 +763,7 @@ export default function ToursManagement() {
                                   <FormLabel>Fournisseur/Partenaire</FormLabel>
                                   <Select
                                     onValueChange={field.onChange}
-                                    defaultValue={field.value}
+                                    defaultValue={field.value || undefined}
                                   >
                                     <FormControl>
                                       <SelectTrigger data-testid="select-provider">
@@ -872,9 +875,10 @@ export default function ToursManagement() {
           <CardContent className="text-center py-12">
             <p className="text-muted-foreground">Aucun tour disponible</p>
             <Button
-              variant="link"
+              variant="ghost"
               onClick={() => setIsDialogOpen(true)}
               className="mt-2"
+              data-testid="button-create-first-tour"
             >
               Créer votre premier tour
             </Button>
