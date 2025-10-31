@@ -86,9 +86,23 @@ export const requireAdminPassword: RequestHandler = async (req: any, res, next) 
     }
   }
 
-  // On Plesk: Check password-based session
+  // On Plesk: Check password-based session OR email/password session with admin role
+  // Option 1: Old admin password system
   if (req.session?.isAdmin) {
     return next();
+  }
+
+  // Option 2: Email/password login - check user role in DB
+  if (req.session?.userId && req.session?.isAuthenticated) {
+    try {
+      const dbUser = await storage.getUser(req.session.userId);
+      if (dbUser && dbUser.role === "admin") {
+        return next();
+      }
+    } catch (error) {
+      console.error("Error checking admin role on Plesk:", error);
+      return res.status(500).json({ message: "Error verifying admin access" });
+    }
   }
 
   return res.status(401).json({ message: "Admin authentication required" });
