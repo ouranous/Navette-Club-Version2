@@ -281,47 +281,68 @@ export default function HomePageManagement() {
                                   />
                                 </div>
                               )}
-                              <div className="flex gap-2">
-                                <ObjectUploader
-                                  maxNumberOfFiles={1}
-                                  maxFileSize={10485760}
-                                  onGetUploadParameters={async () => {
-                                    const res = await apiRequest("POST", "/api/objects/upload");
-                                    const data = await res.json();
-                                    return {
-                                      method: "PUT" as const,
-                                      url: data.uploadURL,
-                                    };
-                                  }}
-                                  onComplete={async (result) => {
-                                    if (result.successful && result.successful.length > 0 && result.successful[0]?.uploadURL) {
-                                      const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
-                                      try {
-                                        const res = await apiRequest("POST", "/api/objects/normalize-path", { uploadURL: uploadedUrl });
-                                        const data = await res.json();
-                                        field.onChange(data.path);
-                                        toast({ title: "Bannière uploadée avec succès" });
-                                      } catch (error) {
-                                        console.error("Error normalizing path:", error);
-                                        toast({ title: "Erreur lors de l'upload", variant: "destructive" });
-                                      }
-                                    }
-                                  }}
-                                  buttonVariant="outline"
-                                >
-                                  <Upload className="w-4 h-4 mr-2" />
-                                  {field.value ? "Changer la bannière" : "Ajouter une bannière"}
-                                </ObjectUploader>
-                                {field.value && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => field.onChange("")}
-                                  >
-                                    Supprimer
-                                  </Button>
-                                )}
+                              
+                              {/* URL Input - Always visible */}
+                              <div>
+                                <label className="text-sm font-medium mb-2 block">
+                                  URL de l'image (externe ou uploadée)
+                                </label>
+                                <Input
+                                  placeholder="https://exemple.com/image-banniere.jpg"
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                  data-testid="input-hero-imageUrl"
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Entrez l'URL d'une image hébergée sur un service externe (Cloudinary, ImageKit, etc.)
+                                </p>
                               </div>
+
+                              {/* Upload button - Only on Replit */}
+                              {import.meta.env.REPL_ID && (
+                                <div className="flex gap-2 items-center">
+                                  <div className="text-sm text-muted-foreground">Ou</div>
+                                  <ObjectUploader
+                                    maxNumberOfFiles={1}
+                                    maxFileSize={10485760}
+                                    onGetUploadParameters={async () => {
+                                      const res = await apiRequest("POST", "/api/objects/upload");
+                                      const data = await res.json();
+                                      return {
+                                        method: "PUT" as const,
+                                        url: data.uploadURL,
+                                      };
+                                    }}
+                                    onComplete={async (result) => {
+                                      if (result.successful && result.successful.length > 0 && result.successful[0]?.uploadURL) {
+                                        const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
+                                        try {
+                                          const res = await apiRequest("POST", "/api/objects/normalize-path", { uploadURL: uploadedUrl });
+                                          const data = await res.json();
+                                          field.onChange(data.path);
+                                          toast({ title: "Bannière uploadée avec succès" });
+                                        } catch (error) {
+                                          console.error("Error normalizing path:", error);
+                                          toast({ title: "Erreur lors de l'upload", variant: "destructive" });
+                                        }
+                                      }
+                                    }}
+                                    buttonVariant="outline"
+                                  >
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    Uploader depuis votre ordinateur
+                                  </ObjectUploader>
+                                  {field.value && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      onClick={() => field.onChange("")}
+                                    >
+                                      Supprimer
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </FormControl>
                           <FormDescription>
