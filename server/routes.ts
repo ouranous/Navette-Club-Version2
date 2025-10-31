@@ -811,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========== TRANSFER BOOKINGS ==========
-  app.get("/api/transfer-bookings", isAuthenticated, async (req, res) => {
+  app.get("/api/transfer-bookings", requireAdminPassword, async (req, res) => {
     try {
       const bookings = await storage.getAllTransferBookings();
       res.json(bookings);
@@ -820,7 +820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/transfer-bookings/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/transfer-bookings/:id", requireAdminPassword, async (req, res) => {
     try {
       const booking = await storage.getTransferBooking(req.params.id);
       if (!booking) {
@@ -842,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/transfer-bookings/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/transfer-bookings/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertTransferBookingSchema.partial().parse(req.body);
       const booking = await storage.updateTransferBooking(req.params.id, validatedData);
@@ -856,7 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========== DISPOSAL BOOKINGS ==========
-  app.get("/api/disposal-bookings", isAuthenticated, async (req, res) => {
+  app.get("/api/disposal-bookings", requireAdminPassword, async (req, res) => {
     try {
       const bookings = await storage.getAllDisposalBookings();
       res.json(bookings);
@@ -865,7 +865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/disposal-bookings/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/disposal-bookings/:id", requireAdminPassword, async (req, res) => {
     try {
       const booking = await storage.getDisposalBooking(req.params.id);
       if (!booking) {
@@ -887,7 +887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/disposal-bookings/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/disposal-bookings/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertDisposalBookingSchema.partial().parse(req.body);
       const booking = await storage.updateDisposalBooking(req.params.id, validatedData);
@@ -901,7 +901,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========== TOUR BOOKINGS ==========
-  app.get("/api/tour-bookings", isAuthenticated, async (req, res) => {
+  app.get("/api/tour-bookings", requireAdminPassword, async (req, res) => {
     try {
       const bookings = await storage.getAllTourBookings();
       res.json(bookings);
@@ -910,7 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tour-bookings/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/tour-bookings/:id", requireAdminPassword, async (req, res) => {
     try {
       const booking = await storage.getTourBooking(req.params.id);
       if (!booking) {
@@ -932,7 +932,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/tour-bookings/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/tour-bookings/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertTourBookingSchema.partial().parse(req.body);
       const booking = await storage.updateTourBooking(req.params.id, validatedData);
@@ -946,7 +946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========== PAYMENT INTENTS ==========
-  app.get("/api/payment-intents", isAuthenticated, async (req, res) => {
+  app.get("/api/payment-intents", requireAdminPassword, async (req, res) => {
     try {
       const intents = await storage.getAllPaymentIntents();
       res.json(intents);
@@ -955,7 +955,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/payment-intents/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/payment-intents/:id", requireAdminPassword, async (req, res) => {
     try {
       const intent = await storage.getPaymentIntent(req.params.id);
       if (!intent) {
@@ -977,7 +977,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/payment-intents/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/payment-intents/:id", requireAdminPassword, async (req, res) => {
     try {
       const validatedData = insertPaymentIntentSchema.partial().parse(req.body);
       const intent = await storage.updatePaymentIntent(req.params.id, validatedData);

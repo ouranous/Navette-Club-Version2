@@ -176,13 +176,23 @@ export async function setupAuth(app: Express) {
   });
 }
 
-export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // Skip authentication check if REPL_ID is not available (non-Replit environments)
+export const isAuthenticated: RequestHandler = async (req: any, res, next) => {
+  // On external hosting (Plesk): Check email/password session
   if (!process.env.REPL_ID) {
-    console.log("⚠️  Auth check skipped: running without authentication");
+    if (req.session?.userId && req.session?.isAuthenticated) {
+      return next();
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // On Replit: Check both email/password session AND Replit Auth
+  
+  // Option 1: Check email/password session
+  if (req.session?.userId && req.session?.isAuthenticated) {
     return next();
   }
 
+  // Option 2: Check Replit Auth
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {
