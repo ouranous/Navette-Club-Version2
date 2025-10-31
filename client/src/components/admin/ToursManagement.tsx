@@ -51,7 +51,9 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
-  Sparkles
+  Sparkles,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertCityTourSchema, type CityTour, type Provider } from "@shared/schema";
@@ -79,6 +81,7 @@ export default function ToursManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTour, setEditingTour] = useState<CityTour | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showPreview, setShowPreview] = useState(false);
 
   const { data: tours = [], isLoading } = useQuery<CityTour[]>({
     queryKey: ["/api/tours"],
@@ -278,96 +281,83 @@ export default function ToursManagement() {
               Nouveau tour
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden p-0">
-            <div className="flex h-full max-h-[80vh]">
-              {/* Left Panel - Live Preview */}
-              <div className="hidden lg:block w-2/5 bg-muted/30 p-6 overflow-y-auto border-r">
-                <div className="sticky top-0">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold text-lg">Aperçu en direct</h3>
-                  </div>
-                  <TourPreviewCard
-                    name={watchedValues.name}
-                    description={watchedValues.description}
-                    imageUrl={watchedValues.imageUrl || undefined}
-                    category={watchedValues.category}
-                    difficulty={watchedValues.difficulty}
-                    duration={watchedValues.duration}
-                    maxCapacity={watchedValues.maxCapacity}
-                    price={watchedValues.price}
-                  />
-                  
-                  {/* Highlights Preview */}
-                  {watchedValues.highlights && watchedValues.highlights.length > 0 && (
-                    <div className="mt-6">
-                      <h4 className="font-semibold text-sm mb-3">Points Forts</h4>
-                      <div className="space-y-2">
-                        {watchedValues.highlights.slice(0, 5).map((highlight, idx) => {
-                          const parts = highlight.split('::');
-                          const text = parts.length > 1 ? parts[1] : highlight;
-                          return (
-                            <div key={idx} className="flex items-start gap-2 text-sm bg-card p-2 rounded-md">
-                              <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                              <span>{text}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Panel - Form Steps */}
-              <div className="flex-1 flex flex-col">
-                <DialogHeader className="px-6 pt-6 pb-4 border-b">
+          <DialogContent className="max-w-full max-h-full h-screen w-screen p-0 gap-0">
+            <div className="flex flex-col h-full">
+              {/* Sticky Header */}
+              <DialogHeader className="px-6 pt-6 pb-4 border-b bg-background shrink-0">
+                <div className="flex items-center justify-between mb-4">
                   <DialogTitle className="text-2xl">
                     {editingTour ? "Modifier" : "Créer"} un city tour
                   </DialogTitle>
-                  
-                  {/* Stepper */}
-                  <div className="flex items-center gap-2 mt-4">
-                    {STEPS.map((step, idx) => (
-                      <div key={step.id} className="flex items-center flex-1">
-                        <button
-                          type="button"
-                          onClick={() => setCurrentStep(step.id)}
-                          className={cn(
-                            "flex items-center gap-3 flex-1 p-3 rounded-lg transition-all hover-elevate",
-                            currentStep === step.id 
-                              ? "bg-primary text-primary-foreground" 
-                              : currentStep > step.id
-                                ? "bg-primary/10 text-primary"
-                                : "bg-muted text-muted-foreground"
-                          )}
-                        >
-                          <div className={cn(
-                            "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold",
-                            currentStep === step.id 
-                              ? "bg-white text-primary" 
-                              : currentStep > step.id
-                                ? "bg-primary text-white"
-                                : "bg-background"
-                          )}>
-                            {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
-                          </div>
-                          <div className="text-left">
-                            <div className="font-semibold text-sm">{step.title}</div>
-                            <div className="text-xs opacity-80">{step.description}</div>
-                          </div>
-                        </button>
-                        {idx < STEPS.length - 1 && (
-                          <ChevronRight className="w-4 h-4 mx-2 text-muted-foreground flex-shrink-0" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPreview(!showPreview)}
+                    data-testid="button-toggle-preview"
+                  >
+                    {showPreview ? (
+                      <>
+                        <EyeOff className="w-4 h-4 mr-2" />
+                        Masquer aperçu
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4 mr-2" />
+                        Voir aperçu
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                {/* Stepper */}
+                <div className="flex items-center gap-2">
+                  {STEPS.map((step, idx) => (
+                    <div key={step.id} className="flex items-center flex-1">
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(step.id)}
+                        className={cn(
+                          "flex items-center gap-3 flex-1 p-3 rounded-lg transition-all hover-elevate",
+                          currentStep === step.id 
+                            ? "bg-primary text-primary-foreground" 
+                            : currentStep > step.id
+                              ? "bg-primary/10 text-primary"
+                              : "bg-muted text-muted-foreground"
                         )}
-                      </div>
-                    ))}
-                  </div>
-                </DialogHeader>
+                      >
+                        <div className={cn(
+                          "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold",
+                          currentStep === step.id 
+                            ? "bg-white text-primary" 
+                            : currentStep > step.id
+                              ? "bg-primary text-white"
+                              : "bg-background"
+                        )}>
+                          {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
+                        </div>
+                        <div className="text-left">
+                          <div className="font-semibold text-sm">{step.title}</div>
+                          <div className="text-xs opacity-80">{step.description}</div>
+                        </div>
+                      </button>
+                      {idx < STEPS.length - 1 && (
+                        <ChevronRight className="w-4 h-4 mx-2 text-muted-foreground flex-shrink-0" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </DialogHeader>
 
+              {/* Main Content Area */}
+              <div className="flex flex-1 overflow-hidden">
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col">
-                    <div className="flex-1 overflow-y-auto px-6 py-6">
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
+                    {/* Form Content - Scrollable */}
+                    <div className={cn(
+                      "flex-1 overflow-y-auto px-6 py-6",
+                      showPreview ? "w-3/5" : "w-full"
+                    )}>
                       {/* Step 1: Concept */}
                       {currentStep === 1 && (
                         <div className="space-y-6 max-w-2xl">
@@ -823,8 +813,8 @@ export default function ToursManagement() {
                       )}
                     </div>
 
-                    {/* Navigation Footer */}
-                    <DialogFooter className="px-6 py-4 border-t bg-muted/20 gap-3">
+                    {/* Sticky Footer */}
+                    <DialogFooter className="px-6 py-4 border-t bg-background shrink-0 gap-3">
                       {currentStep > 1 && (
                         <Button
                           type="button"
@@ -860,6 +850,47 @@ export default function ToursManagement() {
                     </DialogFooter>
                   </form>
                 </Form>
+
+                {/* Preview Panel - Collapsible */}
+                {showPreview && (
+                  <div className="w-2/5 bg-muted/30 border-l overflow-y-auto">
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold text-lg">Aperçu en direct</h3>
+                      </div>
+                      <TourPreviewCard
+                        name={watchedValues.name}
+                        description={watchedValues.description}
+                        imageUrl={watchedValues.imageUrl || undefined}
+                        category={watchedValues.category}
+                        difficulty={watchedValues.difficulty}
+                        duration={watchedValues.duration}
+                        maxCapacity={watchedValues.maxCapacity}
+                        price={watchedValues.price}
+                      />
+                      
+                      {/* Highlights Preview */}
+                      {watchedValues.highlights && watchedValues.highlights.length > 0 && (
+                        <div className="mt-6">
+                          <h4 className="font-semibold text-sm mb-3">Points Forts</h4>
+                          <div className="space-y-2">
+                            {watchedValues.highlights.slice(0, 5).map((highlight, idx) => {
+                              const parts = highlight.split('::');
+                              const text = parts.length > 1 ? parts[1] : highlight;
+                              return (
+                                <div key={idx} className="flex items-start gap-2 text-sm bg-card p-2 rounded-md">
+                                  <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                  <span>{text}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </DialogContent>
