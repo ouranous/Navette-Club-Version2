@@ -704,59 +704,39 @@ export default function VehiclesManagement() {
                   name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Photo du véhicule</FormLabel>
-                      <div className="space-y-3">
-                        {field.value && (
+                      <FormLabel>URL Photo du véhicule</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://example.com/image.jpg"
+                          {...field}
+                          data-testid="input-imageUrl"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Utilisez un service d'hébergement d'images externe (Cloudinary, ImageKit, etc.)
+                      </FormDescription>
+                      {field.value && (
+                        <div className="space-y-3 mt-3">
                           <div className="relative w-full h-48 bg-muted rounded-md overflow-hidden">
                             <img
                               src={field.value}
                               alt="Aperçu"
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://placehold.co/400x300?text=Image+non+disponible";
+                              }}
                             />
                           </div>
-                        )}
-                        <div className="flex gap-2">
-                          <ObjectUploader
-                            maxNumberOfFiles={1}
-                            maxFileSize={10485760}
-                            onGetUploadParameters={async () => {
-                              const res = await apiRequest("POST", "/api/objects/upload");
-                              const data = await res.json();
-                              return {
-                                method: "PUT" as const,
-                                url: data.uploadURL,
-                              };
-                            }}
-                            onComplete={async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-                              if (result.successful && result.successful[0]?.uploadURL) {
-                                const uploadedUrl = result.successful[0].uploadURL.split('?')[0];
-                                try {
-                                  const res = await apiRequest("POST", "/api/objects/normalize-path", { uploadURL: uploadedUrl });
-                                  const data = await res.json();
-                                  field.onChange(data.path);
-                                  toast({ title: "Photo uploadée avec succès" });
-                                } catch (error) {
-                                  console.error("Error normalizing path:", error);
-                                  toast({ title: "Erreur lors de l'upload", variant: "destructive" });
-                                }
-                              }
-                            }}
-                            buttonVariant="outline"
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => field.onChange("")}
                           >
-                            <Upload className="w-4 h-4 mr-2" />
-                            {field.value ? "Changer la photo" : "Ajouter une photo"}
-                          </ObjectUploader>
-                          {field.value && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => field.onChange("")}
-                            >
-                              Supprimer
-                            </Button>
-                          )}
+                            Supprimer
+                          </Button>
                         </div>
-                      </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
