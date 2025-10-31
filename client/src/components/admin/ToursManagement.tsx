@@ -39,6 +39,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import RichTextEditor from "@/components/RichTextEditor";
 import { 
   Plus, 
   Pencil, 
@@ -277,10 +278,10 @@ export default function ToursManagement() {
               Nouveau tour
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden p-0">
-            <div className="flex h-full">
+          <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden p-0">
+            <div className="flex h-full max-h-[75vh]">
               {/* Left Panel - Live Preview */}
-              <div className="w-2/5 bg-muted/30 p-6 overflow-y-auto border-r">
+              <div className="hidden lg:block w-2/5 bg-muted/30 p-6 overflow-y-auto border-r">
                 <div className="sticky top-0">
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="w-5 h-5 text-primary" />
@@ -421,11 +422,11 @@ export default function ToursManagement() {
                                 <FormItem>
                                   <FormLabel>Accroche courte*</FormLabel>
                                   <FormControl>
-                                    <Textarea
-                                      {...field}
-                                      rows={2}
+                                    <RichTextEditor
+                                      content={field.value || ""}
+                                      onChange={field.onChange}
                                       placeholder="Décrivez votre tour en une phrase captivante..."
-                                      data-testid="input-description"
+                                      minHeight="120px"
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -584,12 +585,11 @@ export default function ToursManagement() {
                                 <FormItem>
                                   <FormLabel>Description complète</FormLabel>
                                   <FormControl>
-                                    <Textarea
-                                      {...field}
-                                      value={field.value || ""}
-                                      rows={6}
+                                    <RichTextEditor
+                                      content={field.value || ""}
+                                      onChange={field.onChange}
                                       placeholder="Racontez l'histoire de ce tour, ce qui le rend unique..."
-                                      data-testid="input-full-description"
+                                      minHeight="300px"
                                     />
                                   </FormControl>
                                   <FormMessage />
