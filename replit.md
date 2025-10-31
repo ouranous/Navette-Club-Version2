@@ -1,6 +1,12 @@
 # Overview
 NavetteClub is a premium transportation platform offering high-end transfer services and city tour experiences. It features a sophisticated booking interface for transfers and guided city tours. The platform includes a geographic zone-based vehicle filtering system, a redesigned 2-column UI for vehicle selection, automatic transfer pricing and booking flow, comprehensive admin-editable website pages, Konnect payment integration (Tunisia's payment gateway), and SendGrid email automation. The platform is deployable on both Replit and external hosting (Plesk/VPS). The business vision is to provide a reliable and premium service in the transportation sector.
 
+# Recent Changes (Oct 31, 2025)
+- **CRITICAL FIX**: Fixed authentication bypass on Plesk - `requireAuth` middleware now properly verifies email/password sessions instead of bypassing all authentication on external hosting
+- **Session Configuration**: Enhanced session cookie settings for Plesk with `trust proxy`, `sameSite`, and proper `secure` flag for HTTPS
+- **Vehicle Image Management**: Added `imageUrl` text input field to provider vehicle form, allowing transporters to enter external image URLs (Cloudinary, ImageKit, etc.) since Object Storage is not available on Plesk
+- **Simplified Provider Forms**: Removed admin-only fields (`showOnHomePage`) from provider vehicle creation form - only transporters manage their vehicles with essential fields
+
 # User Preferences
 Preferred communication style: Simple, everyday language.
 
