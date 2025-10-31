@@ -53,6 +53,9 @@ export async function initKonnectPayment(
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
     const fullBaseUrl = `${protocol}://${baseUrl}`;
 
+    console.log('🔑 Konnect API Key loaded:', KONNECT_API_KEY ? `${KONNECT_API_KEY.substring(0, 10)}...` : 'NOT SET');
+    console.log('💰 Receiver Wallet ID:', RECEIVER_WALLET_ID);
+
     // Convert amount to millimes (1 TND = 1000 millimes)
     const amountInMillimes = Math.round(paymentRequest.amount * 1000);
 
@@ -77,6 +80,9 @@ export async function initKonnectPayment(
       failUrl: `${fullBaseUrl}/payment/failure?payment_ref=PAYMENT_REF`,
     };
 
+    console.log('📤 Konnect request URL:', `${KONNECT_API_BASE_URL}/payments/init-payment`);
+    console.log('📦 Payload:', JSON.stringify(payload, null, 2));
+
     const response = await axios.post(
       `${KONNECT_API_BASE_URL}/payments/init-payment`,
       payload,
@@ -88,12 +94,14 @@ export async function initKonnectPayment(
       }
     );
 
+    console.log('✅ Konnect payment initialized successfully:', response.data);
+
     return {
       payUrl: response.data.payUrl,
       paymentRef: response.data.paymentRef,
     };
   } catch (error: any) {
-    console.error('Konnect payment initialization error:', error.response?.data || error.message);
+    console.error('❌ Konnect payment initialization error:', error.response?.data || error.message);
     throw new Error(`Failed to initialize Konnect payment: ${error.response?.data?.message || error.message}`);
   }
 }
