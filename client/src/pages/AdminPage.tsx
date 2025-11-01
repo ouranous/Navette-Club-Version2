@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { 
   SidebarProvider, 
   Sidebar,
@@ -26,7 +26,8 @@ import SocialMediaManagement from "@/components/admin/SocialMediaManagement";
 import TransferBookingsManagement from "@/components/admin/TransferBookingsManagement";
 import TourBookingsManagement from "@/components/admin/TourBookingsManagement";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-import type { Provider, Vehicle, TransferBooking, TourBooking } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Provider, Vehicle, TransferBooking, TourBooking, AdminView } from "@shared/schema";
 
 export default function AdminPage() {
   const { isAdmin, isLoading } = useAdminAuth();
@@ -51,6 +52,42 @@ export default function AdminPage() {
     queryKey: ["/api/tour-bookings"],
     enabled: isAdmin,
   });
+
+  const { data: adminViews = [] } = useQuery<AdminView[]>({
+    queryKey: ["/api/admin/views"],
+    enabled: isAdmin,
+  });
+
+  const updateViewMutation = useMutation({
+    mutationFn: async (section: string) => {
+      await apiRequest("POST", "/api/admin/views", { section });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/views"] });
+    },
+  });
+
+  // Calculate new items count for each section
+  const getLastViewedAt = (section: string): Date | null => {
+    const view = adminViews.find(v => v.section === section);
+    return view ? new Date(view.lastViewedAt) : null;
+  };
+
+  const countNewItems = <T extends { createdAt: Date | string }>(items: T[], section: string): number => {
+    const lastViewed = getLastViewedAt(section);
+    if (!lastViewed) return items.length; // If never viewed, all are new
+    return items.filter(item => new Date(item.createdAt) > lastViewed).length;
+  };
+
+  const newProviders = countNewItems(providers, "providers");
+  const newVehicles = countNewItems(vehicles, "vehicles");
+  const newTransfers = countNewItems(transferBookings.filter(b => b.status === "pending"), "transfers");
+  const newTours = countNewItems(tourBookings.filter(b => b.status === "pending"), "tours");
+
+  // Update view timestamp when clicking on a section
+  const handleSectionClick = (section: string) => {
+    updateViewMutation.mutate(section);
+  };
 
   const pendingTransfers = transferBookings.filter(b => b.status === "pending").length;
   const pendingTours = tourBookings.filter(b => b.status === "pending").length;
@@ -94,15 +131,18 @@ export default function AdminPage() {
 
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      onClick={() => setActiveTab("providers")}
+                      onClick={() => {
+                        setActiveTab("providers");
+                        handleSectionClick("providers");
+                      }}
                       isActive={activeTab === "providers"}
                       data-testid="button-nav-providers"
                     >
                       <Building2 className="w-4 h-4" />
                       <span>Fournisseurs</span>
-                      {providers.length > 0 && (
+                      {newProviders > 0 && (
                         <Badge variant="secondary" className="ml-auto" data-testid="badge-providers-count">
-                          {providers.length}
+                          {newProviders}
                         </Badge>
                       )}
                     </SidebarMenuButton>
@@ -110,15 +150,18 @@ export default function AdminPage() {
                   
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      onClick={() => setActiveTab("vehicles")}
+                      onClick={() => {
+                        setActiveTab("vehicles");
+                        handleSectionClick("vehicles");
+                      }}
                       isActive={activeTab === "vehicles"}
                       data-testid="button-nav-vehicles"
                     >
                       <Car className="w-4 h-4" />
                       <span>Véhicules</span>
-                      {vehicles.length > 0 && (
+                      {newVehicles > 0 && (
                         <Badge variant="secondary" className="ml-auto" data-testid="badge-vehicles-count">
-                          {vehicles.length}
+                          {newVehicles}
                         </Badge>
                       )}
                     </SidebarMenuButton>
@@ -137,15 +180,18 @@ export default function AdminPage() {
 
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      onClick={() => setActiveTab("transfers")}
+                      onClick={() => {
+                        setActiveTab("transfers");
+                        handleSectionClick("transfers");
+                      }}
                       isActive={activeTab === "transfers"}
                       data-testid="button-nav-transfers"
                     >
                       <Navigation className="w-4 h-4" />
                       <span>Demandes Transfert</span>
-                      {pendingTransfers > 0 && (
+                      {newTransfers > 0 && (
                         <Badge variant="destructive" className="ml-auto" data-testid="badge-transfers-pending">
-                          {pendingTransfers}
+                          {newTransfers}
                         </Badge>
                       )}
                     </SidebarMenuButton>
@@ -153,15 +199,18 @@ export default function AdminPage() {
 
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      onClick={() => setActiveTab("tour-bookings")}
+                      onClick={() => {
+                        setActiveTab("tour-bookings");
+                        handleSectionClick("tours");
+                      }}
                       isActive={activeTab === "tour-bookings"}
                       data-testid="button-nav-tour-bookings"
                     >
                       <Plane className="w-4 h-4" />
                       <span>Demandes City Tours</span>
-                      {pendingTours > 0 && (
+                      {newTours > 0 && (
                         <Badge variant="destructive" className="ml-auto" data-testid="badge-tours-pending">
-                          {pendingTours}
+                          {newTours}
                         </Badge>
                       )}
                     </SidebarMenuButton>
