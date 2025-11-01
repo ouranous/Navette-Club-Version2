@@ -1,7 +1,16 @@
 # Overview
 NavetteClub is a premium transportation platform offering high-end transfer services and city tour experiences. It features a sophisticated booking interface for transfers and guided city tours. The platform includes a geographic zone-based vehicle filtering system, a redesigned 2-column UI for vehicle selection, automatic transfer pricing and booking flow, comprehensive admin-editable website pages, Konnect payment integration (Tunisia's payment gateway), and SendGrid email automation. The platform is deployable on both Replit and external hosting (Plesk/VPS). The business vision is to provide a reliable and premium service in the transportation sector.
 
-# Recent Changes (Oct 31, 2025)
+# Recent Changes (Nov 1, 2025)
+- **Admin Notification System**: Implemented intelligent "unread" badge system for admin dashboard. Badges track new items created since last section visit using `admin_views` database table with timestamps. Clicking a section updates the timestamp and clears badges. Features include:
+  * Database table `admin_views` to store last-viewed timestamps per section
+  * API routes `/api/admin/views` (GET/POST) protected by admin authentication
+  * Dynamic badge counts comparing item `createdAt` with section `lastViewedAt`
+  * Badges only display when count > 0; pending transfers/tours use red destructive variant
+  * Automatic cache invalidation after timestamp update
+  * Graceful handling when section never viewed (all items considered new)
+
+# Previous Changes (Oct 31, 2025)
 - **City Tours Konnect Payment Integration**: Fully integrated Konnect payment gateway for city tour bookings, matching the transfer booking flow. After booking creation, users are automatically redirected to Konnect payment page. Email vouchers are sent automatically after successful payment via webhook (removed "sous peu" message). Complete flow: booking → payment init → Konnect redirect → webhook update → voucher email.
 - **Rich Text Editor Integration**: Integrated Tiptap WYSIWYG editor (MIT license) for City Tours description and fullDescription fields with complete formatting toolbar (bold, italic, underline, headings, lists, text alignment, links, images, highlighting, undo/redo). Fixed content synchronization to properly populate editor when editing existing tours.
 - **HTML Rendering & Security**: Implemented DOMPurify sanitization for tour descriptions on detail pages to safely render rich HTML content while preventing XSS attacks. Tour cards strip HTML tags for clean previews with proper line-clamp functionality.
