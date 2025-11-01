@@ -128,6 +128,20 @@ export default function TourBookingsManagement() {
               filteredBookings.map((booking) => (
                 <Card key={booking.id} data-testid={`booking-${booking.id}`}>
                   <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-sm" data-testid={`ref-${booking.id}`}>
+                          {booking.referenceNumber || `ID: ${booking.id.slice(0, 8)}`}
+                        </Badge>
+                        <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
+                          {booking.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(booking.createdAt), "dd/MM/yyyy HH:mm")}
+                      </p>
+                    </div>
+                    
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <div className="flex items-start gap-2">
@@ -178,11 +192,6 @@ export default function TourBookingsManagement() {
                           <p className="text-sm text-muted-foreground font-mono text-xs">
                             {booking.customerId}
                           </p>
-                        </div>
-
-                        <div>
-                          <p className="text-sm font-medium mb-1">Statut</p>
-                          {getStatusBadge(booking.status)}
                         </div>
                       </div>
                     </div>

@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, MapPin, Users, DollarSign, Pencil } from "lucide-react";
@@ -34,6 +35,7 @@ export default function TransferBookingsManagement() {
   const { toast } = useToast();
   const [editingBooking, setEditingBooking] = useState<TransferBooking | null>(null);
   const [selectedProviderId, setSelectedProviderId] = useState<string>("");
+  const [providerNote, setProviderNote] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
 
@@ -46,20 +48,24 @@ export default function TransferBookingsManagement() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, providerId }: { id: string; providerId: string }) => {
-      const res = await apiRequest("PATCH", `/api/transfer-bookings/${id}`, { providerId });
+    mutationFn: async ({ id, providerId, providerNote }: { id: string; providerId?: string; providerNote?: string }) => {
+      const data: any = {};
+      if (providerId !== undefined) data.providerId = providerId;
+      if (providerNote !== undefined) data.providerNote = providerNote;
+      const res = await apiRequest("PATCH", `/api/transfer-bookings/${id}`, data);
       return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/transfer-bookings"] });
-      toast({ title: "Transporteur modifié avec succès" });
+      toast({ title: "Informations modifiées avec succès" });
       setEditingBooking(null);
       setSelectedProviderId("");
+      setProviderNote("");
     },
     onError: () => {
       toast({
         title: "Erreur",
-        description: "Impossible de modifier le transporteur",
+        description: "Impossible de modifier les informations",
         variant: "destructive",
       });
     },
@@ -68,16 +74,23 @@ export default function TransferBookingsManagement() {
   const handleEdit = (booking: TransferBooking) => {
     setEditingBooking(booking);
     setSelectedProviderId(booking.providerId || "");
+    setProviderNote(booking.providerNote || "");
   };
 
   const handleSave = () => {
-    if (!editingBooking || !selectedProviderId) return;
-    updateMutation.mutate({ id: editingBooking.id, providerId: selectedProviderId });
+    if (!editingBooking) return;
+    updateMutation.mutate({ 
+      id: editingBooking.id, 
+      providerId: selectedProviderId || undefined,
+      providerNote: providerNote || "" 
+    });
   };
 
-  const getProviderName = (providerId: string | null) => {
-    if (!providerId) return "Non assigné";
-    const provider = providers.find(p => p.id === providerId);
+  const getProviderName = (booking: TransferBooking) => {
+    if (!booking.providerId) {
+      return booking.providerNote || "Non assigné";
+    }
+    const provider = providers.find(p => p.id === booking.providerId);
     return provider ? `Assigné à ${provider.name}` : "Assigné (fournisseur inconnu)";
   };
 
@@ -160,6 +173,20 @@ export default function TransferBookingsManagement() {
               filteredBookings.map((booking) => (
                 <Card key={booking.id} data-testid={`booking-${booking.id}`}>
                   <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-mono text-sm" data-testid={`ref-${booking.id}`}>
+                          {booking.referenceNumber || `ID: ${booking.id.slice(0, 8)}`}
+                        </Badge>
+                        <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
+                          {booking.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(booking.createdAt), "dd/MM/yyyy HH:mm")}
+                      </p>
+                    </div>
+                    
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <div className="flex items-start gap-2">
@@ -206,7 +233,7 @@ export default function TransferBookingsManagement() {
                           <p className="text-sm font-medium mb-1">Transporteur</p>
                           <div className="flex items-center gap-2">
                             <Badge variant={booking.providerId ? "default" : "secondary"}>
-                              {getProviderName(booking.providerId)}
+                              {getProviderName(booking)}
                             </Badge>
                             <Button
                               size="icon"
@@ -217,13 +244,6 @@ export default function TransferBookingsManagement() {
                               <Pencil className="w-4 h-4" />
                             </Button>
                           </div>
-                        </div>
-
-                        <div>
-                          <p className="text-sm font-medium">Statut</p>
-                          <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
-                            {booking.status}
-                          </Badge>
                         </div>
                       </div>
                     </div>
@@ -245,9 +265,9 @@ export default function TransferBookingsManagement() {
       <Dialog open={!!editingBooking} onOpenChange={(open) => !open && setEditingBooking(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Modifier le transporteur</DialogTitle>
+            <DialogTitle>Modifier les informations de la demande</DialogTitle>
             <DialogDescription>
-              Sélectionnez un nouveau transporteur pour cette demande de transfert
+              Modifiez le transporteur assigné ou ajoutez une note personnalisée
             </DialogDescription>
           </DialogHeader>
 
@@ -267,6 +287,19 @@ export default function TransferBookingsManagement() {
                 </SelectContent>
               </Select>
             </div>
+            
+            <div>
+              <p className="text-sm font-medium mb-2">Note personnalisée (si non assigné)</p>
+              <Input
+                placeholder="Ex: En attente de confirmation, Non disponible, etc."
+                value={providerNote}
+                onChange={(e) => setProviderNote(e.target.value)}
+                data-testid="input-provider-note"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Cette note remplacera "Non assigné" si aucun transporteur n'est sélectionné
+              </p>
+            </div>
           </div>
 
           <DialogFooter>
@@ -279,7 +312,7 @@ export default function TransferBookingsManagement() {
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!selectedProviderId || updateMutation.isPending}
+              disabled={updateMutation.isPending}
               data-testid="button-save"
             >
               {updateMutation.isPending ? "Enregistrement..." : "Enregistrer"}
