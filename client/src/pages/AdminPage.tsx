@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { 
   SidebarProvider, 
   Sidebar,
@@ -13,7 +14,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Building2, Car, MapIcon, Route, List, Home, Phone, Share2, Navigation, LogOut } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Building2, Car, MapIcon, Route, List, Home, Phone, Share2, Navigation, LogOut, Plane } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import ProvidersManagement from "@/components/admin/ProvidersManagement";
 import VehiclesManagement from "@/components/admin/VehiclesManagement";
@@ -22,11 +24,36 @@ import HomePageManagement from "@/components/admin/HomePageManagement";
 import ContactInfoManagement from "@/components/admin/ContactInfoManagement";
 import SocialMediaManagement from "@/components/admin/SocialMediaManagement";
 import TransferBookingsManagement from "@/components/admin/TransferBookingsManagement";
+import TourBookingsManagement from "@/components/admin/TourBookingsManagement";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import type { Provider, Vehicle, TransferBooking, TourBooking } from "@shared/schema";
 
 export default function AdminPage() {
   const { isAdmin, isLoading } = useAdminAuth();
   const [activeTab, setActiveTab] = useState("homepage");
+
+  const { data: providers = [] } = useQuery<Provider[]>({
+    queryKey: ["/api/providers"],
+    enabled: isAdmin,
+  });
+
+  const { data: vehicles = [] } = useQuery<Vehicle[]>({
+    queryKey: ["/api/vehicles"],
+    enabled: isAdmin,
+  });
+
+  const { data: transferBookings = [] } = useQuery<TransferBooking[]>({
+    queryKey: ["/api/transfer-bookings"],
+    enabled: isAdmin,
+  });
+
+  const { data: tourBookings = [] } = useQuery<TourBooking[]>({
+    queryKey: ["/api/tour-bookings"],
+    enabled: isAdmin,
+  });
+
+  const pendingTransfers = transferBookings.filter(b => b.status === "pending").length;
+  const pendingTours = tourBookings.filter(b => b.status === "pending").length;
 
   if (isLoading) {
     return (
@@ -73,6 +100,11 @@ export default function AdminPage() {
                     >
                       <Building2 className="w-4 h-4" />
                       <span>Fournisseurs</span>
+                      {providers.length > 0 && (
+                        <Badge variant="secondary" className="ml-auto" data-testid="badge-providers-count">
+                          {providers.length}
+                        </Badge>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   
@@ -84,6 +116,11 @@ export default function AdminPage() {
                     >
                       <Car className="w-4 h-4" />
                       <span>Véhicules</span>
+                      {vehicles.length > 0 && (
+                        <Badge variant="secondary" className="ml-auto" data-testid="badge-vehicles-count">
+                          {vehicles.length}
+                        </Badge>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
 
@@ -105,7 +142,28 @@ export default function AdminPage() {
                       data-testid="button-nav-transfers"
                     >
                       <Navigation className="w-4 h-4" />
-                      <span>Transferts</span>
+                      <span>Demandes Transfert</span>
+                      {pendingTransfers > 0 && (
+                        <Badge variant="destructive" className="ml-auto" data-testid="badge-transfers-pending">
+                          {pendingTransfers}
+                        </Badge>
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => setActiveTab("tour-bookings")}
+                      isActive={activeTab === "tour-bookings"}
+                      data-testid="button-nav-tour-bookings"
+                    >
+                      <Plane className="w-4 h-4" />
+                      <span>Demandes City Tours</span>
+                      {pendingTours > 0 && (
+                        <Badge variant="destructive" className="ml-auto" data-testid="badge-tours-pending">
+                          {pendingTours}
+                        </Badge>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
 
@@ -181,6 +239,10 @@ export default function AdminPage() {
 
               <TabsContent value="transfers" className="mt-0">
                 <TransferBookingsManagement />
+              </TabsContent>
+
+              <TabsContent value="tour-bookings" className="mt-0">
+                <TourBookingsManagement />
               </TabsContent>
 
               <TabsContent value="contact" className="mt-0">

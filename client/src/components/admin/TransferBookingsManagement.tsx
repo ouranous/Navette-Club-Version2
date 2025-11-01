@@ -34,6 +34,8 @@ export default function TransferBookingsManagement() {
   const { toast } = useToast();
   const [editingBooking, setEditingBooking] = useState<TransferBooking | null>(null);
   const [selectedProviderId, setSelectedProviderId] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("all");
 
   const { data: bookings = [], isLoading } = useQuery<TransferBooking[]>({
     queryKey: ["/api/transfer-bookings"],
@@ -76,8 +78,29 @@ export default function TransferBookingsManagement() {
   const getProviderName = (providerId: string | null) => {
     if (!providerId) return "Non assigné";
     const provider = providers.find(p => p.id === providerId);
-    return provider?.name || "Inconnu";
+    return provider ? `Assigné à ${provider.name}` : "Assigné (fournisseur inconnu)";
   };
+
+  const filteredBookings = bookings.filter(booking => {
+    if (statusFilter !== "all" && booking.status !== statusFilter) return false;
+    
+    if (dateFilter !== "all") {
+      const bookingDate = new Date(booking.pickupDate);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      if (dateFilter === "today") {
+        const bookingDay = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate());
+        if (bookingDay.getTime() !== today.getTime()) return false;
+      } else if (dateFilter === "upcoming") {
+        if (bookingDate < today) return false;
+      } else if (dateFilter === "past") {
+        if (bookingDate >= today) return false;
+      }
+    }
+    
+    return true;
+  });
 
   if (isLoading) {
     return (
@@ -93,17 +116,48 @@ export default function TransferBookingsManagement() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Gestion des Transferts</CardTitle>
+          <CardTitle>Demandes de Transfert</CardTitle>
           <CardDescription>
             Gérez les demandes de transfert et assignez les transporteurs
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex gap-4">
+            <div className="flex-1">
+              <label className="text-sm font-medium mb-2 block">Filtrer par statut</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger data-testid="filter-status">
+                  <SelectValue placeholder="Tous les statuts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="confirmed">Confirmés</SelectItem>
+                  <SelectItem value="cancelled">Annulés</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <label className="text-sm font-medium mb-2 block">Filtrer par date</label>
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger data-testid="filter-date">
+                  <SelectValue placeholder="Toutes les dates" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les dates</SelectItem>
+                  <SelectItem value="today">Aujourd'hui</SelectItem>
+                  <SelectItem value="upcoming">À venir</SelectItem>
+                  <SelectItem value="past">Passées</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-4">
-            {bookings.length === 0 ? (
+            {filteredBookings.length === 0 ? (
               <p className="text-muted-foreground">Aucune demande de transfert</p>
             ) : (
-              bookings.map((booking) => (
+              filteredBookings.map((booking) => (
                 <Card key={booking.id} data-testid={`booking-${booking.id}`}>
                   <CardContent className="p-4">
                     <div className="grid md:grid-cols-2 gap-4">
