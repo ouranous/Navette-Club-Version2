@@ -167,9 +167,11 @@ export const customers = pgTable("customers", {
 // Transfer Bookings - Réservations de transferts
 export const transferBookings = pgTable("transfer_bookings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referenceNumber: text("reference_number").unique(), // Numéro de référence unique (ex: TR-20251101-001)
   customerId: varchar("customer_id").notNull().references(() => customers.id),
   vehicleId: varchar("vehicle_id").notNull().references(() => vehicles.id),
   providerId: varchar("provider_id").references(() => providers.id), // Transporteur assigné (modifiable par admin)
+  providerNote: text("provider_note"), // Note personnalisée pour remplacer "Non assigné" (modifiable par admin)
   transferType: text("transfer_type").notNull(), // "one-way", "round-trip"
   pickupLocation: text("pickup_location").notNull(),
   dropoffLocation: text("drop_off_location").notNull(),
@@ -193,6 +195,7 @@ export const transferBookings = pgTable("transfer_bookings", {
 // Tour Bookings - Réservations de city tours
 export const tourBookings = pgTable("tour_bookings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referenceNumber: text("reference_number").unique(), // Numéro de référence unique (ex: CT-20251101-001)
   customerId: varchar("customer_id").notNull().references(() => customers.id),
   tourId: varchar("tour_id").notNull().references(() => cityTours.id),
   tourDate: timestamp("tour_date").notNull(),
@@ -443,6 +446,7 @@ export const insertTransferBookingSchema = createInsertSchema(transferBookings).
   createdAt: true,
   updatedAt: true,
 }).extend({
+  referenceNumber: z.string().optional().nullable(),
   pickupDate: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
   returnDate: z.union([z.string(), z.date(), z.null()]).transform(val => val === null ? null : (typeof val === 'string' ? new Date(val) : val)).nullable().optional(),
   totalPrice: z.union([z.string(), z.number()]).transform(val => String(val)),
@@ -451,6 +455,7 @@ export const insertTransferBookingSchema = createInsertSchema(transferBookings).
   nameOnPlacard: z.string().optional().nullable(),
   returnTime: z.string().optional().nullable(),
   providerId: z.string().optional().nullable(),
+  providerNote: z.string().optional().nullable(),
   paymentIntentId: z.string().optional().nullable(),
   status: z.string().optional().default("pending"),
   paymentStatus: z.string().optional().default("pending"),
@@ -461,6 +466,7 @@ export const insertTourBookingSchema = createInsertSchema(tourBookings).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
+  referenceNumber: z.string().optional().nullable(),
   tourDate: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
   totalPrice: z.union([z.string(), z.number()]).transform(val => String(val)),
   specialRequests: z.string().optional().nullable(),

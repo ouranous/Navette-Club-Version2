@@ -28,6 +28,7 @@ import { calculateDistance, calculateTransferPrice } from "./googleMaps";
 import { getGeographicZone, filterAndSortVehiclesByZones } from "./geographicZones";
 import { initKonnectPayment, getKonnectPaymentDetails } from "./konnect";
 import { sendWelcomeEmail, sendVoucherEmail, sendMissionOrderEmail } from "./email";
+import { generateReferenceNumber } from "./utils/referenceNumber";
 
 // Helper function to get userId from either Replit Auth or email/password session
 function getUserId(req: any): string | null {
@@ -625,9 +626,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Creating transfer booking with data:", req.body);
       const validatedData = insertTransferBookingSchema.parse(req.body);
-      console.log("Validated data:", validatedData);
+      
+      // Génération automatique du numéro de référence si non fourni
+      if (!validatedData.referenceNumber) {
+        validatedData.referenceNumber = generateReferenceNumber('TR');
+      }
+      
+      console.log("Validated data with reference number:", validatedData);
       const booking = await storage.createTransferBooking(validatedData);
-      console.log("Booking created:", booking.id);
+      console.log("Booking created:", booking.id, "Reference:", booking.referenceNumber);
       res.status(201).json(booking);
     } catch (error: any) {
       console.error("Transfer booking creation error:", error);
@@ -687,6 +694,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tour-bookings", async (req, res) => {
     try {
       const validatedData = insertTourBookingSchema.parse(req.body);
+      
+      // Génération automatique du numéro de référence si non fourni
+      if (!validatedData.referenceNumber) {
+        validatedData.referenceNumber = generateReferenceNumber('CT');
+      }
+      
       const booking = await storage.createTourBooking(validatedData);
       res.status(201).json(booking);
     } catch (error) {
@@ -925,6 +938,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tour-bookings", async (req, res) => {
     try {
       const validatedData = insertTourBookingSchema.parse(req.body);
+      
+      // Génération automatique du numéro de référence si non fourni
+      if (!validatedData.referenceNumber) {
+        validatedData.referenceNumber = generateReferenceNumber('CT');
+      }
+      
       const booking = await storage.createTourBooking(validatedData);
       res.status(201).json(booking);
     } catch (error) {
