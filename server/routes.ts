@@ -1821,6 +1821,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Views - Track when admin last viewed each section
+  app.get("/api/admin/views", requireAdminPassword, async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Non autorisé" });
+      }
+
+      const views = await storage.getAdminViews(userId);
+      res.json(views);
+    } catch (error: any) {
+      console.error("Error fetching admin views:", error);
+      res.status(500).json({ error: "Failed to fetch admin views" });
+    }
+  });
+
+  app.post("/api/admin/views", requireAdminPassword, async (req, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Non autorisé" });
+      }
+
+      const { section } = req.body;
+      if (!section) {
+        return res.status(400).json({ error: "Section is required" });
+      }
+
+      const view = await storage.upsertAdminView(userId, section);
+      res.json(view);
+    } catch (error: any) {
+      console.error("Error updating admin view:", error);
+      res.status(500).json({ error: "Failed to update admin view" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

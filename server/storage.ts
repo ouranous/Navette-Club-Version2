@@ -15,6 +15,7 @@ import {
   homePageContent,
   contactInfo,
   socialMediaLinks,
+  adminViews,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -46,6 +47,7 @@ import {
   type InsertContactInfo,
   type SocialMediaLink,
   type InsertSocialMediaLink,
+  type AdminView,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -716,6 +718,36 @@ export class DatabaseStorage implements IStorage {
   async deleteSocialMediaLink(id: string): Promise<boolean> {
     const result = await db.delete(socialMediaLinks).where(eq(socialMediaLinks.id, id));
     return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  // Admin Views
+  async getAdminViews(userId: string): Promise<AdminView[]> {
+    return await db.select().from(adminViews).where(eq(adminViews.userId, userId));
+  }
+
+  async upsertAdminView(userId: string, section: string): Promise<AdminView> {
+    // Check if view exists
+    const [existing] = await db
+      .select()
+      .from(adminViews)
+      .where(and(eq(adminViews.userId, userId), eq(adminViews.section, section)));
+
+    if (existing) {
+      // Update existing view
+      const [updated] = await db
+        .update(adminViews)
+        .set({ lastViewedAt: new Date() })
+        .where(eq(adminViews.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new view
+      const [newView] = await db
+        .insert(adminViews)
+        .values({ userId, section, lastViewedAt: new Date() })
+        .returning();
+      return newView;
+    }
   }
 }
 

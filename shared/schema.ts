@@ -522,6 +522,18 @@ export const insertSocialMediaLinkSchema = createInsertSchema(socialMediaLinks).
   platform: z.enum(["facebook", "twitter", "instagram", "linkedin"]),
 });
 
+// Admin Views - Track when admin last viewed each section (for notification badges)
+export const adminViews = pgTable("admin_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  section: text("section").notNull(), // "providers", "vehicles", "transfers", "tours"
+  lastViewedAt: timestamp("last_viewed_at").notNull().defaultNow(),
+});
+
+export const insertAdminViewSchema = createInsertSchema(adminViews).omit({
+  id: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -568,3 +580,6 @@ export type InsertContactInfo = z.infer<typeof insertContactInfoSchema>;
 
 export type SocialMediaLink = typeof socialMediaLinks.$inferSelect;
 export type InsertSocialMediaLink = z.infer<typeof insertSocialMediaLinkSchema>;
+
+export type AdminView = typeof adminViews.$inferSelect;
+export type InsertAdminView = z.infer<typeof insertAdminViewSchema>;
