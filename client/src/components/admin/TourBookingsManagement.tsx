@@ -15,9 +15,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, DollarSign, MapPin, Euro } from "lucide-react";
+import { Calendar, Users, Euro, MapPin, User, Mail, Phone } from "lucide-react";
 import type { TourBooking, CityTour } from "@shared/schema";
 import { format } from "date-fns";
+
+// Type pour les détails clients
+interface Customer {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+}
 
 export default function TourBookingsManagement() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -31,21 +40,54 @@ export default function TourBookingsManagement() {
     queryKey: ["/api/tours"],
   });
 
+  // Récupérer les détails des clients
+  const { data: customers = {} } = useQuery<Record<string, Customer>>({
+    queryKey: ["/api/customers"],
+    select: (data: any[]) => {
+      return data.reduce((acc, customer) => {
+        acc[customer.id] = customer;
+        return acc;
+      }, {} as Record<string, Customer>);
+    },
+  });
+
   const getTourName = (tourId: string) => {
     const tour = tours.find(t => t.id === tourId);
     return tour?.name || "Tour inconnu";
   };
 
+  const getCustomerDetails = (customerId: string) => {
+    const customer = customers[customerId];
+    if (!customer) {
+      return {
+        fullName: "Client inconnu",
+        email: "N/A",
+        phone: "N/A",
+      };
+    }
+    
+    // Construire le nom complet à partir de firstName et lastName
+    const fullName = [customer.firstName, customer.lastName]
+      .filter(Boolean)
+      .join(' ') || "Client inconnu";
+    
+    return {
+      fullName,
+      email: customer.email || "N/A",
+      phone: customer.phone || "N/A",
+    };
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "confirmed":
-        return <Badge variant="default" data-testid={`status-${status}`}>Confirmé</Badge>;
+        return <Badge variant="default">Confirmé</Badge>;
       case "pending":
-        return <Badge variant="secondary" data-testid={`status-${status}`}>En attente</Badge>;
+        return <Badge variant="secondary">En attente</Badge>;
       case "cancelled":
-        return <Badge variant="destructive" data-testid={`status-${status}`}>Annulé</Badge>;
+        return <Badge variant="destructive">Annulé</Badge>;
       default:
-        return <Badge variant="outline" data-testid={`status-${status}`}>{status}</Badge>;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -94,7 +136,7 @@ export default function TourBookingsManagement() {
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">Filtrer par statut</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger data-testid="filter-status">
+                <SelectTrigger>
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
@@ -108,7 +150,7 @@ export default function TourBookingsManagement() {
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">Filtrer par date</label>
               <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger data-testid="filter-date">
+                <SelectTrigger>
                   <SelectValue placeholder="Toutes les dates" />
                 </SelectTrigger>
                 <SelectContent>
@@ -125,86 +167,103 @@ export default function TourBookingsManagement() {
             {filteredBookings.length === 0 ? (
               <p className="text-muted-foreground">Aucune demande de city tour</p>
             ) : (
-              filteredBookings.map((booking) => (
-                <Card key={booking.id} data-testid={`booking-${booking.id}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-4 pb-3 border-b">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-sm" data-testid={`ref-${booking.id}`}>
-                          {booking.referenceNumber || `ID: ${booking.id.slice(0, 8)}`}
-                        </Badge>
-                        <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
-                          {booking.status}
-                        </Badge>
+              filteredBookings.map((booking) => {
+                const customer = getCustomerDetails(booking.customerId);
+                
+                return (
+                  <Card key={booking.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="font-mono text-sm">
+                            {booking.referenceNumber || `ID: ${booking.id.slice(0, 8)}`}
+                          </Badge>
+                          {getStatusBadge(booking.status)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(booking.createdAt), "dd/MM/yyyy HH:mm")}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(booking.createdAt), "dd/MM/yyyy HH:mm")}
-                      </p>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Tour</p>
-                            <p className="text-sm text-muted-foreground">
-                              {getTourName(booking.tourId)}
-                            </p>
+                      
+                      {/* SECTION DÉTAILS CLIENT - AJOUTÉE */}
+                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Informations Client
+                        </h4>
+                        <div className="grid md:grid-cols-3 gap-3 text-sm">
+                          <div className="flex items-center gap-2">
+                            <User className="w-3 h-3 text-muted-foreground" />
+                            <span className="font-medium">{customer.fullName}</span>
                           </div>
-                        </div>
-
-                        <div className="flex items-start gap-2">
-                          <Calendar className="w-4 h-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Date</p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(booking.tourDate), "dd/MM/yyyy")}
-                            </p>
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-muted-foreground">{customer.email}</span>
                           </div>
-                        </div>
-
-                        <div className="flex items-start gap-2">
-                          <Users className="w-4 h-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Participants</p>
-                            <p className="text-sm text-muted-foreground">
-                              {booking.adults} adulte{booking.adults > 1 ? 's' : ''}
-                              {booking.children && booking.children > 0 && `, ${booking.children} enfant${booking.children > 1 ? 's' : ''}`}
-                            </p>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-muted-foreground">{customer.phone}</span>
                           </div>
                         </div>
                       </div>
+                      
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">Tour</p>
+                              <p className="text-sm text-muted-foreground">
+                                {getTourName(booking.tourId)}
+                              </p>
+                            </div>
+                          </div>
 
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <Euro className="w-4 h-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Prix</p>
-                            <p className="text-sm text-muted-foreground">
-                              {booking.totalPrice ? `${parseFloat(booking.totalPrice).toFixed(2)} EUR` : "Non calculé"}
-                            </p>
+                          <div className="flex items-start gap-2">
+                            <Calendar className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">Date</p>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(booking.tourDate), "dd/MM/yyyy")}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2">
+                            <Users className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">Participants</p>
+                              <p className="text-sm text-muted-foreground">
+                                {booking.adults} adulte{booking.adults > 1 ? 's' : ''}
+                                {booking.children && booking.children > 0 && `, ${booking.children} enfant${booking.children > 1 ? 's' : ''}`}
+                              </p>
+                            </div>
                           </div>
                         </div>
 
-                        <div>
-                          <p className="text-sm font-medium mb-1">Client ID</p>
-                          <p className="text-sm text-muted-foreground font-mono text-xs">
-                            {booking.customerId}
-                          </p>
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <Euro className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">Prix</p>
+                              <p className="text-sm text-muted-foreground">
+                                {booking.totalPrice ? `${parseFloat(booking.totalPrice).toFixed(2)} EUR` : "Non calculé"}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {booking.specialRequests && (
-                      <div className="mt-4 pt-4 border-t">
-                        <p className="text-sm font-medium">Demandes spéciales</p>
-                        <p className="text-sm text-muted-foreground">{booking.specialRequests}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
+                      {booking.specialRequests && (
+                        <div className="mt-4 pt-4 border-t">
+                          <p className="text-sm font-medium">Demandes spéciales</p>
+                          <p className="text-sm text-muted-foreground">{booking.specialRequests}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
         </CardContent>
