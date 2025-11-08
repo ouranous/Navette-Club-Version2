@@ -34,6 +34,7 @@ import ProviderProfilePage from "@/pages/ProviderProfilePage";
 import ProviderPasswordPage from "@/pages/ProviderPasswordPage";
 import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import PaymentFailurePage from "@/pages/PaymentFailurePage";
+import LogoutPage from "@/pages/LogoutPage";
 import NotFound from "@/pages/not-found";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
