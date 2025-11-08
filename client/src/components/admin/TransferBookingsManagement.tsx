@@ -26,10 +26,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MapPin, Users, DollarSign, Pencil } from "lucide-react";
+import { Calendar, MapPin, Users, DollarSign, Pencil, User, Mail, Phone } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { TransferBooking, Provider } from "@shared/schema";
 import { format } from "date-fns";
+
+// Type pour les détails clients
+interface Customer {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+}
 
 export default function TransferBookingsManagement() {
   const { toast } = useToast();
@@ -46,6 +55,16 @@ export default function TransferBookingsManagement() {
   const { data: providers = [] } = useQuery<Provider[]>({
     queryKey: ["/api/providers"],
   });
+
+  const { data: customersArray = [] } = useQuery<Customer[]>({
+    queryKey: ["/api/customers"],
+  });
+
+  // Convertir en map pour accès rapide
+  const customers = customersArray.reduce((acc, customer) => {
+    acc[customer.id] = customer;
+    return acc;
+  }, {} as Record<string, Customer>);
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, providerId, providerNote }: { id: string; providerId?: string; providerNote?: string }) => {
@@ -92,6 +111,28 @@ export default function TransferBookingsManagement() {
     }
     const provider = providers.find(p => p.id === booking.providerId);
     return provider ? `Assigné à ${provider.name}` : "Assigné (fournisseur inconnu)";
+  };
+
+  const getCustomerDetails = (customerId: string) => {
+    const customer = customers[customerId];
+    if (!customer) {
+      return {
+        fullName: "Client inconnu",
+        email: "N/A",
+        phone: "N/A",
+      };
+    }
+    
+    // Construire le nom complet à partir de firstName et lastName
+    const fullName = [customer.firstName, customer.lastName]
+      .filter(Boolean)
+      .join(' ') || "Client inconnu";
+    
+    return {
+      fullName,
+      email: customer.email || "N/A",
+      phone: customer.phone || "N/A",
+    };
   };
 
   const filteredBookings = bookings.filter(booking => {
@@ -170,93 +211,119 @@ export default function TransferBookingsManagement() {
             {filteredBookings.length === 0 ? (
               <p className="text-muted-foreground">Aucune demande de transfert</p>
             ) : (
-              filteredBookings.map((booking) => (
-                <Card key={booking.id} data-testid={`booking-${booking.id}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-4 pb-3 border-b">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-sm" data-testid={`ref-${booking.id}`}>
-                          {booking.referenceNumber || `ID: ${booking.id.slice(0, 8)}`}
-                        </Badge>
-                        <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
-                          {booking.status}
-                        </Badge>
+              filteredBookings.map((booking) => {
+                const customer = getCustomerDetails(booking.customerId);
+                
+                return (
+                  <Card key={booking.id} data-testid={`booking-${booking.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="font-mono text-sm" data-testid={`ref-${booking.id}`}>
+                            {booking.referenceNumber || `ID: ${booking.id.slice(0, 8)}`}
+                          </Badge>
+                          <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
+                            {booking.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(booking.createdAt), "dd/MM/yyyy HH:mm")}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(booking.createdAt), "dd/MM/yyyy HH:mm")}
-                      </p>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Trajet</p>
-                            <p className="text-sm text-muted-foreground">
-                              {booking.pickupLocation} → {booking.dropoffLocation}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-start gap-2">
-                          <Calendar className="w-4 h-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Date</p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(booking.pickupDate), "dd/MM/yyyy")} à {booking.pickupTime}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-start gap-2">
-                          <Users className="w-4 h-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Passagers</p>
-                            <p className="text-sm text-muted-foreground">{booking.passengers}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <DollarSign className="w-4 h-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Prix</p>
-                            <p className="text-sm text-muted-foreground">
-                              {booking.totalPrice ? `${parseFloat(booking.totalPrice).toFixed(2)} TND` : "Non calculé"}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="text-sm font-medium mb-1">Transporteur</p>
+                      
+                      {/* SECTION DÉTAILS CLIENT - AJOUTÉE */}
+                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Informations Client
+                        </h4>
+                        <div className="grid md:grid-cols-3 gap-3 text-sm">
                           <div className="flex items-center gap-2">
-                            <Badge variant={booking.providerId ? "default" : "secondary"}>
-                              {getProviderName(booking)}
-                            </Badge>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleEdit(booking)}
-                              data-testid={`button-edit-${booking.id}`}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
+                            <User className="w-3 h-3 text-muted-foreground" />
+                            <span className="font-medium">{customer.fullName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-muted-foreground">{customer.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-muted-foreground">{customer.phone}</span>
                           </div>
                         </div>
                       </div>
-                    </div>
+                      
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">Trajet</p>
+                              <p className="text-sm text-muted-foreground">
+                                {booking.pickupLocation} → {booking.dropoffLocation}
+                              </p>
+                            </div>
+                          </div>
 
-                    {booking.specialRequests && (
-                      <div className="mt-4 pt-4 border-t">
-                        <p className="text-sm font-medium">Demandes spéciales</p>
-                        <p className="text-sm text-muted-foreground">{booking.specialRequests}</p>
+                          <div className="flex items-start gap-2">
+                            <Calendar className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">Date</p>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(booking.pickupDate), "dd/MM/yyyy")} à {booking.pickupTime}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2">
+                            <Users className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">Passagers</p>
+                              <p className="text-sm text-muted-foreground">{booking.passengers}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <DollarSign className="w-4 h-4 mt-1 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">Prix</p>
+                              <p className="text-sm text-muted-foreground">
+                                {booking.totalPrice ? `${parseFloat(booking.totalPrice).toFixed(2)} TND` : "Non calculé"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-medium mb-1">Transporteur</p>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={booking.providerId ? "default" : "secondary"}>
+                                {getProviderName(booking)}
+                              </Badge>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleEdit(booking)}
+                                data-testid={`button-edit-${booking.id}`}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
+
+                      {booking.specialRequests && (
+                        <div className="mt-4 pt-4 border-t">
+                          <p className="text-sm font-medium">Demandes spéciales</p>
+                          <p className="text-sm text-muted-foreground">{booking.specialRequests}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
         </CardContent>
