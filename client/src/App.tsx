@@ -28,6 +28,10 @@ import ProviderRegisterPage from "@/pages/ProviderRegisterPage";
 import ProviderVehiclesPage from "@/pages/ProviderVehiclesPage";
 import ProviderAddVehiclePage from "@/pages/ProviderAddVehiclePage";
 import ProviderRequestsPage from "@/pages/ProviderRequestsPage";
+import ProviderDriversPage from "@/pages/ProviderDriversPage";
+import ProviderMessagesPage from "@/pages/ProviderMessagesPage";
+import ProviderProfilePage from "@/pages/ProviderProfilePage";
+import ProviderPasswordPage from "@/pages/ProviderPasswordPage";
 import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import PaymentFailurePage from "@/pages/PaymentFailurePage";
 import NotFound from "@/pages/not-found";
@@ -49,11 +53,18 @@ function Router() {
       <Route path="/admin/login" component={AdminLoginPage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/client/dashboard" component={ClientDashboardPage} />
+      
+      {/* Provider routes */}
       <Route path="/provider/dashboard" component={ProviderDashboardPage} />
       <Route path="/provider/register" component={ProviderRegisterPage} />
       <Route path="/provider/vehicles" component={ProviderVehiclesPage} />
       <Route path="/provider/vehicles/add" component={ProviderAddVehiclePage} />
       <Route path="/provider/requests" component={ProviderRequestsPage} />
+      <Route path="/provider/drivers" component={ProviderDriversPage} />
+      <Route path="/provider/messages" component={ProviderMessagesPage} />
+      <Route path="/provider/profile" component={ProviderProfilePage} />
+      <Route path="/provider/password" component={ProviderPasswordPage} />
+      
       <Route path="/payment/success" component={PaymentSuccessPage} />
       <Route path="/payment/failure" component={PaymentFailurePage} />
       <Route path="/about" component={AboutPage} />
@@ -63,6 +74,7 @@ function Router() {
       <Route path="/terms" component={TermsPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/cancellation" component={CancellationPage} />
+      
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
